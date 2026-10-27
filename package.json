@@ -1,6 +1,8 @@
 {
-    "$schema": "https://www.schemastore.org/package.json",
+    "name": "cemainou",
     "private": true,
+    "license": "FSL-1.1-ALv2",
+    "$schema": "https://www.schemastore.org/package.json",
     "type": "module",
     "scripts": {
         "build": "vite build",
