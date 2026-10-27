@@ -19,3 +19,7 @@ Mcp::oauthRoutes();
 // înregistrarea aplicațiilor e deschisă (așa cer conectorii), deci cu limită: 10 pe minut de la o adresă
 Route::post('oauth/register', OAuthRegisterController::class)->middleware('throttle:10,1');
 Mcp::web('/mcp', CemainouServer::class)->middleware([McpJournal::class, AgentLanguage::class, EnsureUpToDate::class, ThrottleBeforeAuth::class.':mcp-ip', 'auth:sanctum,api', McpAccess::class, 'throttle:mcp', RecordAgentPresence::class]);
+
+// serverul local (stdio: php artisan mcp:start cemainou), doar ca să-și descrie uneltele (initialize, tools/list), de pildă pentru verificarea
+// cataloagelor MCP (Glama îl pornește într-un container); fără rețea și fără om logat, deci nicio unealtă nu rulează (App\Mcp\Methods\StrictCallTool)
+Mcp::local('cemainou', CemainouServer::class);

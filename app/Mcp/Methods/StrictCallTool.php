@@ -10,13 +10,20 @@ use Laravel\Mcp\Transport\JsonRpcRequest;
 use Laravel\Mcp\Transport\JsonRpcResponse;
 
 /**
- * Apelul unei unelte, cu o verificare în plus: un câmp pe care unealta nu-l cunoaște (un nume greșit, ca „decision" în loc de „decisions")
+ * Apelul unei unelte, cu două verificări în plus. Fără un om autentificat (serverul local, stdio, care doar își descrie uneltele) nu rulează nimic.
+ * Apoi: un câmp pe care unealta nu-l cunoaște (un nume greșit, ca „decision" în loc de „decisions")
  * oprește apelul cu un mesaj clar, în loc să fie ignorat în tăcere și să se piardă ce a vrut omul să trimită. Nu se salvează nimic.
  */
 class StrictCallTool extends CallTool
 {
     public function handle(JsonRpcRequest $request, ServerContext $context): Generator|JsonRpcResponse
     {
+        if (! (auth()->user() ?? request()->user())) {
+            return JsonRpcResponse::result($request->id, [
+                'content' => [['type' => 'text', 'text' => 'This local cemainou server only describes its tools. To use them, connect your agent to your cemainou\'s /mcp address with your personal key (Profile → Agents) or sign in from the Claude or ChatGPT app.']],
+                'isError' => true,
+            ]);
+        }
         $tool = $context->tools()->first(fn ($tool): bool => $tool->name() === ($request->params['name'] ?? null));
         $arguments = $request->params['arguments'] ?? [];
         if ($tool && is_array($arguments)) {
