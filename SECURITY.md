@@ -1,6 +1,7 @@
 # Security
 
-Please do not open a public issue for a vulnerability. Write to **cmn@rt.md** with "cemainou security" in the subject:
+Please do not open a public issue for a vulnerability. Report it privately on GitHub ([Security → Report a vulnerability](https://github.com/rtdesignstudio/cemainou/security/advisories/new)),
+or write to **cmn@rt.md** with "cemainou security" in the subject:
 what you found, the version (Settings or the What's new page shows it) and the steps to reproduce it.
 
 We answer within two working days, fix confirmed issues in a new signed version as soon as we can, and credit you in the

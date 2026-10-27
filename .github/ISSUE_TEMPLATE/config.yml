@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: An idea or a question
+    url: https://github.com/rtdesignstudio/cemainou/discussions
+    about: Ideas, questions and how you use cemainou go to Discussions; issues are for bugs.
+  - name: Security report
+    url: https://github.com/rtdesignstudio/cemainou/security/advisories/new
+    about: Please report vulnerabilities privately, never in a public issue.
+  - name: Hosting, installation help or support
+    url: https://rt.md/cemainou/#support
+    about: Hosted cemainou, help with installing it, or supporting the project (cmn@rt.md).
+  - name: Live demo
+    url: https://d.rt.md/cemainou-en/
+    about: Try cemainou without installing it.
