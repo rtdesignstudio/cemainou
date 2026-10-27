@@ -43,6 +43,7 @@ PHP 8.4+, SQLite (default) or MySQL 8+ / MariaDB 10.2+, HTTPS. No shell, cron or
 ## Installing
 
 Upload the release zip, point the site's document root to `public/` and open the address: the installer at `/install` does the rest.
+Installed it? In Settings, turn on **Keep me posted** to get an email about important versions; it sends nothing else, and you can turn it off any time.
 The full guide, including updates and backups: [docs/installation.md](docs/installation.md).
 
 ## Development
