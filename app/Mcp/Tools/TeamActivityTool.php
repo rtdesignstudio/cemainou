@@ -15,7 +15,7 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[Name('team_activity')]
-#[Description('What the team is working on: each person\'s current focus, when they were last seen, their updates from the last days and the open blockers. Work hours appear to the whole team; a collaborator sees only their own hours and only the projects they are on.')]
+#[Description('Reads what the team is doing, without changing anything: each person\'s current focus and when they were last seen, their updates from the last days (days, default 1), the open blockers and blocked tasks, and the week by person, day and project for a chart. Use it for "what is the team doing?"; for one person\'s day use my_day, for one project\'s history use project_timeline. Only what the person may see: hours show to the team, a collaborator sees only their own hours and their projects.')]
 #[IsReadOnly]
 class TeamActivityTool extends TeamTool
 {

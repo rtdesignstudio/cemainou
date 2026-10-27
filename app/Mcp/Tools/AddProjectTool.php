@@ -24,7 +24,7 @@ use Laravel\Mcp\Server\Attributes\Name;
  * Același proiect de două ori nu se dublează.
  */
 #[Name('add_project')]
-#[Description('Creates a project, and its client if the person confirms the client is new (create_client). The whole team (not clients). Only when the person asks; confirm the name, the client and who leads it first. Returns the slug for a .cemainou file.')]
+#[Description('Creates a new project (and its client, only with create_client when the person confirms the client is new), with an optional lead, repo, categories and description; optionally from a template that adds its standard tasks. For the team only: clients cannot create projects. Use it only when the person asks, after confirming the name, the client and the lead; to change an existing project use update_project. If projects with the same or a similar name exist it returns them instead (confirm_new creates the new one anyway); errors name the known clients or templates, or say the repo is already taken. Returns the project\'s slug (for a .cemainou file).')]
 class AddProjectTool extends TeamTool
 {
     public array $legacyFields = ['category'];                       // forma veche, o singură categorie

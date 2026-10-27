@@ -25,7 +25,7 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 
 #[Name('log_update')]
-#[Description('Saves a status update: what was done since the last update, what is in progress, blockers, next steps and decisions. Call it ONLY after the person has seen the draft and confirmed it. Short, outcome-focused lines; never secrets, credentials, personal data or code.')]
+#[Description('Saves the person\'s status update for a project and day: done, in progress, blocked, next steps and decisions. Call it only after last_update and after the person has seen the draft and confirmed it; several sessions on the same day add to the same update. To fix an update already sent use edit_update with a reason, never a second log_update; for past days rebuilt from git use log_history. Short, outcome-focused lines; never secrets, credentials, personal data or code. Returns the saved update.')]
 class LogUpdateTool extends TeamTool
 {
     protected bool $forClients = true;                          // și clientul (doar proiectele și lucrurile lui)

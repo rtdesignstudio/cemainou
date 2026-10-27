@@ -31,7 +31,7 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[Name('last_update')]
-#[Description('Call it first when reporting: your own last update on the project, the moment to report from ("since", for git log --since), your open and new tasks, and next_steps (the exact steps to follow). Also when your work day started.')]
+#[Description('Reads the context for writing a status update (/upd), without saving anything: the person\'s own last update on the project, the moment to report from ("since", for git log --since), their open and newly assigned tasks, today\'s start time and next_steps (the exact steps to follow). Call it first, before drafting; then log_update saves the confirmed draft. Not for a single day\'s view (my_day) or a project overview (project_brief). If no project can be found from repo, project or session, it returns an error that says how to pick one.')]
 #[IsReadOnly]
 class LastUpdateTool extends TeamTool
 {

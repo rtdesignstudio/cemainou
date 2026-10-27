@@ -14,7 +14,7 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 
 #[Name('add_task')]
-#[Description('Adds a task to a project: free (anyone can take it), for the person themself ("me") or for a colleague. Confirm the title and who does it with the person first.')]
+#[Description('Creates one task on a project: free (anyone can take it), for the person themself ("me") or for a colleague who works on the project, with optional notes (steps as - [ ] lines), a due date or a repeat. Use it only when the person asks, after confirming the title and who does it; for an idea for later pass it as an idea, to change an existing task use update_task, to start working on one use start_task. Fails on archived projects or when the assignee is not on the project. Returns the task, with its number (#id).')]
 class AddTaskTool extends TeamTool
 {
     protected bool $forClients = true;                          // și clientul (doar proiectele și lucrurile lui)

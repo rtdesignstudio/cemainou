@@ -18,7 +18,7 @@ use Laravel\Mcp\Server\Attributes\Name;
  * sau toate, și „citite" pentru unele sau toate. Fiecare om vede doar ale lui, deci merge și pentru client.
  */
 #[Name('notifications')]
-#[Description('The person\'s notifications (the bell): tasks given to them, comments and mentions, the morning summary, answers to their feedback. By default the unread ones, newest first. mark_read marks some (by id) as read, mark_all_read all of them. Use it for "what is new for me?". Only mark them read when the person has seen them or asks.')]
+#[Description('Lists the person\'s notifications (the bell), newest first, unread by default: tasks given to them, comments and mentions, the morning summary and answers to their feedback. Use it for "what is new for me?"; for what the whole team is doing use team_activity, for one day\'s work use my_day. mark_read marks the given ids as read and mark_all_read marks all of them, only when the person has seen them or asks. all: true includes the read ones. Returns each notification\'s id, type, title, text, time and link, plus the unread count.')]
 class NotificationsTool extends TeamTool
 {
     protected bool $forClients = true;                          // fiecare își vede doar notificările lui
