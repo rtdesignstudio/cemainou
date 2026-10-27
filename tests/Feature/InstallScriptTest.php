@@ -107,9 +107,17 @@ class InstallScriptTest extends TestCase
 
     public function test_without_the_claude_command_the_connection_is_written_into_claude_json(): void
     {
-        foreach (array_filter([dirname((string) shell_exec('command -v node')), '/usr/bin']) as $tools) {      // cu node, apoi doar cu python3
+        $node = trim((string) shell_exec('command -v node'));
+        foreach (array_filter([$node !== '' ? 'node' : null, 'python']) as $with) {      // cu node, apoi doar cu python3
             $home = $this->home();
             unlink("{$home}/bin/claude");                                                                   // Claude Code din aplicația desktop: fără comanda claude
+            // doar node într-un folder al lui (nu tot folderul din care vine: acolo poate sta și o comandă claude, instalată cu npm)
+            $tools = '/usr/bin';
+            if ($with === 'node') {
+                $tools = "{$home}/node-only";
+                File::ensureDirectoryExists($tools);
+                symlink($node, "{$tools}/node");
+            }
             File::put("{$home}/.claude.json", json_encode(['numStartups' => 7, 'mcpServers' => ['whatsupai' => ['type' => 'http', 'url' => 'https://vechi.test/mcp'], 'altul' => ['type' => 'stdio']],
                 'projects' => ['/p' => ['mcpServers' => ['whatsupai' => ['type' => 'http']]]]]));
 

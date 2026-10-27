@@ -11281,11 +11281,12 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
     .wsa-music-btn svg { width: 24px; height: 24px; }
     .fi-topbar-database-notifications-btn { width: 44px; height: 44px; }
     .fi-topbar-database-notifications-btn .fi-icon { width: 24px; height: 24px; }
-    .wsa-music-x, .wsa-award-close, .wsa-badge-page-close, .wsa-card-close, .wsa-hint-close, .wsa-lightbox-close, .wsa-myday-close,
-    .wsa-search-close, .wsa-since-close, .wsa-tip-card-close, .wsa-usermenu-close, .wsa-sidebar-close, .fi-modal-close-btn, .fi-no-notification-close-btn {
+    .wsa-music-x, .wsa-badge-page-close, .wsa-card-close, .wsa-hint-close, .wsa-lightbox-close, .wsa-myday-close,
+    .wsa-since-close, .wsa-tip-card-close, .wsa-usermenu-close, .wsa-sidebar-close, .fi-modal-close-btn, .fi-no-notification-close-btn {
         min-width: 44px; min-height: 44px; display: inline-grid; place-items: center; font-size: 40px; line-height: 1;   /* × de ~32 px */
     }
     .wsa-music-x { margin-right: -10px; }
+    .wsa-search-close { min-height: 44px; }   /* „Închide" din căutare e text: aceeași zonă de apăsare, fără litere de 40 px (feedback #38) */
     .fi-modal-close-btn .fi-icon, .fi-no-notification-close-btn .fi-icon, .wsa-sidebar-close .fi-icon, .wsa-usermenu-close svg, .wsa-search-close svg, .wsa-lightbox-close svg { width: 32px; height: 32px; }   /* iconița × 32 px, zona de apăsare 44 px */
 }
 /* feedback #32: cu panoul muzicii deschis, butonul + (notarea rapidă) se mută la stânga panoului, ca să rămână la vedere */
