@@ -65,6 +65,15 @@ class PromptTimeTest extends TestCase
         $this->assertSame([50, 50], $this->today());
     }
 
+    public function test_a_prompt_left_open_for_hours_ends_at_its_last_signal(): void
+    {
+        $this->hook('09:00', 'UserPromptSubmit');
+        $this->hook('09:20', 'PostToolUse');                                             // a lucrat 20 de minute
+        $this->hook('16:00', 'Stop');                                                    // „stop" după 7 ore de tăcere: o aprobare uitată, un laptop închis
+
+        $this->assertSame([20, 20], $this->today());
+    }
+
     public function test_short_pauses_between_prompts_count_long_ones_do_not(): void
     {
         $this->hook('10:00', 'UserPromptSubmit');

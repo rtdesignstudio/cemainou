@@ -25,6 +25,9 @@ use Illuminate\Support\Collection;
 class WorkTime
 {
     /** Pauza dintre două semnale care se socotește lucru (și fereastra „activ acum"): din Setări, implicit 15 minute. */
+    /** Cât poate tăcea o sesiune într-un prompt deschis (secunde) înainte ca promptul să se socotească încheiat la ultimul ei semnal. */
+    public const PROMPT_SILENCE = 7200;
+
     public static function gap(): int
     {
         return Settings::get('gap_minutes');
@@ -338,7 +341,9 @@ class WorkTime
 
     /**
      * Prompturile fiecărei sesiuni: de la trimitere (prompt) până la sfârșit (stop sau închiderea sesiunii). Un prompt fără sfârșit
-     * (sesiune întreruptă) ține până la ultimul semnal al sesiunii dinaintea următorului prompt.
+     * (sesiune întreruptă) ține până la ultimul semnal al sesiunii dinaintea următorului prompt. Un prompt lung contează întreg, chiar fără
+     * semnale cât agentul gândește; dar dacă sesiunea tace mai mult de PROMPT_SILENCE (nicio unealtă, niciun semnal: o aprobare care
+     * așteaptă, un Esc, un laptop închis), promptul se încheie la ultimul semnal dinaintea tăcerii, nu la „stop"-ul care vine ore mai târziu.
      *
      * @param  list<array{0: int, 1: string, 2: ?int, 3: ?int}>  $rows  ordonate
      * @return list<array{0: int, 1: int}>
@@ -355,6 +360,10 @@ class WorkTime
         foreach ($bySession as $events) {
             [$start, $last] = [null, null];
             foreach ($events as [$time, $kind]) {
+                if ($start !== null && $time - $last > self::PROMPT_SILENCE) {
+                    $prompts[] = [$start, $last];
+                    $start = null;
+                }
                 if ($kind === ActivityKind::Prompt->value) {
                     if ($start !== null) {
                         $prompts[] = [$start, $last];
