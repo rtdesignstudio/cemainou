@@ -1,0 +1,37 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Handle X-XSRF-Token Header
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# PHP2Shell (CVE-2026-109618, CVE-2026-109619, 21 oct. 2026): cazurile de atac știute trec prin session.upload_progress; cemainou nu-l folosește,
+# deci e oprit acolo unde .htaccess poate schimba PHP-ul (LiteSpeed, Apache cu mod_php). Cu PHP-FPM: în pool sau php.ini. Ajută până la PHP reparat.
+<IfModule LiteSpeed>
+    php_flag session.upload_progress.enabled off
+</IfModule>
+<IfModule mod_php.c>
+    php_flag session.upload_progress.enabled off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag session.upload_progress.enabled off
+</IfModule>

@@ -1,0 +1,72 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Activity;
+use App\Models\Project;
+use App\Models\User;
+use App\Support\TodayLayout;
+use App\Support\WorkTime;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Tests\TestCase;
+
+/** „Ziua mea": cele 24 de ore cu timpul lucrat pe proiecte, cifrele zilei; pe Azi, deasupra „Săptămânii mele". */
+class MyDayTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
+    }
+
+    public function test_hours_follow_the_wall_clock_on_the_days_the_clocks_change(): void
+    {
+        $ana = User::factory()->create(['name' => 'Ana', 'role' => 'lead', 'timezone' => 'Europe/Chisinau']);
+        $site = Project::factory()->create(['name' => 'Site']);
+        foreach (['2026-10-25', '2026-03-29'] as $date) {                                  // ziua cu 25 de ore și cea cu 23
+            Activity::query()->delete();
+            Carbon::setTestNow(Carbon::parse("{$date} 18:00", 'Europe/Chisinau'));
+            foreach (['09:00', '09:10', '09:20', '09:30', '09:40', '09:50', '10:00'] as $at) {
+                Activity::create(['user_id' => $ana->id, 'project_id' => $site->id, 'kind' => 'app', 'source' => 'web', 'occurred_at' => Carbon::parse("{$date} {$at}", 'Europe/Chisinau')->utc()]);
+            }
+            $day = WorkTime::hourly($ana);
+            $this->assertSame([0, 60, 0], [$day['hours'][8]['minutes'], $day['hours'][9]['minutes'], $day['hours'][10]['minutes']], $date);
+        }
+    }
+
+    public function test_the_day_is_split_by_hour_and_by_project(): void
+    {
+        Carbon::setTestNow(Carbon::parse('today 18:00', 'Europe/Chisinau'));
+        $ana = User::factory()->create(['name' => 'Ana', 'role' => 'lead', 'timezone' => 'Europe/Chisinau']);
+        [$site, $app] = [Project::factory()->create(['name' => 'Site']), Project::factory()->create(['name' => 'Aplicația'])];
+        $signal = fn (Project $p, string $at) => Activity::create(['user_id' => $ana->id, 'project_id' => $p->id, 'kind' => 'app', 'source' => 'web', 'occurred_at' => Carbon::parse("today {$at}", 'Europe/Chisinau')->utc()]);
+        foreach (['09:00', '09:10', '09:20', '09:30', '09:40', '09:50', '10:00', '10:10', '10:20'] as $at) {
+            $signal($site, $at);                                                            // 09:00-10:20 pe Site, fără pauză
+        }
+        foreach (['14:00', '14:10', '14:20'] as $at) {
+            $signal($app, $at);                                                             // 20 de minute pe Aplicația
+        }
+
+        $day = WorkTime::hourly($ana);
+        $this->assertSame([0, 60, 20, 0, 20], [$day['hours'][8]['minutes'], $day['hours'][9]['minutes'], $day['hours'][10]['minutes'], $day['hours'][13]['minutes'], $day['hours'][14]['minutes']]);
+        $this->assertSame([$site->id => 60], $day['hours'][9]['projects']);
+        $this->assertSame([$app->id => 20], $day['hours'][14]['projects']);
+        $this->assertSame(80, $day['longest']);
+
+        $this->actingAs($ana)->get('/')->assertOk()->assertSee(['My day', 'Longest stretch', '1h 20m', 'Site', 'Aplicația'])
+            ->assertSee('09:00-10:00 · 1h · Site 1h', false);
+    }
+
+    public function test_it_sits_full_width_right_above_my_week_also_in_a_saved_layout(): void
+    {
+        $ana = User::factory()->create(['role' => 'lead']);
+        $ana->forceFill(['today_layout' => [['key' => 'my-tasks', 'span' => 'half', 'visible' => true], ['key' => 'my-week', 'span' => 'full', 'visible' => true], ['key' => 'late', 'span' => 'half', 'visible' => true]]])->save();
+
+        $keys = collect(TodayLayout::for($ana->fresh(), all: true))->pluck('key')->all();
+        $this->assertSame(array_search('my-week', $keys) - 1, array_search('my-day', $keys));   // chiar deasupra
+        $this->assertSame('full', collect(TodayLayout::for($ana->fresh(), all: true))->firstWhere('key', 'my-day')['span']);
+    }
+}

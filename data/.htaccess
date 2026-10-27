@@ -1,0 +1,2 @@
+# Dacă rădăcina site-ului ajunge vreodată să fie proiectul, nu public/: baza de date nu se servește niciodată.
+Require all denied

@@ -1,0 +1,9 @@
+# Pentru hostingurile la care rădăcina site-ului e folderul aplicației (nu public/): totul trece prin public/.
+# Așa data/ (.env, baza, fișierele), vendor/ și restul codului nu se pot cere din browser. Cu rădăcina pe public/, fișierul nu contează.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>

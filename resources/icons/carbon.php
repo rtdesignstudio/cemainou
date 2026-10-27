@@ -1,0 +1,38 @@
+<?php
+
+// Iconițele aplicației sunt din Carbon (IBM, Apache 2.0): Filament și codul nostru cer nume Heroicons,
+// iar scripts/carbon-icons.php scrie pentru fiecare SVG-ul Carbon de aici în resources/svg/heroicons-carbon.
+// Un nume care lipsește rămâne Heroicon (config/blade-heroicons.php caută întâi în folderul nostru).
+return [
+    'adjustments-horizontal' => 'settings-adjust', 'archive-box' => 'archive', 'arrow-down' => 'arrow-down', 'arrow-down-circle' => 'arrow-down', 'arrow-down-tray' => 'download',
+    'arrow-left' => 'arrow-left', 'arrow-left-circle' => 'arrow-left', 'arrow-left-end-on-rectangle' => 'logout', 'arrow-left-on-rectangle' => 'logout',
+    'arrow-left-start-on-rectangle' => 'logout', 'arrow-path' => 'renew', 'arrow-right' => 'arrow-right', 'arrow-right-circle' => 'arrow-right',
+    'arrow-top-right-on-square' => 'launch', 'arrow-trending-down' => 'arrow-down-right', 'arrow-trending-up' => 'arrow-up-right', 'arrow-up' => 'arrow-up',
+    'arrow-up-circle' => 'arrow-up', 'arrow-up-tray' => 'upload', 'arrow-uturn-left' => 'undo', 'arrow-uturn-right' => 'redo',
+    'arrows-pointing-out' => 'maximize', 'arrows-right-left' => 'arrows-horizontal', 'arrows-up-down' => 'arrows-vertical', 'at-symbol' => 'at',
+    'bars-2' => 'menu', 'bars-4' => 'draggable', 'bars-3' => 'menu', 'bars-3-bottom-left' => 'menu', 'bell' => 'notification', 'bell-alert' => 'notification-new',
+    'bell-slash' => 'notification-off', 'bold' => 'text-bold', 'bolt' => 'flash', 'book-open' => 'book', 'bookmark' => 'bookmark',
+    'building-office' => 'building', 'building-office-2' => 'enterprise', 'calendar' => 'calendar', 'calendar-days' => 'calendar',
+    'camera' => 'camera', 'chart-bar' => 'chart-bar', 'chat-bubble-bottom-center-text' => 'chat', 'chat-bubble-left' => 'chat',
+    'chat-bubble-left-ellipsis' => 'chat-launch', 'chat-bubble-left-right' => 'forum', 'check' => 'checkmark', 'check-badge' => 'certificate-check',
+    'check-circle' => 'checkmark-outline', 'chevron-double-left' => 'chevron-left', 'chevron-double-right' => 'chevron-right', 'chevron-down' => 'chevron-down',
+    'chevron-left' => 'chevron-left', 'chevron-right' => 'chevron-right', 'chevron-up' => 'chevron-up', 'chevron-up-down' => 'chevron-sort',
+    'circle-stack' => 'data-base', 'clipboard' => 'paste', 'clipboard-document-list' => 'list-checked', 'clock' => 'time', 'code-bracket' => 'code',
+    'cog' => 'settings', 'cog-6-tooth' => 'settings', 'command-line' => 'terminal', 'computer-desktop' => 'screen', 'cpu-chip' => 'chip',
+    'credit-card' => 'purchase', 'cursor-arrow-rays' => 'touch-1', 'cursor-arrow-ripple' => 'touch-1', 'device-phone-mobile' => 'mobile',
+    'document' => 'document-blank', 'document-chart-bar' => 'report', 'document-duplicate' => 'copy', 'document-text' => 'document',
+    'ellipsis-horizontal' => 'overflow-menu-horizontal', 'ellipsis-vertical' => 'overflow-menu-vertical', 'envelope' => 'email',
+    'exclamation-circle' => 'error-outline', 'exclamation-triangle' => 'warning-alt', 'eye' => 'view', 'eye-slash' => 'view-off', 'film' => 'video',
+    'folder' => 'folder', 'folder-plus' => 'folder-add', 'funnel' => 'filter', 'globe-alt' => 'earth', 'hand-thumb-up' => 'thumbs-up', 'home' => 'home',
+    'information-circle' => 'information', 'italic' => 'text-italic', 'language' => 'translate', 'light-bulb' => 'idea', 'link' => 'link',
+    'list-bullet' => 'list-bulleted', 'lock-closed' => 'locked', 'lock-open' => 'unlocked', 'magnifying-glass' => 'search',
+    'magnifying-glass-minus' => 'zoom-out', 'magnifying-glass-plus' => 'zoom-in', 'megaphone' => 'bullhorn', 'minus' => 'subtract', 'no-symbol' => 'misuse-outline', 'moon' => 'asleep',
+    'numbered-list' => 'list-numbered', 'paper-airplane' => 'send', 'paper-clip' => 'attachment', 'pencil' => 'edit', 'pencil-square' => 'edit',
+    'phone' => 'phone', 'photo' => 'image', 'play' => 'play', 'play-circle' => 'play-outline', 'plus' => 'add', 'presentation-chart-bar' => 'presentation-file',
+    'qr-code' => 'qr-code', 'queue-list' => 'list', 'question-mark-circle' => 'help', 'rectangle-group' => 'apps', 'rectangle-stack' => 'copy', 'rocket-launch' => 'rocket',
+    'shield-check' => 'security', 'shopping-bag' => 'shopping-bag', 'shopping-cart' => 'shopping-cart', 'signal' => 'network-3', 'slash' => 'subtract',
+    'sparkles' => 'magic-wand', 'square' => 'checkbox', 'square-2-stack' => 'copy', 'squares-2x2' => 'grid', 'squares-plus' => 'add-alt', 'star' => 'star',
+    'stop' => 'checkbox', 'strikethrough' => 'text-strikethrough', 'sun' => 'sun', 'swatch' => 'color-palette', 'trash' => 'trash-can', 'trophy' => 'trophy',
+    'underline' => 'text-underline', 'user' => 'user', 'user-circle' => 'user-avatar', 'user-group' => 'group', 'users' => 'user-multiple',
+    'variable' => 'function', 'view-columns' => 'column', 'x-circle' => 'close-outline', 'x-mark' => 'close',
+];
