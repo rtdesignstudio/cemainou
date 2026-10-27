@@ -209,7 +209,7 @@ class FeedbackWidgetTest extends TestCase
         $base = '/api/widget/'.$this->project->widget_key.'/thread/'.$task->id;
         $this->getJson($base, $auth)->assertOk()->assertJsonPath('comments.0.by', 'Alex')->assertJsonPath('comments.0.mine', false);
         $this->postJson($base, ['text' => 'Niciunul, doar se învârte.'], $auth)->assertOk()->assertJsonPath('comments.1.mine', true);
-        $this->assertSame('Niciunul, doar se învârte.', $task->comments()->latest('id')->first()->body);
+        $this->assertSame('Niciunul, doar se învârte.', $task->comments()->reorder()->latest('id')->first()->body);
         $this->assertTrue($this->lead->notifications()->where('data', 'like', '%comment%')->exists());
 
         $foreign = Task::factory()->for(Project::factory()->create())->create(['site_context' => ['path' => '/']]);
@@ -334,7 +334,7 @@ class FeedbackWidgetTest extends TestCase
         $this->getJson('/api/widget/'.$this->project->widget_key.'/mine', $auth)->assertJsonCount(1, 'items')->assertJsonPath('items.0.id', $task->id);
         $this->getJson('/api/widget/'.$this->project->widget_key.'/thread/'.$own->id, $auth)->assertNotFound();
         $this->postJson('/api/widget/'.$this->project->widget_key.'/thread/'.$task->id, ['text' => 'E pe iPhone'], $auth)->assertOk();
-        $this->assertSame('Ion Popescu: E pe iPhone', $task->comments()->latest('id')->first()->body);
+        $this->assertSame('Ion Popescu: E pe iPhone', $task->comments()->reorder()->latest('id')->first()->body);
 
         $this->actingAs($this->lead)->get(route('filament.admin.resources.tasks.view', $task))->assertSee(['Sent by Ion Popescu', 'ion@test.md']);
         $task->moveTo(TaskStatus::Done, $this->lead);

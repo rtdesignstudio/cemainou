@@ -7,7 +7,7 @@ return [
      *
      * Versiunea aplicației (pagina Setări, serverul MCP).
      */
-    'version' => '0.1.394',
+    'version' => '0.1.395',
 
     /*
      * În spatele unui proxy (imaginea Docker, Cloudflare): TRUSTED_PROXIES=* sau o listă de adrese, ca IP-ul și https să fie cele reale.
