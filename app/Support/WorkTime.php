@@ -176,7 +176,7 @@ class WorkTime
      * secunde), ziua se socotește fără ele, iar first/last sunt primul și ultimul semnal rămas.
      *
      * @param  list<array{0: int, 1: int}>  $without
-     * @return array{hours: list<array{minutes: int, projects: array<int, int>}>, longest: int, first: ?int, last: ?int}
+     * @return array{hours: list<array{minutes: int, projects: array<int, int>}>, longest: int, seconds: int, projectSeconds: array<int, float>, first: ?int, last: ?int}
      */
     public static function hourly(User $user, ?CarbonInterface $day = null, array $without = []): array
     {
@@ -186,36 +186,56 @@ class WorkTime
         $rows = self::rows($user->activities()->whereBetween('occurred_at', [$from, $to])->toBase()->get(['occurred_at', 'kind', 'work_session_id', 'project_id']));
         $points = $user->workSessions()->whereBetween('started_at', [$from, $to])->pluck('started_at')->map(fn ($t) => Carbon::parse($t)->getTimestamp())->all();
 
-        if ($without) {
-            $outside = fn (int $t) => ! array_filter($without, fn (array $w) => $t >= $w[0] && $t < $w[1] + 60);   // minutul de la capăt intră și el
-            $kept = [];
-            $open = [];
-            foreach ($rows as $row) {
-                if (! $outside($row[0])) {
-                    continue;
-                }
-                $closer = $row[1] === ActivityKind::Stop->value || $row[1] === ActivityKind::SessionEnd->value;
-                if ($closer && empty($open[$row[2]])) {
-                    continue;                                       // un „stop" fără prompt deschis: coada bucății scoase, nu lucru
-                }
-                $open[$row[2]] = $row[1] === ActivityKind::Prompt->value ? true : ($closer ? false : ($open[$row[2]] ?? false));
-                $kept[] = $row;
-            }
-            $rows = $kept;
-            $points = array_values(array_filter($points, $outside));
-        }
+        [$rows, $points] = self::without($rows, $points, $without);
         $times = array_merge(array_column($rows, 0), $points);
 
         return self::hourlyOf($rows, $points, $day) + ['first' => $times ? min($times) : null, 'last' => $times ? max($times) : null];
     }
 
     /**
+     * Semnalele și momentele fără bucățile scoase la o corecție ([început, sfârșit] în secunde; minutul de la capăt intră și el), plus
+     * „stop"-urile rămase fără prompt deschis (coada bucății scoase, nu lucru).
+     *
+     * @param  list<array{0: int, 1: string, 2: ?int, 3: ?int}>  $rows
+     * @param  list<int>  $points
+     * @param  list<array{0: int, 1: int}>  $without
+     * @return array{0: list<array{0: int, 1: string, 2: ?int, 3: ?int}>, 1: list<int>}
+     */
+    public static function without(array $rows, array $points, array $without): array
+    {
+        if (! $without) {
+            return [$rows, $points];
+        }
+        $outside = fn (int $t) => ! array_filter($without, fn (array $w) => $t >= $w[0] && $t < $w[1] + 60);
+        $kept = [];
+        $open = [];
+        foreach ($rows as $row) {
+            if (! $outside($row[0])) {
+                continue;
+            }
+            $closer = $row[1] === ActivityKind::Stop->value || $row[1] === ActivityKind::SessionEnd->value;
+            if ($closer && empty($open[$row[2]])) {
+                continue;
+            }
+            $open[$row[2]] = $row[1] === ActivityKind::Prompt->value ? true : ($closer ? false : ($open[$row[2]] ?? false));
+            $kept[] = $row;
+        }
+
+        return [$kept, array_values(array_filter($points, $outside))];
+    }
+
+    /**
      * Minutele lucrate pe fiecare oră de azi, pentru toți odată (cardurile echipei): două interogări pentru toți, apoi același calcul ca hourly().
      *
+     * Cu $without (pe om, bucățile scoase la corecție, vezi MyDay::removedStretches) ziua se socotește fără ele; $first primește primul
+     * semnal rămas al fiecăruia (secunde), pentru „Început" de pe card.
+     *
      * @param  Collection<int, User>  $users
+     * @param  array<int, list<array{0: int, 1: int}>>  $without
+     * @param  array<int, ?int>  $first
      * @return array<int, list<int>>
      */
-    public static function hourlyForUsers(Collection $users): array
+    public static function hourlyForUsers(Collection $users, array $without = [], array &$first = []): array
     {
         if ($users->isEmpty()) {
             return [];
@@ -225,11 +245,14 @@ class WorkTime
         $signals = Activity::query()->whereIn('user_id', $ids)->whereBetween('occurred_at', [$from, $to])->toBase()->get(['user_id', 'occurred_at', 'kind', 'work_session_id', 'project_id'])->groupBy('user_id');
         $starts = WorkSession::query()->whereIn('user_id', $ids)->whereBetween('started_at', [$from, $to])->toBase()->get(['user_id', 'started_at'])->groupBy('user_id');
 
-        return $users->mapWithKeys(function (User $user) use ($signals, $starts, $days) {
+        return $users->mapWithKeys(function (User $user) use ($signals, $starts, $days, $without, &$first) {
             $day = $days[$user->id];
             [$a, $b] = [$day->getTimestamp(), $day->copy()->endOfDay()->getTimestamp()];
             $rows = array_values(array_filter(self::rows(collect($signals->get($user->id, []))), fn (array $r) => $r[0] >= $a && $r[0] <= $b));
             $points = collect($starts->get($user->id, []))->map(fn ($s) => self::utc($s->started_at))->filter(fn (int $t) => $t >= $a && $t <= $b)->values()->all();
+            [$rows, $points] = self::without($rows, $points, $without[$user->id] ?? []);
+            $times = array_merge(array_column($rows, 0), $points);
+            $first[$user->id] = $times ? min($times) : null;
 
             return [$user->id => array_column(self::hourlyOf($rows, $points, $day)['hours'], 'minutes')];
         })->all();
@@ -251,6 +274,7 @@ class WorkTime
         $own = array_map(fn (array $r) => [...self::pauses(array_column($r, 0)), ...self::prompts($r)], $byProject);
 
         $hours = [];
+        $projectSeconds = [];
         for ($h = 0; $h < 24; $h++) {
             $a = $day->copy()->setTime($h, 0)->getTimestamp();                          // ora locală h, după ceasul de pe perete: și în ziua schimbării orei
             $b = $h === 23 ? $day->copy()->addDay()->startOfDay()->getTimestamp() : $day->copy()->setTime($h + 1, 0)->getTimestamp();
@@ -258,6 +282,9 @@ class WorkTime
             $shares = self::split(array_map(fn (array $i) => self::clip($i, $a, $b), $own));
             $sum = array_sum($shares);
             $k = $sum > $total && $sum > 0 ? $total / $sum : 1;                           // proiectele nu trec de ce s-a lucrat în ora aceea
+            foreach ($shares as $id => $sec) {
+                $projectSeconds[$id] = ($projectSeconds[$id] ?? 0) + $sec * $k;
+            }
             $projects = array_filter(array_map(fn ($sec) => (int) round($sec * $k / 60), $shares));
             $rest = (int) round($total / 60) - array_sum($projects);
             if ($rest > 0) {
@@ -268,7 +295,8 @@ class WorkTime
         }
         $longest = $all ? max(array_map(fn (array $i) => $i[1] - $i[0], $all)) : 0;
 
-        return ['hours' => $hours, 'longest' => (int) round($longest / 60)];
+        // pe toată ziua, nerotunjite pe ore: cifrele de sub grafic se adună la fel ca timpul zilei
+        return ['hours' => $hours, 'longest' => (int) round($longest / 60), 'seconds' => self::seconds($all), 'projectSeconds' => $projectSeconds];
     }
 
     /** Intervalele, unite (cele suprapuse sau lipite devin unul), ordonate. @param  list<array{0: int, 1: int}>  $intervals */

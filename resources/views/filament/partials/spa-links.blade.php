@@ -102,6 +102,22 @@
             setTimeout(place, 50);
         });
 
+        // grilele de carduri lipite (.wsa-team): colțurile de afară rotunjite (--wsa-r), și când ultimul rând nu e plin: cardul de la capătul
+        // rândului de deasupra golului și ultimul card primesc colțul lor de jos-dreapta (restul îl face grila, cu overflow: hidden)
+        const corners = () => document.querySelectorAll('.wsa-team').forEach((grid) => {
+            const cells = [...grid.children];
+            const cols = getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length || 1;
+            const rows = Math.ceil(cells.length / cols);
+            cells.forEach((cell, i) => cell.classList.toggle('is-corner-br',
+                i === cells.length - 1 || (cells.length % cols !== 0 && rows > 1 && i === (rows - 1) * cols - 1)));
+        });
+        let cornersQueued = false;
+        const queueCorners = () => { if (! cornersQueued) { cornersQueued = true; setTimeout(() => { cornersQueued = false; corners(); }, 0); } };
+        ['DOMContentLoaded', 'livewire:navigated'].forEach((e) => document.addEventListener(e, queueCorners));
+        window.addEventListener('resize', queueCorners);
+        document.addEventListener('livewire:init', () => Livewire.hook('morph.updated', queueCorners));
+        queueCorners();
+
         // la o pagină nouă, panoul clopoțelului se închide (altfel acoperă pagina deschisă din notificare)
         document.addEventListener('livewire:navigating', () => {
             window.dispatchEvent(new CustomEvent('close-modal', { detail: { id: 'database-notifications' } }));

@@ -19,6 +19,7 @@ use App\Support\TeamSetup;
 use App\Support\WorkTime;
 use Filament\Notifications\Notification;
 use Filament\Widgets\Widget;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /** Echipa azi: un card pe om. Ora de început și timpul activ le vede doar adminul sau omul însuși. */
@@ -63,7 +64,13 @@ class TeamToday extends Widget
             ->groupBy('user_id')->map(fn ($entries) => (int) $entries->sum('minutes'));
         // ziua pe ore, pe card (bare mici): măsurat plin, adăugat de mână hașurat; doar la cine are voie să-i vadă orele
         $timed = $users->filter(fn (User $user) => $viewer->can('viewWorkTime', $user));
-        $hourly = WorkTime::hourlyForUsers($timed);
+        // bucățile scoase la corecție azi (cu ora lor): nici barele, nici „Început" nu le mai arată
+        $removed = TimeEntry::whereIn('user_id', $timed->pluck('id'))->where('is_correction', true)->where('minutes', '<', 0)->whereNotNull('start_minute')
+            ->whereDate('date', '>=', now()->subDay()->toDateString())->get(['user_id', 'date', 'minutes', 'start_minute'])
+            ->filter(fn ($e) => $e->date->toDateString() === now($users->firstWhere('id', $e->user_id)?->tz())->toDateString())->groupBy('user_id')
+            ->map(fn ($entries, $id) => MyDay::removedStretches($users->firstWhere('id', $id), now($users->firstWhere('id', $id)->tz()), $entries))->all();
+        $firstSignal = [];
+        $hourly = WorkTime::hourlyForUsers($timed, $removed, $firstSignal);
         $entries = TimeEntry::whereIn('user_id', $timed->pluck('id'))->where('is_correction', false)->whereDate('date', '>=', now()->subDay()->toDateString())
             ->get(['user_id', 'date', 'minutes', 'start_minute'])->filter(fn ($e) => $e->date->toDateString() === now($users->firstWhere('id', $e->user_id)?->tz())->toDateString())->groupBy('user_id');
         $hours = $timed->mapWithKeys(function (User $user) use ($hourly, $entries) {
@@ -75,7 +82,7 @@ class TeamToday extends Widget
         // uneltele fiecăruia (agent, timp măsurat, /upd...): adminul le vede la toți, fiecare la el
         $whose = $viewer->isAdmin() ? $users : $users->where('id', $viewer->id);
         $setup = PageCache::data('team-setup', $viewer, [$whose->pluck('id')->values()->all()], fn () => TeamSetup::for($whose));   // 10 minute: cheile, hook-urile, telefonul nu se schimbă de la un minut la altul
-        $people = $users->map(function (User $user) use ($viewer, $nowIn, $times, $doing, $setup, $added, $hours) {
+        $people = $users->map(function (User $user) use ($viewer, $nowIn, $times, $doing, $setup, $added, $hours, $removed, $firstSignal) {
             $time = $viewer->can('viewWorkTime', $user) ? $times[$user->id] : null;
             $lastSeen = $user->last_seen_at;
             $active = $lastSeen && $lastSeen->gt(now()->subMinutes(WorkTime::gap()));
@@ -96,7 +103,8 @@ class TeamToday extends Widget
                 'hours' => ($h = $hours->get($user->id)) && array_sum($h['measured']) + array_sum($h['added']) > 0 ? $h : null,
                 'added' => $time !== null ? (int) ($added[$user->id] ?? 0) : 0,
                 'total' => $time !== null ? max(0, $time['active_minutes'] + (int) ($added[$user->id] ?? 0)) : 0,
-                'start_local' => $time && $time['start'] ? $time['start']->copy()->setTimezone($user->tz())->format('H:i') : null,
+                'start_local' => $time && $time['start'] ? (isset($removed[$user->id]) && ($firstSignal[$user->id] ?? null)
+                    ? Carbon::createFromTimestampUTC($firstSignal[$user->id]) : $time['start'])->copy()->setTimezone($user->tz())->format('H:i') : null,
                 'last_update' => $last,
                 'setup' => $setup[$user->id] ?? null,
                 'self' => $user->is($viewer),

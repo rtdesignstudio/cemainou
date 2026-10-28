@@ -2,12 +2,10 @@
 
 namespace App\Filament\Resources\Users\Pages;
 
-use App\Actions\CorrectTime;
 use App\Enums\TaskStatus;
-use App\Enums\WorkCategory;
+use App\Filament\Actions\WorkTimeActions;
 use App\Filament\Resources\Users\InvitationActions;
 use App\Filament\Resources\Users\UserResource;
-use App\Models\Project;
 use App\Models\Task;
 use App\Models\Update;
 use App\Support\BackLinks;
@@ -15,16 +13,10 @@ use App\Support\Markdown;
 use App\Support\MyDay;
 use App\Support\PageCache;
 use App\Support\PersonActivity;
-use App\Support\Settings;
 use App\Support\TeamSetup;
 use App\Support\WorkTime;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Carbon;
@@ -144,28 +136,7 @@ class ViewUser extends ViewRecord
     /** Timp pe care agentul nu-l vede (ședință, telefon), adăugat pe web: omul pentru el, adminul pentru oricine; azi sau în fereastra din Setări. */
     protected function addTimeAction(): Action
     {
-        return Action::make('addTime')->label(__('Add time'))->outlined()
-            ->visible(fn () => auth()->user()->can('manageWorkTime', $this->record) && ! $this->record->isClient())
-            ->schema([
-                Select::make('project_id')->label(__('Project'))->required()->searchable()->options(fn () => Project::active()->visibleTo($this->record)->orderBy('name')->pluck('name', 'id')),
-                DatePicker::make('date')->label(__('Day'))->required()->native(false)->format('Y-m-d')->default(fn () => $this->day ?: now($this->record->tz())->toDateString())
-                    ->minDate(fn () => now($this->record->tz())->subDays(Settings::get('report_days'))->toDateString())->maxDate(fn () => now($this->record->tz())->endOfDay()),
-                TextInput::make('minutes')->label(__('Minutes'))->integer()->required()->minValue(1)->maxValue(720),
-                TextInput::make('start')->label(__('From (optional)'))->type('time')->rule('date_format:H:i')
-                    ->helperText(__('Without it, the hourly bars place the time in the gaps of the day, hatched.')),
-                Select::make('category')->label(__('Category'))->options(WorkCategory::class)->default(WorkCategory::Meeting->value),
-                TextInput::make('note')->label(__('What it was'))->maxLength(200)->placeholder(__('E.g. meeting with the client')),
-            ])
-            ->action(function (array $data) {
-                abort_unless(auth()->user()->can('manageWorkTime', $this->record), 403);
-                $this->record->timeEntries()->create([
-                    'project_id' => $data['project_id'], 'date' => Carbon::parse($data['date'])->toDateString(), 'minutes' => (int) $data['minutes'],
-                    'category' => $data['category'] ?? null, 'note' => filled($data['note'] ?? null) ? trim($data['note']) : null,
-                    'start_minute' => filled($data['start'] ?? null) ? (int) substr($data['start'], 0, 2) * 60 + (int) substr($data['start'], 3, 2) : null,
-                ]);
-                $this->day = Carbon::parse($data['date'])->toDateString();
-                Notification::make()->title(__('Time added.'))->success()->send();
-            });
+        return WorkTimeActions::add(fn () => $this->record, fn () => $this->day, fn (string $date) => $this->day = $date);
     }
 
     /**
@@ -174,34 +145,7 @@ class ViewUser extends ViewRecord
      */
     public function correctTimeAction(): Action
     {
-        return Action::make('correctTime')->label(__('Correct the time'))->outlined()
-            ->visible(fn () => auth()->user()->can('manageWorkTime', $this->record) && ! $this->record->isClient())
-            ->fillForm(fn (array $arguments) => ['project_id' => $arguments['project'] ?? null, 'date' => $this->day ?: now($this->record->tz())->toDateString(),
-                'actual' => isset($arguments['project']) ? WorkTime::format(CorrectTime::total($this->record, Project::find($arguments['project']), $this->day)) : null])
-            ->modalDescription(__('Write how long you really worked that day on the project. What was measured stays as it was; the difference is kept as a correction, with the reason, and the totals use it.'))
-            ->schema([
-                Select::make('project_id')->label(__('Project'))->required()->searchable()->options(fn () => Project::visibleTo($this->record)->orderBy('name')->pluck('name', 'id'))
-                    ->live()->afterStateUpdated(fn ($state, $get, $set) => $state && $get('date') ? $set('actual', WorkTime::format(CorrectTime::total($this->record, Project::find($state), Carbon::parse($get('date'))->toDateString()))) : null),
-                DatePicker::make('date')->label(__('Day'))->required()->native(false)->format('Y-m-d')->live()
-                    ->minDate(fn () => now($this->record->tz())->subDays(Settings::get('report_days'))->toDateString())->maxDate(fn () => now($this->record->tz())->endOfDay())
-                    ->afterStateUpdated(fn ($state, $get, $set) => $state && $get('project_id') ? $set('actual', WorkTime::format(CorrectTime::total($this->record, Project::find($get('project_id')), Carbon::parse($state)->toDateString()))) : null),
-                TextInput::make('actual')->label(__('How long you really worked'))->required()->placeholder('2h 30m')
-                    ->helperText(__('E.g. 2h 30m, 90m or 0 if you did not work on it.'))
-                    ->rule(fn () => fn (string $attribute, $value, \Closure $fail) => WorkTime::parseDuration((string) $value) === null && trim((string) $value) !== '0'
-                        ? $fail(__('Write it as 2h 30m, 2h or 150')) : null),
-                TextInput::make('start')->label(__('The extra time started at (optional)'))->type('time')->rule('date_format:H:i')
-                    ->helperText(__('When you take time out: from what time. My day then leaves that stretch out of the chart, too.')),
-                Textarea::make('reason')->label(__('Why'))->required()->maxLength(200)->rows(2)->placeholder(__('E.g. the agent stayed open over lunch')),
-            ])
-            ->action(function (array $data) {
-                abort_unless(auth()->user()->can('manageWorkTime', $this->record), 403);
-                $project = Project::visibleTo($this->record)->findOrFail($data['project_id']);
-                $minutes = trim((string) $data['actual']) === '0' ? 0 : (int) WorkTime::parseDuration((string) $data['actual']);
-                $result = CorrectTime::apply($this->record, $project, Carbon::parse($data['date'])->toDateString(), $minutes, $data['reason'], auth()->user(),
-                    filled($data['start'] ?? null) ? (int) substr($data['start'], 0, 2) * 60 + (int) substr($data['start'], 3, 2) : null);
-                $this->day = Carbon::parse($data['date'])->toDateString();
-                Notification::make()->title(__('Time corrected: :from → :to.', ['from' => WorkTime::format($result['before']), 'to' => WorkTime::format($result['after'])]))->success()->send();
-            });
+        return WorkTimeActions::correct(fn () => $this->record, fn () => $this->day, fn (string $date) => $this->day = $date);
     }
 
     public function removeCorrection(int $id): void

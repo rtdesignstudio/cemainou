@@ -203,7 +203,7 @@ class HoursTest extends TestCase
         $day = fn () => \App\Support\Hours::between(collect([$this->cip->id]), '2026-10-19', '2026-10-19')->sole();
 
         Livewire::actingAs($this->ana)->test(ViewUser::class, ['record' => $this->ana->getRouteKey()])
-            ->callAction('correctTime', ['project_id' => $this->cip->id, 'date' => '2026-10-19', 'actual' => '2h 30m', 'reason' => 'Agentul a rămas deschis la prânz'])
+            ->callAction('correctTime', ['project_id' => $this->cip->id, 'date' => '2026-10-19', 'actual_hours' => 2, 'actual_minutes' => 30, 'reason' => 'Agentul a rămas deschis la prânz'])
             ->assertHasNoActionErrors();
         $correction = TimeEntry::where('is_correction', true)->sole();
         $this->assertSame([-180, 'Agentul a rămas deschis la prânz', $this->ana->id], [$correction->minutes, $correction->note, $correction->corrected_by]);
@@ -211,14 +211,14 @@ class HoursTest extends TestCase
         $this->assertSame(300, ProjectDay::sole()->active_minutes);                                 // măsurătoarea rămâne neatinsă
 
         Livewire::actingAs($this->ana)->test(ViewUser::class, ['record' => $this->ana->getRouteKey()])   // a doua corectare înlocuiește corecția
-            ->callAction('correctTime', ['project_id' => $this->cip->id, 'date' => '2026-10-19', 'actual' => '6h', 'reason' => 'Am uitat ședința de seară'])
+            ->callAction('correctTime', ['project_id' => $this->cip->id, 'date' => '2026-10-19', 'actual_hours' => 6, 'actual_minutes' => 0, 'reason' => 'Am uitat ședința de seară'])
             ->assertHasNoActionErrors();
         $this->assertSame([30, 330], [TimeEntry::where('is_correction', true)->sole()->minutes, $day()['measured']]);
 
         Livewire::actingAs(User::factory()->create())->test(ViewUser::class, ['record' => $this->ana->getRouteKey()])->assertActionHidden('correctTime')
             ->call('removeCorrection', TimeEntry::where('is_correction', true)->sole()->id)->assertForbidden();
         Livewire::actingAs($this->ana)->test(ViewUser::class, ['record' => $this->ana->getRouteKey()])
-            ->callAction('correctTime', ['project_id' => $this->cip->id, 'date' => '2026-10-19', 'actual' => 'mult', 'reason' => 'x'])->assertHasActionErrors(['actual'])
+            ->callAction('correctTime', ['project_id' => $this->cip->id, 'date' => '2026-10-19', 'actual_hours' => 2, 'actual_minutes' => 75, 'reason' => 'x'])->assertHasActionErrors(['actual_minutes'])
             ->call('removeCorrection', TimeEntry::where('is_correction', true)->sole()->id);
         $this->assertSame([300, 0], [$day()['measured'], TimeEntry::where('is_correction', true)->count()]);
     }

@@ -11,7 +11,7 @@
     --wsa-fs-meta: 0.8125rem;
     --wsa-fs-small: 0.9375rem;
     --wsa-fs-input: 1rem;
-    --wsa-fs-button: 0.9375rem;                               /* aceeași mărime pe toate butoanele (feedback #6) */
+    --wsa-fs-button: 1rem;                                    /* aceeași mărime pe toate butoanele (feedback #6), 16px ca în câmpuri */
     --wsa-fs-body: 1.125rem;
     --wsa-fs-title: 1.375rem;
     --wsa-fs-number: 1.5rem;
@@ -20,18 +20,19 @@
 
 /*
  * cemainou - aspect curat, minimalist, tipografic: alb, text aproape negru, linii fine în loc de umbre,
- * colțuri drepte, negru ca singur accent, titluri mari cu greutate medie. Fontul (Inter Tight) și culorile vin din AdminPanelProvider.
+ * colțuri de 2px, negru ca singur accent, titluri mari cu greutate medie. Fontul (Inter Tight) și culorile vin din AdminPanelProvider.
  */
 
-/* colțuri drepte și fără umbre, peste tot (componentele Filament își iau valorile de aici) */
+/* colțuri de 2px și fără umbre, peste tot (componentele Filament își iau valorile de aici) */
 @theme {
-    --radius-xs: 0;
-    --radius-sm: 0;
-    --radius-md: 0;
-    --radius-lg: 0;
-    --radius-xl: 0;
-    --radius-2xl: 0;
-    --radius-3xl: 0;
+    --wsa-r: 2px;                                            /* colțurile: doar 2px, pe exterior (butoane, câmpuri, carduri) */
+    --radius-xs: var(--wsa-r);
+    --radius-sm: var(--wsa-r);
+    --radius-md: var(--wsa-r);
+    --radius-lg: var(--wsa-r);
+    --radius-xl: var(--wsa-r);
+    --radius-2xl: var(--wsa-r);
+    --radius-3xl: var(--wsa-r);
     --shadow-2xs: 0 0 #0000;
     --shadow-xs: 0 0 #0000;
     --shadow-sm: 0 0 #0000;
@@ -72,7 +73,7 @@
     background: transparent !important;
     padding-inline: 0.25rem;
     margin-inline: 0.25rem;
-    border-radius: 0;
+    border-radius: var(--wsa-r);
 }
 @media (min-width: 1024px) {
     .fi-topbar-nav-groups {
@@ -196,7 +197,10 @@ button.wsa-link:disabled,
     grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
     border-top: 1px solid var(--color-gray-200);
     border-left: 1px solid var(--color-gray-200);
+    border-radius: var(--wsa-r);                             /* grila de carduri lipite: doar colțurile de afară */
+    overflow: hidden;
 }
+.wsa-team > .is-corner-br { border-bottom-right-radius: var(--wsa-r); }   /* colț de afară într-un rând neplin (spa-links îl marchează) */
 .wsa-person {
     border-right: 1px solid var(--color-gray-200);
     border-bottom: 1px solid var(--color-gray-200);
@@ -405,7 +409,7 @@ button.wsa-link:disabled,
     height: 2.5rem;
     padding: 0 0.75rem;
     border: 1px solid var(--color-gray-300);
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     background: #fff;
     font-size: var(--wsa-fs-small);
     color: var(--color-gray-950);
@@ -486,6 +490,7 @@ button.wsa-link:disabled,
     font-size: var(--wsa-fs-meta);
     font-weight: 500;
     color: var(--color-gray-950);
+    border-radius: var(--wsa-r);
 }
 .wsa-take:hover {
     background: var(--color-gray-950);
@@ -709,6 +714,7 @@ a.wsa-link-row:hover > span {
     padding: 0.75rem;
     border: 1px solid var(--color-gray-200);
     background: var(--color-gray-50);
+    border-radius: var(--wsa-r);
 }
 .wsa-code code {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -723,7 +729,7 @@ a.wsa-link-row:hover > span {
     height: 2.5rem;
     padding: 0 0.75rem;
     border: 1px solid var(--color-gray-300);
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     font-size: var(--wsa-fs-small);
     color: var(--color-gray-950);
 }
@@ -742,6 +748,7 @@ a.wsa-link-row:hover > span {
     border: 1px solid var(--color-gray-950);
     font-size: var(--wsa-fs-small);
     color: var(--color-gray-950);
+    border-radius: var(--wsa-r);
 }
 .wsa-hint-link {
     font-weight: 500;
@@ -797,6 +804,7 @@ a.wsa-link-row:hover > span {
 .wsa-drafts {
     padding: 1rem 1.25rem 0.25rem;
     border: 1px solid var(--color-gray-950);
+    border-radius: var(--wsa-r);
 }
 .wsa-drafts-head {
     display: flex;
@@ -932,12 +940,12 @@ a.wsa-link-row:hover > span {
 
 /* căutarea globală și avatarul, în stilul nostru: fără colțuri, fără umbre */
 .fi-global-search-field .fi-input-wrp {
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     box-shadow: none;
     border: 1px solid var(--color-gray-200);
 }
 .fi-avatar {
-    border-radius: 0;
+    border-radius: var(--wsa-r);
 }
 
 /* „Revocă toate", sub lista cheilor */
@@ -959,7 +967,7 @@ a.wsa-link-row:hover > span {
     align-items: center;
     gap: 1rem;
     padding: 1.6rem 2rem;
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     background: #fff;
     box-shadow: none;
     --tw-ring-shadow: 0 0 #0000;
@@ -1015,7 +1023,7 @@ a.wsa-link-row:hover > span {
     height: auto;
     padding: 0.7rem 1.1rem;
     border: 1px solid var(--color-gray-950);
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     background: #fff;
     color: var(--color-gray-950);
     font-size: var(--wsa-fs-small);
@@ -1329,7 +1337,7 @@ a.wsa-doc-title:hover {
     min-height: 28rem;
     padding: 0.9rem 1rem;
     border: 1px solid var(--color-gray-300);
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: var(--wsa-fs-small);
     line-height: 1.6;
@@ -1344,6 +1352,7 @@ a.wsa-doc-title:hover {
     min-height: 28rem;
     padding: 0.9rem 1rem;
     border: 1px solid var(--color-gray-200);
+    border-radius: var(--wsa-r);
 }
 .wsa-editor-note {
     margin-top: 0.4rem;
@@ -1357,6 +1366,7 @@ a.wsa-doc-title:hover {
     margin-bottom: 1rem;
     padding: 1rem 1.1rem;
     border: 1px solid var(--color-gray-950);
+    border-radius: var(--wsa-r);
 }
 .wsa-conflict > p {
     margin-bottom: 0.9rem;
@@ -1374,6 +1384,7 @@ a.wsa-doc-title:hover {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: var(--wsa-fs-meta);
     line-height: 1.6;
+    border-radius: var(--wsa-r);
 }
 .wsa-diff-line {
     display: grid;
@@ -1467,6 +1478,7 @@ a.wsa-doc-title:hover {
     vertical-align: -0.1em;
     border: 1px solid var(--color-gray-400);
     background: #fff;
+    border-radius: var(--wsa-r);
 }
 .wsa-prose input[type="checkbox"]:checked {
     border-color: var(--color-gray-950);
@@ -1488,6 +1500,7 @@ a.wsa-doc-title:hover {
     border: 1px solid var(--color-gray-200);
     background: var(--color-gray-50);
     overflow-x: auto;
+    border-radius: var(--wsa-r);
 }
 .wsa-prose pre code {
     padding: 0;
@@ -1607,7 +1620,7 @@ a.wsa-doc-title:hover {
 }
 .wsa-comment-add .fi-btn {
     width: 100%;
-    min-height: 3rem;
+    min-height: var(--wsa-h);
     justify-content: center;
     font-size: var(--wsa-fs-input);
 }
@@ -1753,7 +1766,7 @@ a.wsa-revision-line:hover {
 .fi-user-menu-trigger .fi-avatar {
     width: 2.375rem;
     height: 2.375rem;
-    border-radius: 0;
+    border-radius: var(--wsa-r);
 }
 
 /* ── telefon: butoanele negre din formulare și din ferestre pe toată lățimea și mai înalte (login, salvează, creează, comentează);
@@ -1763,7 +1776,7 @@ a.wsa-revision-line:hover {
     .fi-sc-actions .fi-btn.fi-color-primary,
     .fi-modal-footer-actions .fi-btn {
         width: 100%;
-        min-height: 3rem;
+        min-height: var(--wsa-h);
         justify-content: center;
         font-size: var(--wsa-fs-input);
     }
@@ -1832,6 +1845,7 @@ a.wsa-link-row:hover > span {
     font-size: var(--wsa-fs-label);
     line-height: 1.5;
     color: var(--color-gray-950);
+    border-radius: var(--wsa-r);
 }
 .wsa-tag.is-soft {
     border-color: var(--color-gray-300);
@@ -2120,7 +2134,7 @@ a.wsa-tag:hover {                                             /* clientul de pe 
 .fi-topbar-database-notifications-btn .fi-badge {
     min-width: 1.125rem;
     padding: 0 0.25rem;
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     background: var(--color-gray-950);
     color: #fff;
     font-weight: 500;
@@ -2360,6 +2374,7 @@ a.wsa-tag:hover {                                             /* clientul de pe 
     font-size: var(--wsa-fs-small);
     color: var(--color-gray-700);
     cursor: pointer;
+    border-radius: var(--wsa-r);
 }
 .wsa-feedback-files:hover {
     border-color: var(--color-gray-950);
@@ -2378,7 +2393,7 @@ a.wsa-tag:hover {                                             /* clientul de pe 
 }
 .wsa-feedback-send {
     width: 100%;
-    min-height: 3rem;
+    min-height: var(--wsa-h);
     justify-content: center;
     font-size: var(--wsa-fs-input);
 }
@@ -2394,6 +2409,7 @@ a.wsa-tag:hover {                                             /* clientul de pe 
     overflow: hidden;
     border: 1px solid var(--color-gray-200);
     background: var(--color-gray-50);
+    border-radius: var(--wsa-r);
 }
 .wsa-feedback-thumb:hover {
     border-color: var(--color-gray-950);
@@ -2546,7 +2562,7 @@ a.wsa-tag:hover {                                             /* clientul de pe 
     }
     .fi-page:not(.wsa-today):not(.fi-resource-tasks.fi-resource-list-records-page) .fi-header-actions-ctn .fi-btn {
         width: 100%;
-        min-height: 3rem;
+        min-height: var(--wsa-h);
         justify-content: center;
         font-size: var(--wsa-fs-input);
         white-space: normal;
@@ -2583,10 +2599,10 @@ a.wsa-tag:hover {                                             /* clientul de pe 
 }
 .wsa-task-new-row select {
     height: 100%;
-    min-height: 3rem;
+    min-height: var(--wsa-h);
     padding: 0 2.5rem 0 0.75rem;                              /* loc pentru săgeata noastră (din regula .wsa-add select) */
     border: 1px solid var(--color-gray-300);
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     background-color: #fff;
     font-size: var(--wsa-fs-small);
     color: var(--color-gray-950);
@@ -2661,7 +2677,7 @@ a.wsa-tag:hover {                                             /* clientul de pe 
     height: 2.5rem;
     padding: 0 2.5rem 0 0.75rem;
     border: 1px solid var(--color-gray-300);
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     appearance: none;
     background-color: #fff;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' version='1.1' x='0px' y='0px' viewBox='0 0 32 32' xml:space='preserve' fill='%23737373'%3E%3Cpolygon points='16,22 6,12 7.4,10.6 16,19.2 24.6,10.6 26,12 '/%3E%3Crect id='_x3C_Transparent_Rectangle_x3E_' class='st0' width='32' height='32' style='fill:none'/%3E%3C/svg%3E");
@@ -3077,6 +3093,7 @@ html.wsa-lightbox-on body {
     border: 1px solid var(--color-gray-200);
     background: #fff;
     text-align: left;
+    border-radius: var(--wsa-r);
 }
 .wsa-capture-choices button:hover {
     border-color: var(--color-gray-950);
@@ -3128,6 +3145,8 @@ html.wsa-lightbox-on body {
     grid-auto-flow: column;
     grid-auto-columns: 1fr;
     border: 1px solid var(--color-gray-300);
+    border-radius: var(--wsa-r);
+    overflow: hidden;                                        /* butoanele lipite: doar colțurile de afară se rotunjesc */
 }
 .wsa-capture-kinds button {
     padding: 0.55rem 0.5rem;
@@ -3148,7 +3167,7 @@ html.wsa-lightbox-on body {
     min-height: 7rem;
     padding: 0.75rem;
     border: 1px solid var(--color-gray-300);
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     font: inherit;
     font-size: var(--wsa-fs-body);
     resize: vertical;
@@ -3168,7 +3187,7 @@ html.wsa-lightbox-on body {
     height: 2.5rem;
     padding: 0 2.5rem 0 0.75rem;
     border: 1px solid var(--color-gray-300);
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     appearance: none;
     background: #fff no-repeat right 0.85rem center / 1rem url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' version='1.1' x='0px' y='0px' viewBox='0 0 32 32' xml:space='preserve' fill='%23737373'%3E%3Cpolygon points='16,22 6,12 7.4,10.6 16,19.2 24.6,10.6 26,12 '/%3E%3Crect id='_x3C_Transparent_Rectangle_x3E_' class='st0' width='32' height='32' style='fill:none'/%3E%3C/svg%3E");
     font-size: var(--wsa-fs-small);
@@ -3203,7 +3222,7 @@ html.wsa-lightbox-on body {
     height: 2.5rem;
     padding: 0 0.75rem;
     border: 1px solid var(--color-gray-300);
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     background-color: #fff;
     font: inherit;
     font-size: var(--wsa-fs-small);
@@ -3303,6 +3322,7 @@ html.wsa-lightbox-on body {
     padding: 1.25rem 1.5rem;
     border: 1px solid var(--color-gray-950);
     background: #fff;
+    border-radius: var(--wsa-r);
 }
 .wsa-start-head {
     display: flex;
@@ -3355,6 +3375,7 @@ html.wsa-lightbox-on body {
     height: 1.5rem;
     border: 1px solid var(--color-gray-300);
     color: transparent;
+    border-radius: var(--wsa-r);
 }
 .wsa-start-check svg {
     width: 1rem;
@@ -3397,6 +3418,7 @@ html.wsa-lightbox-on body {
     font-size: var(--wsa-fs-small);
     font-weight: 500;
     color: var(--color-gray-950);
+    border-radius: var(--wsa-r);
 }
 .wsa-seen-btn svg {
     width: 1.1rem;
@@ -3558,6 +3580,7 @@ button.wsa-start-link {
     padding: 1.25rem 1.5rem;
     border: 1px solid var(--color-gray-200);
     background: #fff;
+    border-radius: var(--wsa-r);
 }
 .wsa-myday-facts {
     display: flex;
@@ -3664,6 +3687,7 @@ button.wsa-start-link {
     background: #fff;
     text-align: left;
     color: var(--color-gray-950);
+    border-radius: var(--wsa-r);
 }
 .wsa-place:hover {
     border-color: var(--color-gray-950);
@@ -3856,6 +3880,7 @@ button.wsa-start-link {
     gap: 0.25rem;
     max-width: 100%;
     border: 1px solid var(--color-gray-950);
+    border-radius: var(--wsa-r);
 }
 .wsa-cmds-code code {
     padding: 0.4rem 0.2rem 0.4rem 0.7rem;
@@ -4237,6 +4262,7 @@ a.wsa-week-cell:focus-visible {
     border: 1px solid var(--color-gray-400);
     background: #fff;
     transition: background-color 0.15s, border-color 0.15s;
+    border-radius: var(--wsa-r);
 }
 .wsa-switch i {
     position: absolute;
@@ -4345,6 +4371,8 @@ a.wsa-week-cell:focus-visible {
     display: inline-flex;
     margin-bottom: 1.5rem;
     border: 1px solid var(--color-gray-300);
+    border-radius: var(--wsa-r);
+    overflow: hidden;                                        /* butoanele lipite: doar colțurile de afară se rotunjesc */
 }
 .wsa-layout-switch button {
     display: inline-flex;
@@ -4425,7 +4453,7 @@ a.wsa-week-cell:focus-visible {
     height: 2.25rem;
     padding: 0 2rem 0 0.75rem;
     border: 1px solid var(--color-gray-300);
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     background-color: #fff;
     font-size: var(--wsa-fs-meta);
     color: var(--color-gray-950);
@@ -4446,6 +4474,7 @@ a.wsa-week-cell:focus-visible {
     padding: 1.5rem;
     border: 1px solid var(--color-gray-200);
     background: #fff;
+    border-radius: var(--wsa-r);
 }
 .wsa-pcard:hover {
     border-color: var(--color-gray-400);
@@ -4688,7 +4717,7 @@ a.wsa-week-cell:focus-visible {
     height: 2.25rem;
     padding: 0 0.6rem;
     border: 1px solid var(--color-gray-300);
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     font-size: var(--wsa-fs-small);
     color: var(--color-gray-950);
 }
@@ -4723,7 +4752,7 @@ a.wsa-week-cell:focus-visible {
 }
 .fi-ta-search-field .fi-input-wrp {
     border: 0 !important;
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     background: transparent !important;
     box-shadow: none !important;
     --tw-ring-shadow: 0 0 #0000 !important;
@@ -4933,13 +4962,15 @@ a.wsa-week-cell:focus-visible {
     height: 2.25rem;
     padding-left: 0.6rem;
     border: 1px solid var(--color-gray-300);
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     font-size: var(--wsa-fs-small);
 }
 .wsa-access-mode {
     display: inline-flex;
     margin-bottom: 0.5rem;
     border: 1px solid var(--color-gray-300);
+    border-radius: var(--wsa-r);
+    overflow: hidden;                                        /* butoanele lipite: doar colțurile de afară se rotunjesc */
 }
 .wsa-access-mode button {
     padding: 0.45rem 0.85rem;
@@ -5071,7 +5102,7 @@ a.wsa-week-cell:focus-visible {
     }
     .wsa-myday-actions .fi-btn {
         width: 100%;
-        min-height: 3rem;
+        min-height: var(--wsa-h);
         white-space: nowrap;
     }
     .wsa-myday-actions .fi-btn:not(.fi-outlined) {
@@ -5203,6 +5234,7 @@ a.wsa-week-cell:focus-visible {
     font: 500 0.6875rem/1.3 inherit;
     text-align: center;
     color: var(--color-gray-500);
+    border-radius: var(--wsa-r);
 }
 .wsa-capture-more {
     display: grid;
@@ -5295,6 +5327,7 @@ a.wsa-week-cell:focus-visible {
     padding: 0.8rem 1rem;
     border: 1px solid var(--color-gray-200);
     transition: border-color 0.12s, background-color 0.12s;
+    border-radius: var(--wsa-r);
 }
 .wsa-capture-more a:hover {
     border-color: var(--color-gray-950);
@@ -5303,6 +5336,7 @@ a.wsa-week-cell:focus-visible {
 .wsa-capture-feedback {
     margin-top: 0.5rem;
     border: 1px solid transparent;
+    border-radius: var(--wsa-r);
 }
 @media (max-width: 639px) {
     /* plăcile de sus pe telefon: iconița centrată pe verticală, lângă titlu și descriere */
@@ -5348,6 +5382,7 @@ a.wsa-week-cell:focus-visible {
     border: 1px solid var(--color-gray-200);
     font-size: var(--wsa-fs-small);
     color: var(--color-gray-950);
+    border-radius: var(--wsa-r);
 }
 .wsa-guide-toc a:hover {
     border-color: var(--color-gray-950);
@@ -5402,6 +5437,7 @@ a.wsa-week-cell:focus-visible {
     padding: 1rem;
     border: 1px solid var(--color-gray-200);
     background: #fff;
+    border-radius: var(--wsa-r);
 }
 .wsa-flow-top {
     display: flex;
@@ -5452,6 +5488,7 @@ a.wsa-week-cell:focus-visible {
     gap: 0.5rem;
     padding: 1.125rem;
     border: 1px solid var(--color-gray-200);
+    border-radius: var(--wsa-r);
 }
 .wsa-entity:target {
     border-color: var(--color-gray-950);
@@ -5588,6 +5625,7 @@ details.wsa-cmds-section .wsa-cmds-row:last-child {
     padding: 1.5rem 3.5rem 1.5rem 1.5rem;
     border: 1px solid var(--color-gray-200);
     background: var(--color-gray-50);
+    border-radius: var(--wsa-r);
 }
 .wsa-tip-card-icon {
     flex: none;
@@ -5665,6 +5703,7 @@ details.wsa-cmds-section .wsa-cmds-row:last-child {
     border: 1px solid var(--color-gray-200);
     background: #fff;
     text-align: left;
+    border-radius: var(--wsa-r);
 }
 .wsa-install-btn:hover {
     border-color: var(--color-gray-950);
@@ -5731,6 +5770,7 @@ details.wsa-cmds-section .wsa-cmds-row:last-child {
     padding: 2rem;
     border: 1px solid var(--color-gray-200);
     background: #fff;
+    border-radius: var(--wsa-r);
 }
 .wsa-logo-preview-box img {
     display: block;
@@ -5748,6 +5788,7 @@ details.wsa-cmds-section .wsa-cmds-row:last-child {
 .wsa-logo-upload .filepond--panel-root {
     border: 1px dashed var(--color-gray-300);
     background: #fff;
+    border-radius: var(--wsa-r);
 }
 .wsa-logo-upload .filepond--item-panel {
     background: var(--color-gray-100);
@@ -5853,6 +5894,7 @@ details.wsa-cmds-section .wsa-cmds-row:last-child {
     height: 2.25rem;
     border: 1px solid var(--color-gray-200);
     color: var(--color-gray-950);
+    border-radius: var(--wsa-r);
 }
 .wsa-period-step:hover {
     border-color: var(--color-gray-950);
@@ -6076,6 +6118,7 @@ details.wsa-cmds-section .wsa-cmds-row:last-child {
     border: 1px solid var(--color-gray-200);
     font-size: var(--wsa-fs-meta);
     color: var(--color-gray-950);
+    border-radius: var(--wsa-r);
 }
 a.wsa-chip:hover {
     border-color: var(--color-gray-950);
@@ -6635,7 +6678,7 @@ a.wsa-chip:hover {
 .fi-resource-create-record-page .fi-sc-actions .fi-ac.fi-align-start > .fi-btn,
 .fi-resource-edit-record-page form .fi-sc-actions:last-child .fi-ac.fi-align-start > .fi-btn {
     width: 100%;
-    min-height: 3rem;
+    min-height: var(--wsa-h);
     justify-content: center;
     font-size: var(--wsa-fs-input);
 }
@@ -6728,6 +6771,7 @@ a.wsa-chip:hover {
     border: 1px solid var(--color-gray-950);
     background: #fff;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+    border-radius: var(--wsa-r);
 }
 .wsa-since-list a {
     display: grid;
@@ -6967,7 +7011,7 @@ a.wsa-chip:hover {
     width: 2.5rem;
     height: 1.375rem;
     border: 1px solid var(--color-gray-400);
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     background: #fff;
     box-shadow: none;
 }
@@ -6977,7 +7021,7 @@ a.wsa-chip:hover {
     left: 3px;
     width: calc(1.375rem - 8px);
     height: calc(1.375rem - 8px);
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     background: var(--color-gray-400);
     box-shadow: none;
 }
@@ -7073,6 +7117,7 @@ a.wsa-chip:hover {
     text-align: center;
     font-size: var(--wsa-fs-small);
     transition: border-color 0.15s, background 0.15s;
+    border-radius: var(--wsa-r);
 }
 .wsa-capture-drop.is-over {
     border-color: var(--color-gray-950);
@@ -7116,7 +7161,7 @@ a.wsa-chip:hover {
     height: 2.5rem;
     padding: 0 0.75rem;
     border: 1px solid var(--color-gray-300);
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     font: inherit;
     font-size: var(--wsa-fs-body);
 }
@@ -7161,6 +7206,7 @@ a.wsa-chip:hover {
     line-height: 1.4;
     color: var(--color-gray-700);
     white-space: nowrap;
+    border-radius: var(--wsa-r);
 }
 .wsa-role.is-demo {
     border-color: var(--color-gray-950);
@@ -7261,7 +7307,8 @@ a.wsa-chip:hover {
         background: #fff;
         text-align: left;
         text-decoration: none;
-    }
+        border-radius: var(--wsa-r);
+}
     .wsa-since-item:active {
         border-color: var(--color-gray-950);
     }
@@ -7299,6 +7346,7 @@ a.wsa-chip:hover {
     background: #fff;
     font-size: var(--wsa-fs-small);
     font-variant-numeric: tabular-nums;
+    border-radius: var(--wsa-r);
 }
 .wsa-capture-chips button.is-on,
 .wsa-capture-chips button:hover {
@@ -7352,6 +7400,7 @@ a.wsa-chip:hover {
     background: #fff;
     font-size: var(--wsa-fs-meta);
     white-space: nowrap;
+    border-radius: var(--wsa-r);
 }
 .wsa-late-actions button:hover {
     border-color: var(--color-gray-950);
@@ -7465,7 +7514,7 @@ a.wsa-chip:hover {
         max-height: none;
         margin: 0;
         border: 0;
-        border-radius: 0;
+        border-radius: var(--wsa-r);
         box-shadow: none;
     }
     .fi-modal:not(.fi-modal-slide-over) .fi-modal-header {
@@ -7569,7 +7618,8 @@ a.wsa-chip:hover {
         background: #fff;
         font-size: var(--wsa-fs-small);
         font-weight: 500;
-    }
+        border-radius: var(--wsa-r);
+}
 }
 
 /* ferestrele pe telefon (feedback #4): titlul mai mare, fără linia de sub el */
@@ -7647,7 +7697,7 @@ a.wsa-chip:hover {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .wsa-myday-actions .fi-btn {
-        min-height: 3rem;
+        min-height: var(--wsa-h);
         padding-inline: 0.5rem;
         white-space: normal;
         text-align: center;
@@ -7687,6 +7737,7 @@ a.wsa-chip:hover {
     font-size: var(--wsa-fs-small);
     color: var(--color-gray-700);
     cursor: pointer;
+    border-radius: var(--wsa-r);
 }
 .wsa-mine-people button:hover {
     border-color: var(--color-gray-950);
@@ -7869,6 +7920,7 @@ a.wsa-chip:hover {
     color: var(--color-gray-700);
     cursor: pointer;
     white-space: nowrap;
+    border-radius: var(--wsa-r);
 }
 .wsa-mine-btn:hover {
     border-color: var(--color-gray-950);
@@ -7896,6 +7948,7 @@ a.wsa-chip:hover {
     padding: 1.5rem;
     border: 1px solid var(--color-gray-950);
     background: #fff;
+    border-radius: var(--wsa-r);
 }
 .wsa-customize-head {
     display: flex;
@@ -7964,6 +8017,8 @@ a.wsa-chip:hover {
 .wsa-customize-width {
     display: inline-flex;
     border: 1px solid var(--color-gray-200);
+    border-radius: var(--wsa-r);
+    overflow: hidden;                                        /* butoanele lipite: doar colțurile de afară se rotunjesc */
 }
 .wsa-customize-width button {
     padding: 0.35rem 0.75rem;
@@ -8026,6 +8081,7 @@ a.wsa-chip:hover {
     background: #fff;
     text-align: left;
     cursor: pointer;
+    border-radius: var(--wsa-r);
 }
 .wsa-customize-presets button:hover {
     border-color: var(--color-gray-950);
@@ -8093,6 +8149,7 @@ a.wsa-comment-row:hover .wsa-comment-text {
 .wsa-week.is-recap {
     padding: 1.5rem;
     border: 1px solid var(--color-gray-950);
+    border-radius: var(--wsa-r);
 }
 .wsa-week-lead {
     font-size: var(--wsa-fs-title);
@@ -8221,6 +8278,8 @@ a.wsa-row:hover .wsa-row-title {
     display: inline-flex;
     margin-bottom: 0.625rem;
     border: 1px solid var(--color-gray-200);
+    border-radius: var(--wsa-r);
+    overflow: hidden;                                        /* butoanele lipite: doar colțurile de afară se rotunjesc */
 }
 .wsa-kind-switch button {
     padding: 0.35rem 0.875rem;
@@ -8257,6 +8316,7 @@ a.wsa-row:hover .wsa-row-title {
     border: 1px solid var(--color-gray-200);
     background: #fff;
     padding: 1.5rem 3.75rem 1.5rem 1.75rem;
+    border-radius: var(--wsa-r);
 }
 .wsa-hint {
     gap: 0.5rem 1.25rem;
@@ -8444,6 +8504,7 @@ a.wsa-row:hover .wsa-row-title {
     border: 1px solid var(--color-gray-200);
     font-size: var(--wsa-fs-meta);
     word-break: break-all;
+    border-radius: var(--wsa-r);
 }
 .wsa-project-inbox {
     display: flex;
@@ -8510,7 +8571,7 @@ a.wsa-row:hover .wsa-row-title {
         overflow-y: auto;
         padding-top: env(safe-area-inset-top);
         border: 0;
-        border-radius: 0;
+        border-radius: var(--wsa-r);
         box-shadow: none;
         z-index: 60;
     }
@@ -8709,6 +8770,7 @@ a.wsa-row:hover .wsa-row-title {
     border: 1px solid var(--color-gray-300);
     background: #fff;
     font-size: var(--wsa-fs-small);
+    border-radius: var(--wsa-r);
 }
 .wsa-item-form.is-wide textarea {
     flex-basis: 100%;
@@ -8769,6 +8831,7 @@ a.wsa-row:hover .wsa-row-title {
     line-height: 1.5;
     color: var(--color-gray-700);
     vertical-align: 0.1em;
+    border-radius: var(--wsa-r);
 }
 .wsa-task-state.is-done {
     border-color: var(--color-gray-950);
@@ -8840,6 +8903,7 @@ a.wsa-row:hover .wsa-row-title {
     margin: 0.25rem 0 1rem;
     padding: 1rem;
     border: 1px solid var(--color-gray-200);
+    border-radius: var(--wsa-r);
 }
 .wsa-site-fb-qr .wsa-widget-qr-code svg {
     width: 11rem;
@@ -8998,6 +9062,7 @@ a.wsa-row:hover .wsa-row-title {
     width: 0.6rem;
     height: 0.6rem;
     border: 1px solid var(--color-gray-300);
+    border-radius: var(--wsa-r);
 }
 .wsa-clientp-week li.is-on {
     background: var(--color-gray-950);
@@ -9032,6 +9097,7 @@ a.wsa-row:hover .wsa-row-title {
     border: 1px solid var(--color-gray-200);
     font-size: var(--wsa-fs-meta);
     color: var(--color-gray-400);
+    border-radius: var(--wsa-r);
 }
 .wsa-clientp-steps span.is-done {
     border-color: var(--color-gray-950);
@@ -9051,6 +9117,7 @@ a.wsa-row:hover .wsa-row-title {
     font-size: var(--wsa-fs-meta);
     color: var(--color-gray-400);
     text-decoration: none;
+    border-radius: var(--wsa-r);
 }
 .wsa-setup .is-ok {
     border-color: var(--color-gray-400);
@@ -9115,6 +9182,7 @@ a.wsa-row:hover .wsa-row-title {
     max-height: 14rem;
     width: auto;
     border: 1px solid var(--color-gray-200);
+    border-radius: var(--wsa-r);
 }
 .wsa-shared-projects {
     margin-bottom: 0.25rem;
@@ -9225,6 +9293,7 @@ a.wsa-row:hover .wsa-row-title {
     background: #fff;
     text-align: left;
     cursor: pointer;
+    border-radius: var(--wsa-r);
 }
 .wsa-guide-tour > svg {
     width: 2.75rem;
@@ -9288,6 +9357,7 @@ a.wsa-row:hover .wsa-row-title {
     padding: 0.5rem 0.5rem 0.5rem 0.75rem;
     border: 1px solid var(--color-gray-200);
     font-size: var(--wsa-fs-meta);
+    border-radius: var(--wsa-r);
 }
 .wsa-copy-link-url {
     flex: 1;
@@ -9323,6 +9393,7 @@ a.wsa-row:hover .wsa-row-title {
     gap: 0.75rem 1.5rem;
     padding: 1rem 1.25rem;
     border: 1px solid var(--color-gray-950);
+    border-radius: var(--wsa-r);
 }
 .wsa-unblock p {
     margin: 0;
@@ -9388,6 +9459,7 @@ a.wsa-row:hover .wsa-row-title {
     background: #fff;
     text-align: left;
     cursor: pointer;
+    border-radius: var(--wsa-r);
 }
 .wsa-demo-login button:hover {
     border-color: var(--color-gray-950);
@@ -9489,6 +9561,7 @@ a.wsa-row:hover .wsa-row-title {
     line-height: 1.3;
     color: var(--color-gray-950);
     vertical-align: 0.05em;
+    border-radius: var(--wsa-r);
 }
 .wsa-due-flag.is-overdue {
     background: var(--color-gray-950);
@@ -9545,7 +9618,7 @@ a.wsa-row:hover .wsa-row-title {
     width: 6.5rem;
     padding: 0.3rem 0.5rem;
     border: 1px solid var(--color-gray-300);
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     font-size: var(--wsa-fs-small);
     font-variant-numeric: tabular-nums;
 }
@@ -9738,6 +9811,7 @@ html.wsa-search-open {
     font-size: var(--wsa-fs-small);
     font-weight: 500;
     cursor: pointer;
+    border-radius: var(--wsa-r);
 }
 .wsa-search-close:hover {
     background: var(--color-gray-950);
@@ -9750,6 +9824,7 @@ html.wsa-search-open {
     font-family: inherit;
     font-size: 0.75rem;
     color: var(--color-gray-500);
+    border-radius: var(--wsa-r);
 }
 .wsa-search-filters {
     position: relative;                                        /* căsuțele sr-only din chip-uri rămân în rând (altfel dau scroll paginii pe telefon) */
@@ -9766,6 +9841,7 @@ html.wsa-search-open {
     font-size: var(--wsa-fs-small);
     color: var(--color-gray-700);
     cursor: pointer;
+    border-radius: var(--wsa-r);
 }
 .wsa-search-chip:hover {
     border-color: var(--color-gray-950);
@@ -9780,7 +9856,7 @@ html.wsa-search-open {
     margin-left: auto;
     padding: 0.45rem 2rem 0.45rem 0.75rem;
     border: 1px solid var(--color-gray-200);
-    border-radius: 0;
+    border-radius: var(--wsa-r);
     font-size: var(--wsa-fs-small);
 }
 .wsa-search-body {
@@ -9810,12 +9886,19 @@ html.wsa-search-open {
     color: var(--color-gray-400);
 }
 .wsa-search-item {
+    position: relative;
     display: grid;
     gap: 0.25rem;
     padding: 0.85rem 0.75rem;
-    margin: 0 -0.75rem;
-    border-bottom: 1px solid var(--color-gray-200);
+    margin: 0 -0.75rem;                                        /* fundalul de la hover iese puțin în lateral */
     text-decoration: none;
+}
+.wsa-search-item::after {                                      /* linia gri: cât linia neagră de deasupra, nu cât fundalul */
+    content: "";
+    position: absolute;
+    inset: auto 0.75rem 0;
+    height: 1px;
+    background: var(--color-gray-200);
 }
 .wsa-search-item:hover,
 .wsa-search-item.is-active {
@@ -9969,6 +10052,7 @@ html.wsa-search-open {
     font-size: var(--wsa-fs-small);
     color: var(--color-gray-700);
     cursor: pointer;
+    border-radius: var(--wsa-r);
 }
 .wsa-feed-compact:hover {
     border-color: var(--color-gray-950);
@@ -10060,6 +10144,7 @@ html.wsa-search-open {
     color: var(--color-gray-700);
     vertical-align: 0.05em;
     cursor: pointer;
+    border-radius: var(--wsa-r);
 }
 .wsa-copy-task:hover {
     border-color: var(--color-gray-950);
@@ -10269,7 +10354,7 @@ html.wsa-search-open {
         height: 100dvh;
         overflow-y: auto;
         border: 0;
-        border-radius: 0;
+        border-radius: var(--wsa-r);
         box-shadow: none;
         --tw-ring-shadow: 0 0 #0000;
         z-index: 60;
@@ -10393,6 +10478,7 @@ html.wsa-search-open {
     font-size: var(--wsa-fs-body);
     font-weight: 500;
     text-decoration: none !important;
+    border-radius: var(--wsa-r);
 }
 .fi-no-database .fi-modal-header .fi-ac > *:first-child {
     background: var(--color-gray-950);
@@ -10760,6 +10846,25 @@ html.wsa-search-open {
 .wsa-week-legend i[data-shade="added"] {
     background: repeating-linear-gradient(-45deg, var(--color-gray-500) 0 1px, var(--color-gray-200) 1px 3px);
 }
+/* Ziua mea pe card: săgețile zilei, rândul pentru /upd, orele alese pe grafic, butoanele de timp */
+.wsa-day-nav { display: inline-flex; align-items: center; gap: .5rem; }
+.wsa-day-nav button { display: inline-flex; padding: .25rem; color: var(--color-gray-500); border-radius: .25rem; }
+.wsa-day-nav button:hover:not(:disabled) { color: var(--color-gray-950); }
+.wsa-day-nav button:disabled { opacity: .3; cursor: default; }
+.wsa-day-nav svg { width: 1rem; height: 1rem; }
+.wsa-day-nudge { margin: 1rem 0 0; font-size: .875rem; color: var(--color-gray-600); }
+.wsa-day-chart[data-selectable] { cursor: crosshair; user-select: none; touch-action: none; }
+.wsa-day-hour.is-picked { background: var(--color-gray-200); }
+/* capul cardului: titlul în stânga; în dreapta ziua, apoi butoanele de timp; pe telefon ziua în dreapta titlului, butoanele pe un rând al lor, jumătate-jumătate */
+.wsa-day-head { flex-wrap: wrap; align-items: center; justify-content: flex-start; column-gap: 1.5rem; }
+.wsa-day-head .wsa-day-nav { margin-left: auto; }
+.wsa-day-actions { display: flex; gap: .5rem; }
+@media (max-width: 639px) {
+    .wsa-day-head { justify-content: space-between; }
+    .wsa-day-head .wsa-day-actions { flex: 1 0 100%; margin-left: 0; }
+    .wsa-day-actions > * { flex: 1 1 0; min-width: 0; }
+    .wsa-day-actions .fi-btn { width: 100%; justify-content: center; }
+}
 /* barele pe ore: bucata scoasă la o corecție, abia vizibilă (măsurată, dar nesocotită) */
 .wsa-day-stack i[data-shade="removed"],
 .wsa-week-legend i[data-shade="removed"] {
@@ -10882,6 +10987,7 @@ html.wsa-search-open {
     background: #fff;
     border: 1px solid var(--color-gray-950);
     box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+    border-radius: var(--wsa-r);
 }
 .wsa-mention-menu li {
     display: flex;
@@ -10978,7 +11084,7 @@ html.wsa-search-open {
 .wsa-badges-prefs { display: grid; gap: 8px; margin: 0 0 18px; font-size: var(--wsa-fs-sm, 13px); }
 .wsa-badges-opt { display: flex; gap: 8px; align-items: center; cursor: pointer; }
 .wsa-badges-opt input[type=checkbox] { width: 16px; height: 16px; flex: none; margin: 0; accent-color: #0b0b0b; }
-.wsa-badges-opt select { border: 1px solid var(--color-gray-200); padding: 2px 24px 2px 8px; background-color: #fff; font: inherit; }
+.wsa-badges-opt select { border: 1px solid var(--color-gray-200); padding: 2px 24px 2px 8px; background-color: #fff; font: inherit; border-radius: var(--wsa-r); }
 .wsa-badges-progress { display: grid; gap: 12px; margin: 0 0 20px; }
 .wsa-badges-prog { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: center; font-size: var(--wsa-fs-sm, 13px); }
 .wsa-badges-prog .wsa-badge { width: 40px; height: 40px; }
@@ -10996,7 +11102,7 @@ html.wsa-search-open {
 .wsa-badges-recent .wsa-badge { width: 34px; height: 34px; }
 @media (max-width: 640px) { .wsa-badges-recent a:nth-child(n+3) { display: none; } .wsa-badges-recent .wsa-badge { width: 28px; height: 28px; } }
 .wsa-badge-page { position: fixed; inset: 0; z-index: 60; background: rgb(255 255 255 / .92); display: flex; align-items: center; justify-content: center; padding: 16px; }
-.wsa-badge-page-box { background: #fff; border: 1px solid #0b0b0b; max-width: 440px; width: 100%; padding: 28px 24px 24px; position: relative; text-align: center; max-height: 92vh; overflow: auto; }
+.wsa-badge-page-box { background: #fff; border: 1px solid #0b0b0b; max-width: 440px; width: 100%; padding: 28px 24px 24px; position: relative; text-align: center; max-height: 92vh; overflow: auto; border-radius: var(--wsa-r); }
 .wsa-badge-page-art .wsa-badge { width: 120px; height: 120px; margin: 0 auto 12px; }
 .wsa-badge-page h3 { font-size: 24px; font-weight: 700; letter-spacing: -.02em; margin: 0 0 6px; }
 .wsa-badge-page p { margin: 0 0 12px; }
@@ -11007,7 +11113,7 @@ html.wsa-search-open {
 .wsa-badge-page-tiers b { width: 28px; }
 .wsa-badge-page-tiers span { margin-left: auto; color: var(--color-gray-500); }
 .wsa-badge-page-kudos { list-style: none; padding: 0; margin: 0 0 12px; text-align: left; font-size: 14px; }
-.wsa-badge-kudos input { border: 1px solid var(--color-gray-300); padding: 4px 8px; min-width: 0; width: 60%; }
+.wsa-badge-kudos input { border: 1px solid var(--color-gray-300); padding: 4px 8px; min-width: 0; width: 60%; border-radius: var(--wsa-r); }
 .wsa-award, .wsa-award-intro { position: fixed; inset: 0; z-index: 80; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px 16px; cursor: pointer; color: #0b0b0b; }
 .wsa-award[hidden], .wsa-award-intro[hidden] { display: none; }
 .wsa-award-confetti { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -11051,7 +11157,7 @@ html.wsa-search-open {
 .wsa-absence-row { display: flex; justify-content: space-between; gap: 12px; margin: 0 0 8px; font-size: 14px; }
 .wsa-absence-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin: 8px 0; }
 .wsa-absence-form label { display: grid; gap: 4px; }
-.wsa-absence-form input { border: 1px solid var(--color-gray-200); padding: 4px 8px; font: inherit; }
+.wsa-absence-form input { border: 1px solid var(--color-gray-200); padding: 4px 8px; font: inherit; border-radius: var(--wsa-r); }
 .wsa-project-streak span { display: flex; cursor: help; }   /* în dreapta antetului unui proiect, ca badge-urile de pe Azi */
 .wsa-support { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; justify-content: space-between; }
 .wsa-support-acts { display: inline-flex; gap: 16px; align-items: center; }
@@ -11107,14 +11213,14 @@ html.wsa-search-open {
 .wsa-music-now div { display: grid; gap: 3px; min-width: 0; }
 .wsa-music-now b { font-size: 1rem; font-weight: 600; line-height: 1.25; }
 .wsa-music-now span { font-size: 0.8125rem; color: var(--color-gray-500); }
-.wsa-music-radio { justify-self: start; padding: 2px 8px; border: 1px solid var(--color-gray-950); font-size: 0.6875rem; font-weight: 600; color: var(--color-gray-950) !important; }
+.wsa-music-radio { justify-self: start; padding: 2px 8px; border: 1px solid var(--color-gray-950); font-size: 0.6875rem; font-weight: 600; color: var(--color-gray-950) !important; border-radius: var(--wsa-r); }
 .wsa-music-bar { display: block; height: 2px; background: var(--color-gray-200); }
 .wsa-music-bar i { display: block; height: 100%; background: var(--color-gray-950); transition: width 1s linear; }
 .wsa-music-times { display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.75rem; color: var(--color-gray-500); font-variant-numeric: tabular-nums; }
 .wsa-music-ctl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }   /* ⏮ ⏯ ⏭, pe toată lățimea */
 /* dedesubt: amestecat, volumul, repetat */
 .wsa-music-modes { display: grid; grid-template-columns: 40px 1fr 40px; gap: 8px; align-items: center; }
-.wsa-music-modes button.is-mode { position: relative; display: grid; place-items: center; height: 36px; background: none; border: 1px solid transparent; cursor: pointer; }
+.wsa-music-modes button.is-mode { position: relative; display: grid; place-items: center; height: 36px; background: none; border: 1px solid transparent; cursor: pointer; border-radius: var(--wsa-r); }
 .wsa-music-modes button.is-mode svg { width: 16px; height: 16px; fill: none; stroke: var(--color-gray-400); stroke-width: 1.5; stroke-linejoin: round; }
 .wsa-music-modes button.is-mode.is-on svg { stroke: var(--color-gray-950); }   /* pornit: doar iconul, negru */
 .wsa-music-vol { display: grid; grid-template-columns: 28px 1fr; gap: 6px; align-items: center; }
@@ -11123,7 +11229,7 @@ html.wsa-search-open {
 .wsa-music-vol input { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: linear-gradient(to right, var(--color-gray-950) var(--v, 100%), var(--color-gray-200) var(--v, 100%)); cursor: pointer; }
 .wsa-music-vol input::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: var(--color-gray-950); border: 0; }
 .wsa-music-vol input::-moz-range-thumb { width: 12px; height: 12px; background: var(--color-gray-950); border: 0; border-radius: 0; }
-.wsa-music-ctl button { display: grid; place-items: center; height: 44px; background: none; border: 1px solid var(--color-gray-200); cursor: pointer; }
+.wsa-music-ctl button { display: grid; place-items: center; height: 44px; background: none; border: 1px solid var(--color-gray-200); cursor: pointer; border-radius: var(--wsa-r); }
 .wsa-music-ctl button:hover { border-color: var(--color-gray-400); }
 .wsa-music-ctl button.is-main { border-color: var(--color-gray-950); }
 .wsa-music-ctl svg { width: 18px; height: 18px; fill: none; stroke: var(--color-gray-950); stroke-width: 1.5; stroke-linejoin: round; }
@@ -11136,13 +11242,13 @@ html.wsa-search-open {
 .wsa-music-row.is-off:hover { opacity: 1; }
 .wsa-music-by { display: grid; place-items: center; width: 26px; height: 26px; background: var(--color-gray-100); font-size: 11px; font-weight: 600; color: var(--color-gray-700); }
 .wsa-music-acts { display: flex; gap: 4px; }
-.wsa-music-acts button { padding: 4px 7px; background: none; border: 1px solid var(--color-gray-200); font: inherit; font-size: 0.6875rem; color: var(--color-gray-700); white-space: nowrap; cursor: pointer; }
+.wsa-music-acts button { padding: 4px 7px; background: none; border: 1px solid var(--color-gray-200); font: inherit; font-size: 0.6875rem; color: var(--color-gray-700); white-space: nowrap; cursor: pointer; border-radius: var(--wsa-r); }
 .wsa-music-acts button:hover { border-color: var(--color-gray-950); color: var(--color-gray-950); }
 .wsa-music-add { display: flex; gap: 8px; }
-.wsa-music-add input { flex: 1; min-width: 0; height: 42px; padding: 0 12px; border: 1px solid var(--color-gray-300); font: inherit; font-size: 0.875rem; }
+.wsa-music-add input { flex: 1; min-width: 0; height: 42px; padding: 0 12px; border: 1px solid var(--color-gray-300); font: inherit; font-size: 0.875rem; border-radius: var(--wsa-r); }
 .wsa-music-add input.is-filled, .wsa-music-add input:focus { border-color: var(--color-gray-950); outline: none; }
 .wsa-music-add button { height: 42px; padding: 0 14px; background: var(--color-gray-950); color: #fff; border: 0; font: inherit; font-size: 0.875rem; font-weight: 600; white-space: nowrap; cursor: pointer; }
-.wsa-music-preview { display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: center; padding: 10px; border: 1px solid var(--color-gray-950); }
+.wsa-music-preview { display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: center; padding: 10px; border: 1px solid var(--color-gray-950); border-radius: var(--wsa-r); }
 .wsa-music-preview div { display: grid; gap: 2px; min-width: 0; }
 .wsa-music-preview b { font-size: 0.875rem; font-weight: 600; }
 .wsa-music-preview span { font-size: 0.75rem; color: var(--color-gray-500); }
@@ -11154,7 +11260,7 @@ html.wsa-search-open {
 .wsa-music-menu { position: relative; }
 .wsa-music-menu summary { list-style: none; cursor: pointer; color: var(--color-gray-500); }
 .wsa-music-menu summary::-webkit-details-marker { display: none; }
-.wsa-music-menu > div { position: absolute; right: 0; top: 30px; z-index: 2; display: grid; min-width: 11rem; background: #fff; border: 1px solid var(--color-gray-200); box-shadow: 0 8px 24px rgb(0 0 0 / 0.08); }
+.wsa-music-menu > div { position: absolute; right: 0; top: 30px; z-index: 2; display: grid; min-width: 11rem; background: #fff; border: 1px solid var(--color-gray-200); box-shadow: 0 8px 24px rgb(0 0 0 / 0.08); border-radius: var(--wsa-r); }
 .wsa-music-menu > div button { padding: 9px 12px; background: none; border: 0; font: inherit; font-size: 0.8125rem; text-align: left; cursor: pointer; }
 .wsa-music-menu > div button:hover { background: var(--color-gray-50); }
 .wsa-music-row.is-off .wsa-music-acts { opacity: 1; }
@@ -11174,7 +11280,7 @@ html.wsa-search-open {
 body.wsa-video-here .wsa-music-panel .wsa-music-video-slot { display: block; }
 body.wsa-video-here .wsa-music-panel .wsa-music-now { grid-template-columns: 1fr; }
 body.wsa-video-here .wsa-music-panel .wsa-music-now .wsa-music-thumb { display: none; }
-.wsa-music-claim.is-ghost { background: none; color: var(--color-gray-950); border: 1px solid var(--color-gray-300); }
+.wsa-music-claim.is-ghost { background: none; color: var(--color-gray-950); border: 1px solid var(--color-gray-300); border-radius: var(--wsa-r); }
 .wsa-music-where { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 0.8125rem; color: var(--color-gray-500); }
 .wsa-music-one { position: absolute; top: 3px; right: 5px; font-size: 9px; font-weight: 700; line-height: 1; color: var(--color-gray-950); }   /* repetă doar piesa */
 .wsa-music-where abbr { text-decoration: none; font-weight: 600; color: var(--color-gray-800); cursor: help; }
@@ -11222,12 +11328,12 @@ body.wsa-video-here .wsa-music-panel .wsa-music-now .wsa-music-thumb { display: 
 .wsa-music-hint { display: none; margin-top: -2px; }
 .wsa-music-block:focus-within .wsa-music-hint { display: block; }
 .wsa-music-libhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.wsa-music-libhead input { width: 9rem; height: 28px; padding: 0 8px; background: transparent; border: 1px solid var(--color-gray-200); color: var(--color-gray-950); font: inherit; font-size: 0.8125rem; }
+.wsa-music-libhead input { width: 9rem; height: 28px; padding: 0 8px; background: transparent; border: 1px solid var(--color-gray-200); color: var(--color-gray-950); font: inherit; font-size: 0.8125rem; border-radius: var(--wsa-r); }
 .wsa-music-libhead input:focus { border-color: var(--color-gray-500); outline: none; }
 .wsa-music-list { display: flex; flex-direction: column; }
 .wsa-music-list .wsa-music-row { min-height: 56px; padding: 8px 0; }
 .wsa-music-list .wsa-music-msg { margin: 8px 0; }
-.wsa-music-tag { display: inline-block; padding: 0 5px; border: 1px solid var(--color-gray-300); font-size: 0.6875rem; font-style: normal; font-weight: 600; line-height: 1.5; color: var(--color-gray-950); }
+.wsa-music-tag { display: inline-block; padding: 0 5px; border: 1px solid var(--color-gray-300); font-size: 0.6875rem; font-style: normal; font-weight: 600; line-height: 1.5; color: var(--color-gray-950); border-radius: var(--wsa-r); }
 .wsa-music-row.is-next { cursor: grab; }
 .wsa-music-row.is-drag { opacity: 0.4; }
 .wsa-music-acts { min-width: 64px; justify-content: flex-end; }
@@ -11243,7 +11349,7 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
 .wsa-music-prog .wsa-music-bar.is-seek i { transition: none; }
 /* biblioteca: filtre (toate, preferatele, fiecare om), „Cântă tot" și 👍 */
 .wsa-music-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.wsa-music-chips button { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; line-height: 1; background: none; border: 1px solid var(--color-gray-200); font: inherit; font-size: 0.75rem; font-weight: 600; color: var(--color-gray-700); cursor: pointer; }
+.wsa-music-chips button { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; line-height: 1; background: none; border: 1px solid var(--color-gray-200); font: inherit; font-size: 0.75rem; font-weight: 600; color: var(--color-gray-700); cursor: pointer; border-radius: var(--wsa-r); }
 .wsa-music-chips button small { font-size: 0.6875rem; font-weight: 400; color: var(--color-gray-500); }
 .wsa-music-chips button:hover { border-color: var(--color-gray-500); }
 .wsa-music-chips button.is-on { border-color: var(--color-gray-950); color: var(--color-gray-950); }   /* activ: doar conturul alb, fără fundal */
@@ -11251,7 +11357,7 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
 .wsa-music-playall { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
 .wsa-music-playall button { display: flex; align-items: center; justify-content: center; gap: 8px; height: 38px; padding: 0 12px; background: var(--color-gray-950); color: #0a0a0a; border: 0; font: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
 .wsa-music-playall button svg { width: 12px; height: 12px; fill: currentColor; }
-.wsa-music-playall button.is-ghost { background: none; color: var(--color-gray-950); border: 1px solid var(--color-gray-300); }
+.wsa-music-playall button.is-ghost { background: none; color: var(--color-gray-950); border: 1px solid var(--color-gray-300); border-radius: var(--wsa-r); }
 .wsa-music-acts > .wsa-music-vote { width: auto; min-width: 28px; padding: 0 6px; display: inline-flex; gap: 3px; align-items: center; border-color: transparent; }
 .wsa-music-vote svg { width: 14px; height: 14px; fill: none; stroke: var(--color-gray-500); stroke-width: 1.5; stroke-linejoin: round; }
 .wsa-music-vote small { font-size: 0.6875rem; color: var(--color-gray-500); }
@@ -11272,7 +11378,7 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
 .wsa-joke-icon svg { width: 14px; height: 14px; fill: none; stroke: var(--color-gray-500); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
 .wsa-joke:hover .wsa-joke-icon, .wsa-joke-icon:focus-visible { opacity: 1; }
 .wsa-joke-add { display: flex; align-items: center; gap: 6px; width: 26rem; max-width: 100%; }
-.wsa-joke-add input { flex: 1; min-width: 0; height: 32px; padding: 0 10px; border: 1px solid var(--color-gray-300); font: inherit; font-size: 0.875rem; }
+.wsa-joke-add input { flex: 1; min-width: 0; height: 32px; padding: 0 10px; border: 1px solid var(--color-gray-300); font: inherit; font-size: 0.875rem; border-radius: var(--wsa-r); }
 .wsa-joke-add input:focus { border-color: var(--color-gray-950); outline: none; }
 .wsa-joke-count { font-size: 0.75rem; color: var(--color-gray-400); font-variant-numeric: tabular-nums; }
 .wsa-joke-add button[type=submit] { height: 32px; padding: 0 12px; background: var(--color-gray-950); color: #fff; border: 0; font: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
@@ -11339,4 +11445,115 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
     .wsa-badges-recent { gap: 12px; }
     .wsa-badges-recent .wsa-badge.is-small { display: none; }
     .wsa-badges-recent .wsa-badge.is-large { display: block; width: 56px; height: 56px; }   /* scutul ocupă ~85% din desen: ~48px, cât logo-ul */
+}
+
+/*
+ * Mărimile, la fel peste tot (28 oct 2026): trei înălțimi și două mărimi de text, dintr-un singur loc.
+ * Normală (40px): butoanele principale, câmpurile, listele, zonele de text. Mică (32px): acțiunile de pe rânduri și carduri, filtrele,
+ * comutatoarele. Textul: 16px pe toate butoanele (feedback #6) și în câmpuri (sub 16px, iPhone mărește pagina când atingi câmpul).
+ * Etichetă (24px, 13px): stările din cardul
+ * omului (Agent, Timp măsurat, /upd). Pe telefon, normala are 44px. Mărimile de text sunt cele din scara de sus.
+ */
+:root {
+    --wsa-h: 40px;
+    --wsa-h-sm: 32px;
+    --wsa-h-tag: 24px;
+    --wsa-fs: var(--wsa-fs-button);
+    --wsa-fs-sm: var(--wsa-fs-meta);
+    --wsa-fs-field: var(--wsa-fs-input);
+}
+@media (max-width: 639px) {
+    :root { --wsa-h: 44px; }
+}
+
+/* normală: butoane */
+.fi-btn:not(.fi-size-xs):not(.fi-size-sm):not(.fi-icon-btn):not(.fi-select-input-value-remove-btn),
+.wsa-install-btn {
+    min-height: var(--wsa-h);
+    font-size: var(--wsa-fs);
+    padding-block: 0;
+}
+/* normală: câmpuri, liste, zone de text (textul lor e același peste tot) */
+.fi-input-wrp,
+.fi-global-search-field .fi-input-wrp,
+.fi-ta-search-field .fi-input-wrp {
+    min-height: var(--wsa-h);
+}
+.fi-input,
+.fi-select-input,
+.fi-fo-textarea textarea,
+.fi-global-search-field input,
+.fi-topbar-end .fi-global-search-field input,
+.wsa-textarea,
+.wsa-add input, .wsa-add select, .wsa-task-new-row select, .wsa-access-add select, .wsa-h-select, .wsa-h-date input,
+.wsa-capture-row select, .wsa-capture-field select, .wsa-capture-field input[type="date"], .wsa-capture-form textarea,
+.wsa-connect input, .wsa-item-form input, .wsa-item-form textarea, .wsa-absence-form input, .wsa-badge-kudos input, .wsa-badges-opt select,
+.wsa-joke-add input, .wsa-music-add input, .wsa-music-libhead input, .wsa-search-project, .wsa-estimate-input,
+.wsa-cmds-search input, .fi-fo-markdown-editor .CodeMirror,
+.fi-select-input-btn, .fi-select-input-value-label, .fi-select-input-search-ctn input, .fi-select-input-option {
+    font-size: var(--wsa-fs-field);
+}
+.wsa-add input, .wsa-add select, .wsa-task-new-row select, .wsa-access-add select, .wsa-h-select, .wsa-h-date input,
+.wsa-capture-row select, .wsa-capture-field select, .wsa-capture-field input[type="date"],
+.wsa-connect input, .wsa-item-form input, .wsa-absence-form input, .wsa-badge-kudos input, .wsa-badges-opt select,
+.wsa-joke-add input, .wsa-music-add input, .wsa-music-libhead input, .wsa-estimate-input {
+    min-height: var(--wsa-h);
+    box-sizing: border-box;
+}
+
+/* mică: acțiuni pe rânduri și carduri, filtre, comutatoare */
+.fi-btn.fi-size-sm, .fi-btn.fi-size-xs,
+.wsa-take, .wsa-mine-btn, .wsa-copy-task, .wsa-copy-link, .wsa-late-actions button, .wsa-late-more, .wsa-unblock, .wsa-seen-btn,
+.wsa-mine-people button, .wsa-kind-switch button, .wsa-layout-switch button, .wsa-feed-compact, .wsa-customize-width button,
+.wsa-customize-presets button, .wsa-access-mode button, .wsa-period-step, .wsa-search-chip, .wsa-capture-chips button, .wsa-portfolio-select, .wsa-search-project {
+    min-height: var(--wsa-h-sm);
+    height: auto;
+    font-size: var(--wsa-fs);                                 /* același text ca butoanele normale (feedback #6): doar înălțimea e mai mică */
+    padding-block: 0;
+    box-sizing: border-box;
+}
+.wsa-take, .wsa-mine-btn, .wsa-copy-task, .wsa-copy-link, .wsa-late-actions button, .wsa-late-more, .wsa-unblock, .wsa-seen-btn,
+.wsa-mine-people button, .wsa-kind-switch button, .wsa-layout-switch button, .wsa-feed-compact, .wsa-customize-width button,
+.wsa-customize-presets button, .wsa-access-mode button, .wsa-search-chip, .wsa-capture-chips button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* „Comentează" și trimiterea din formularele scurte: butoane normale, chiar dacă Filament le face mici */
+.wsa-comment-add .fi-btn { min-height: var(--wsa-h); font-size: var(--wsa-fs); }
+
+/* etichetă: stările din cardul omului */
+.wsa-setup > *, .wsa-tag {
+    min-height: var(--wsa-h-tag);
+    font-size: var(--wsa-fs-sm);
+    padding-block: 0;
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+/* antetul pe telefon (28 oct 2026): bara 64, toate elementele 40 înălțime → 12 px sus și jos, și tot 12 px de la margini;
+   textul din căutare centrat pe verticală; clopoțelul nu mai intră peste căutare, numărul lui stă în colțul lui */
+@media (max-width: 1023px) {
+    .fi-topbar { padding-inline: 12px; }
+    .fi-topbar-end { margin-inline: 0 12px; gap: 8px; }
+    .fi-topbar-end .fi-global-search-ctn { margin-inline-end: 4px; }
+    .fi-topbar-end .fi-user-menu { margin-inline-start: 8px; }
+    .fi-global-search-field .fi-input-wrp { min-height: 40px; height: 40px; display: flex; align-items: center; }
+    .fi-global-search-field .fi-input-wrp-content-ctn { align-self: stretch; display: flex; align-items: center; }
+    .fi-global-search-field .fi-input-wrp-prefix { align-self: center; }
+    .fi-topbar-end .fi-global-search-field input { height: 100%; padding-block: 0; line-height: 40px; font-size: var(--wsa-fs-input); }
+    .fi-topbar-database-notifications-btn { width: 40px; height: 40px; flex: none; position: relative; }
+    .fi-topbar-database-notifications-btn .fi-badge { position: absolute; top: 0; right: 0; translate: none; inset-inline-start: auto; }
+    .fi-user-menu-trigger .fi-avatar { width: 40px; height: 40px; }
+    .fi-topbar-open-sidebar-btn, .fi-topbar-close-sidebar-btn { height: 40px; }
+}
+
+/* căutarea: „Închide" e text simplu (fără chenar, zona de apăsare rămâne), iar filtrele de sub ea, chip-uri și lista de proiecte, au aceeași înălțime mică */
+.wsa-search-close { padding: 0 0.25rem; border: 0; background: none; color: var(--color-gray-600); font-size: var(--wsa-fs); font-weight: 400; min-height: var(--wsa-h-sm); text-decoration: underline; text-decoration-color: var(--color-gray-300); text-underline-offset: 4px; }
+.wsa-search-close:hover { background: none; color: var(--color-gray-950); text-decoration-color: currentColor; }
+.wsa-search-project { padding-block: 0; color: var(--color-gray-700); }
+@media (max-width: 1023px) {
+    .wsa-search-close { min-height: 44px; margin-right: -0.25rem; }
 }

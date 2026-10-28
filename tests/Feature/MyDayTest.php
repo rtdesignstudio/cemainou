@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Actions\CorrectTime;
+use App\Filament\Widgets\MyDayCard;
 use App\Models\Activity;
 use App\Models\Project;
+use App\Models\Update;
 use App\Models\User;
 use App\Models\WorkSession;
 use App\Support\MyDay;
@@ -12,6 +14,7 @@ use App\Support\TodayLayout;
 use App\Support\WorkTime;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 /** „Ziua mea": cele 24 de ore cu timpul lucrat pe proiecte, cifrele zilei; pe Azi, deasupra „Săptămânii mele". */
@@ -98,5 +101,47 @@ class MyDayTest extends TestCase
         $this->assertSame(60, $day['hours'][2]['minutes']);                                 // bara rămâne, estompată: măsurată, dar nesocotită
 
         $this->actingAs($ana)->get('/')->assertOk()->assertSee(['corrected −2h', 'Removed by a correction', 'agentul singur, noaptea']);
+
+        $first = [];                                                                        // cardul omului de pe Azi: barele și „Început", la fel
+        $bars = WorkTime::hourlyForUsers(collect([$ana]), [$ana->id => MyDay::removedStretches($ana, today('Europe/Chisinau'))], $first);
+        $this->assertSame([0, 0, 0, 30], [$bars[$ana->id][1], $bars[$ana->id][2], $bars[$ana->id][3], $bars[$ana->id][9]]);
+        $this->assertSame('09:00', Carbon::createFromTimestampUTC($first[$ana->id])->setTimezone('Europe/Chisinau')->format('H:i'));
+    }
+
+    public function test_the_card_goes_back_a_day_and_dragging_over_hours_opens_the_correction_already_filled(): void
+    {
+        Carbon::setTestNow(Carbon::parse('today 18:00', 'Europe/Chisinau'));
+        $ana = User::factory()->create(['name' => 'Ana', 'role' => 'lead', 'timezone' => 'Europe/Chisinau']);
+        $site = Project::factory()->create(['name' => 'Site']);
+        foreach (['01:10', '01:20', '01:30', '01:40', '09:00', '09:10'] as $t) {
+            Activity::create(['user_id' => $ana->id, 'project_id' => $site->id, 'kind' => 'app', 'source' => 'web', 'occurred_at' => Carbon::parse("today {$t}", 'Europe/Chisinau')->utc()]);
+        }
+        $this->actingAs($ana);
+
+        Livewire::test(MyDayCard::class)
+            ->assertSee(['Add time', 'Correct the time'])
+            ->call('shiftDay', 1)->assertSet('date', null)                                     // azi: nu merge în viitor
+            ->call('shiftDay', -1)->assertSet('date', today('Europe/Chisinau')->subDay()->toDateString())
+            ->call('shiftDay', 1)->assertSet('date', null)
+            ->call('selectHours', 1, 1)
+            ->assertActionMounted('correctTime')
+            ->assertSchemaStateSet(['project_id' => $site->id, 'start' => '01:10', 'actual_hours' => 0, 'actual_minutes' => 10]);   // 40m măsurat: scoate cele 30 de la 01:10
+    }
+
+    public function test_the_figures_under_the_chart_add_up_to_the_time_worked_and_a_day_without_an_update_says_so(): void
+    {
+        Carbon::setTestNow(Carbon::parse('today 18:00', 'Europe/Chisinau'));
+        $ana = User::factory()->create(['name' => 'Ana', 'role' => 'lead', 'timezone' => 'Europe/Chisinau']);
+        [$site, $app] = [Project::factory()->create(['name' => 'Site']), Project::factory()->create(['name' => 'Aplicația'])];
+        foreach (['09:00:20', '09:10:40', '09:21', '09:31:30', '09:52', '10:03:10', '10:13:50', '11:00', '11:10:30', '11:20:50'] as $i => $t) {
+            Activity::create(['user_id' => $ana->id, 'project_id' => ($i % 3 ? $site : $app)->id, 'kind' => 'app', 'source' => 'web', 'occurred_at' => Carbon::parse("today {$t}", 'Europe/Chisinau')->utc()]);
+        }
+        $day = MyDay::for($ana);
+        $this->assertSame($day['minutes'], collect($day['legend'])->sum('minutes') + $day['rest']);
+        $this->assertSame(['Web'], $day['hours'][9]['agents']);
+
+        $this->assertTrue($day['unreported']);                                              // peste o oră, niciun update azi
+        Update::factory()->create(['user_id' => $ana->id, 'project_id' => $site->id]);
+        $this->assertFalse(MyDay::for($ana->fresh())['unreported']);
     }
 }

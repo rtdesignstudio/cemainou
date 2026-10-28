@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\Source;
 use App\Enums\TaskStatus;
 use App\Enums\UpdateItemType;
 use App\Models\Project;
@@ -11,6 +12,7 @@ use App\Models\Update;
 use App\Models\User;
 use App\Models\WorkDay;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * Ziua de azi a omului (secțiunea „Ziua mea", deasupra „Săptămânii mele"): cele 24 de ore cu timpul lucrat pe proiecte, timpul față de
@@ -35,8 +37,7 @@ class MyDay
         $hourly = WorkTime::hourly($user, $today);
         // corecțiile zilei: cifra le ia deja (added); o corecție în minus cu ora ei de început scoate și bucata aceea din grafic, interval și cea mai lungă bucată
         $corrections = TimeEntry::where('user_id', $user->id)->whereDate('date', $today->toDateString())->where('is_correction', true)->get(['minutes', 'start_minute', 'note']);
-        $without = $corrections->filter(fn ($c) => $c->minutes < 0 && $c->start_minute !== null)
-            ->map(fn ($c) => [$today->getTimestamp() + $c->start_minute * 60, $today->getTimestamp() + ($c->start_minute - $c->minutes) * 60])->values()->all();
+        $without = self::removedStretches($user, $today, $corrections);
         $measured = $hourly;
         if ($without) {
             $hourly = WorkTime::hourly($user, $today, $without);
@@ -49,17 +50,27 @@ class MyDay
             + (int) TimeEntry::where('user_id', $user->id)->whereDate('date', $yesterday)->sum('minutes');
 
         // proiectele zilei, cele mai lucrate primele: primele 4 au nuanța lor (ca la săptămână), restul și timpul fără proiect sunt „rest"
-        $totals = [];
-        foreach ($hourly['hours'] as $hour) {
-            foreach ($hour['projects'] as $id => $m) {
-                $totals[$id] = ($totals[$id] ?? 0) + $m;
-            }
+        // din secundele zilei (nu din orele rotunjite), împărțite ca suma lor să fie exact timpul măsurat de sus (fără timpul adăugat de mână)
+        $seconds = $hourly['projectSeconds'];
+        if (($none = $hourly['seconds'] - array_sum($seconds)) > 30) {
+            $seconds[0] = $none;                                                         // lucru fără proiect
         }
+        $target = max(0, (int) $day['active_minutes'] + (int) $corrections->filter(fn ($c) => $c->minutes < 0 && $c->start_minute !== null)->sum('minutes'));
+        $totals = self::apportion($seconds, $target);
         $visible = Project::visibleTo($viewer)->whereIn('id', array_keys($totals))->get()->keyBy('id');
         $ranked = collect($totals)->filter(fn ($m, $id) => $id && $visible->has($id))->sortDesc()->keys()->take(self::SHADES)->values();
         $shade = fn (int $id) => ($i = $ranked->search($id)) === false ? 'rest' : (string) $i;
+        // cine a lucrat în fiecare oră (Claude Code, Cursor, Web...): la trecerea cu mouse-ul peste bară
+        $agents = [];
+        foreach ($user->activities()->whereBetween('occurred_at', [$from, $to])->toBase()->get(['occurred_at', 'source']) as $a) {
+            $label = Source::tryFrom((string) $a->source)?->getLabel();
+            if ($label) {
+                $agents[(int) Carbon::parse($a->occurred_at, 'UTC')->setTimezone($tz)->format('G')][$label] = true;
+            }
+        }
         $hours = collect($hourly['hours'])->map(fn (array $h, int $i) => [
             'hour' => $i,
+            'agents' => array_keys($agents[$i] ?? []),
             'minutes' => $h['minutes'],
             'parts' => collect($h['projects'])->map(fn ($m, $id) => ['shade' => $shade((int) $id), 'minutes' => $m, 'name' => $visible[$id]->name ?? __('No project')])
                 ->groupBy('shade')->map(fn ($p, $s) => ['shade' => (string) $s, 'minutes' => $p->sum('minutes'), 'name' => $p->pluck('name')->unique()->join(', ')])
@@ -111,9 +122,52 @@ class MyDay
             'addedLeft' => $placed['left'],                                          // n-a mai încăput în ore (peste 24 de ore pe zi): doar cifra
             'rest' => max(0, $rest),
             'corrected' => (int) $corrections->sum('minutes'),
+            'removed' => (int) -$corrections->filter(fn ($c) => $c->minutes < 0 && $c->start_minute !== null)->sum('minutes'),
+            // azi, după o oră de lucru, fără niciun update: un rând care amintește de /upd (doar celor care lucrează cu agenți)
+            'unreported' => $today->isSameDay(now($tz)) && $user->usesAgents() && (int) $day['active_minutes'] + $added >= UpdateNudge::MIN_MINUTES
+                && ! Update::where('user_id', $user->id)->whereBetween('created_at', [$from, $to])->exists(),
             'correctionNote' => $corrections->pluck('note')->filter()->join(' · '),
             'wins' => $wins,
         ];
+    }
+
+    /**
+     * Bucățile scoase la corecție într-o zi ([început, sfârșit] în secunde): corecțiile în minus care au ora lor de început.
+     *
+     * @return list<array{0: int, 1: int}>
+     */
+    public static function removedStretches(User $user, Carbon $day, ?Collection $corrections = null): array
+    {
+        $day = $day->copy()->startOfDay();
+        $corrections ??= TimeEntry::where('user_id', $user->id)->whereDate('date', $day->toDateString())->where('is_correction', true)->get(['minutes', 'start_minute']);
+
+        return $corrections->filter(fn ($c) => $c->minutes < 0 && $c->start_minute !== null)
+            ->map(fn ($c) => [$day->getTimestamp() + $c->start_minute * 60, $day->getTimestamp() + ($c->start_minute - $c->minutes) * 60])->values()->all();
+    }
+
+    /**
+     * Minutele fiecărei chei, din secunde, cu suma exact $target (cel mai mare rest primește minutul în plus): cifrele de sub grafic se adună
+     * la timpul de sus, fără un minut pierdut la rotunjire.
+     *
+     * @param  array<int, float>  $seconds
+     * @return array<int, int>
+     */
+    public static function apportion(array $seconds, int $target): array
+    {
+        $sum = array_sum($seconds);
+        if ($sum <= 0) {
+            return [];
+        }
+        $exact = array_map(fn ($sec) => $sec * $target / $sum, $seconds);
+        $minutes = array_map(fn ($m) => (int) floor($m), $exact);
+        $rests = array_map(fn ($m, $f) => $m - $f, $exact, $minutes);
+        $rests = array_combine(array_keys($exact), $rests);
+        arsort($rests);
+        foreach (array_slice(array_keys($rests), 0, $target - array_sum($minutes)) as $key) {
+            $minutes[$key]++;
+        }
+
+        return array_filter($minutes);
     }
 
     /**

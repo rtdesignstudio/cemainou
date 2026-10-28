@@ -2986,5 +2986,11 @@
     "Removed by a correction": "Scos la corecție",
     "corrected :time": "corectat :time",
     "The extra time started at (optional)": "Timpul în plus a început la (opțional)",
-    "When you take time out: from what time. My day then leaves that stretch out of the chart, too.": "Când scoți timp: de la ce oră. Atunci „Ziua mea” scoate bucata aceea și din grafic."
+    "When you take time out: from what time. My day then leaves that stretch out of the chart, too.": "Când scoți timp: de la ce oră. Atunci „Ziua mea” scoate bucata aceea și din grafic.",
+    "Drag over the hours to correct them": "Trage peste ore ca să le corectezi",
+    "You have not reported today yet. Tell your agent /upd, or just \"write today's update\".": "Azi încă n-ai raportat. Spune-i agentului /upd sau, simplu, „scrie update-ul de azi”.",
+    "h": "ore",
+    "min": "min",
+    "Write between 1 minute and 12 hours.": "Scrie între 1 minut și 12 ore.",
+    "0 hours and 0 minutes if you did not work on it.": "0 ore și 0 minute dacă n-ai lucrat pe el."
 }
