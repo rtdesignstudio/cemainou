@@ -10,6 +10,7 @@ use App\Models\Update;
 use App\Models\User;
 use App\Models\WorkDay;
 use App\Models\WorkSession;
+use App\Support\Demo;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -79,6 +80,9 @@ class DemoSeeder extends Seeder
             ['Mihai Rotaru', 'mihai@cemainou.test', 'collaborator'],
         ])->map(fn ($u) => User::firstOrCreate(['email' => $u[1]], self::person($u[0], $u[2])));
         [$ana, $ion, $maria, $dumitru, $mihai] = $team->all();
+        if (Demo::withAdmin()) {                                           // doar local: paginile de admin, verificate pe aceleași date
+            User::firstOrCreate(['email' => 'admin@cemainou.test'], self::person('Radu Admin', 'admin'));
+        }
 
         $nord = Client::firstOrCreate(['slug' => 'studio-nord'], ['name' => 'Studio Nord', 'color' => '#2563eb', 'contact_name' => 'Elena Nord']);
         $vin = Client::firstOrCreate(['slug' => 'vinaria-exemplu'], ['name' => self::t('Vinăria Exemplu', 'Example Winery'), 'color' => '#9f1239']);

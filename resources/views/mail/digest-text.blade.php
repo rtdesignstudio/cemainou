@@ -12,6 +12,9 @@
 
 @foreach ($rows as $row)
 {{ $row['name'] }} ({{ $row['url'] }})
+@foreach ($row['waiting'] ?? [] as $task)
+→ {{ __('For you') }}: {{ $task['title'] }} ({{ $task['url'] }})
+@endforeach
 @foreach ($row['updates'] as $update)
 - {{ $update['summary'] }} ({{ $update['who'] }}, {{ $update['when'] }})
 @endforeach

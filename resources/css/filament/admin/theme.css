@@ -82,8 +82,10 @@
         align-items: stretch;
         margin-block: 0;
     }
-    .fi-topbar-nav-groups .fi-topbar-item {
-        display: flex;
+    .fi-topbar-nav-groups .fi-topbar-item,
+    .fi-topbar-nav-groups > .fi-dropdown,
+    .fi-topbar-nav-groups .fi-dropdown-trigger {
+        display: flex;                                        /* și grupul cu meniu (Admin): dropdown-ul și declanșatorul lui se întind la fel */
     }
     .fi-topbar-item-btn {
         display: flex;
@@ -11578,3 +11580,110 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
 .fi-input-wrp:not(.fi-fo-markdown-editor):not(:has(textarea)) > .fi-input-wrp-content-ctn > * { flex: 1 1 auto; min-width: 0; }
 .fi-input-wrp-prefix, .fi-input-wrp-suffix { align-self: center; }
 
+
+/* Admin → Acces: cine ce vede; proiectele pe rânduri, oamenii pe coloane, prima coloană fixă la derularea laterală */
+.wsa-access-matrix {
+    overflow-x: auto;
+    border-top: 1px solid var(--color-gray-950);
+}
+.wsa-access-matrix table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--wsa-fs-small);
+}
+.wsa-access-matrix th,
+.wsa-access-matrix td {
+    border-bottom: 1px solid var(--color-gray-200);
+    text-align: left;
+    vertical-align: middle;
+}
+.wsa-access-matrix thead th {
+    padding: 0.75rem 0.75rem 0.75rem 0;
+    font-weight: 500;
+    white-space: nowrap;
+}
+.wsa-access-matrix thead th small,
+.wsa-access-matrix td small {
+    display: block;
+    font-size: var(--wsa-fs-meta);
+    font-weight: 400;
+    color: var(--color-gray-500);
+}
+.wsa-access-matrix tbody th {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    min-width: 14rem;
+    padding: 0.6rem 1rem 0.6rem 0;
+    background: #fff;
+    font-weight: 500;
+}
+.wsa-access-matrix tbody th a {
+    color: var(--color-gray-950);
+    text-decoration: none;
+}
+.wsa-access-matrix tbody th a:hover {
+    text-decoration: underline;
+}
+.wsa-access-mode-btn {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: var(--wsa-fs-meta);
+    font-weight: 400;
+    color: var(--color-gray-500);
+    text-decoration: underline dotted var(--color-gray-300);
+    text-underline-offset: 0.2em;
+}
+.wsa-access-mode-btn:hover {
+    color: var(--color-gray-950);
+}
+.wsa-access-matrix td {
+    min-width: 6.5rem;
+    padding: 0;
+}
+.wsa-access-matrix td > button,
+.wsa-access-matrix td > span {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    min-height: 3.25rem;
+    padding: 0.4rem 0.75rem 0.4rem 0;
+    text-align: left;
+}
+.wsa-access-matrix td > button:hover {
+    background: var(--color-gray-50);
+}
+.wsa-access-matrix td b {
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-gray-950);
+}
+.wsa-access-matrix td.is-team small {
+    color: var(--color-gray-400);
+}
+.wsa-access-matrix td.is-forgotten small::before {
+    content: "";
+    display: inline-block;
+    width: 0.45rem;
+    height: 0.45rem;
+    margin-right: 0.35rem;
+    background: #d97706;                                   /* în listă, fără nicio sarcină aici: acces poate uitat */
+}
+.wsa-access-add-hint {
+    opacity: 0;
+}
+.wsa-access-matrix td > button:hover .wsa-access-add-hint {
+    opacity: 1;
+}
+.wsa-access-matrix + .wsa-meta {
+    margin-top: 1rem;
+}
+.wsa-access-idle::before {
+    content: "";
+    display: inline-block;
+    width: 0.45rem;
+    height: 0.45rem;
+    margin-right: 0.3rem;
+    background: #d97706;                                   /* cardul „Acces": în listă, fără nicio sarcină pe proiect */
+}

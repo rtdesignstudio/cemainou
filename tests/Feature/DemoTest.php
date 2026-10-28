@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\Update;
 use App\Models\User;
+use App\Support\Demo;
 use App\Support\Files;
 use Database\Seeders\DemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -60,5 +61,20 @@ class DemoTest extends TestCase
 
         $this->expectException(HttpException::class);
         Files::attach($rebrand, $mihai, 'x', 'nota.txt');                          // demo-ul nu găzduiește fișiere
+    }
+
+    public function test_a_demo_admin_exists_only_on_the_local_computer_when_asked(): void
+    {
+        config(['cemainou.demo' => true, 'cemainou.demo_admin' => true]);
+        $this->assertFalse(Demo::withAdmin());                                                      // nu pe un server: testele nu rulează „local"
+
+        $this->app['env'] = 'local';
+        $this->seed(DemoSeeder::class);
+        $admin = User::where('email', 'admin@cemainou.test')->sole();
+        $this->assertTrue(Demo::allowed($admin));
+        $this->assertTrue(Demo::people()->contains('id', $admin->id));                             // ultimul la intrarea dintr-un clic
+
+        config(['cemainou.demo_admin' => false]);
+        $this->assertFalse(Demo::allowed($admin));
     }
 }

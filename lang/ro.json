@@ -2997,5 +2997,20 @@
     "Where do you work with an agent? On your computer or in a chat, your agent sees only your projects.": "Unde lucrezi cu un agent? Pe calculator sau în chat, agentul tău vede doar proiectele tale.",
     "The client's people (accounts with the Client role) see this project's tasks, blockers and updates, except internal ones; they can add tasks and comment. Never hours or team notes; documents and files only when shared with them.": "Oamenii clientului (conturile cu rolul Client) văd sarcinile, blocajele și update-urile proiectului, fără cele interne; pot adăuga sarcini și comenta. Niciodată orele sau notele echipei; documentele și fișierele doar când le sunt arătate.",
     "The client also sees the team's comments on updates": "Clientul vede și comentariile echipei la update-uri",
-    "Off: on an update, the client sees only their own comments.": "Oprit: la un update, clientul vede doar comentariile lui."
+    "Off: on an update, the client sees only their own comments.": "Oprit: la un update, clientul vede doar comentariile lui.",
+    "Every active project and who on the team sees it. Admins see everything.": "Fiecare proiect activ și cine din echipă îl vede. Adminii văd tot.",
+    "Restricted": "Restrânse",
+    "In a list, no tasks": "În listă, fără sarcini",
+    "access perhaps forgotten": "acces poate uitat",
+    "lead": "lider",
+    "in the list": "în listă",
+    "whole team": "toată echipa",
+    "In the list, but no task here.": "În listă, dar fără nicio sarcină aici.",
+    "Click to take out of the list": "Clic ca să-l scoți din listă",
+    "Click to add to the list": "Clic ca să-l adaugi în listă",
+    "Sees it because the project is open to the whole team.": "Îl vede pentru că proiectul e deschis întregii echipe.",
+    "The number is the person's open tasks on the project. On a project open to the whole team, only collaborators need to be in the list; to choose people one by one, switch it to only chosen people.": "Cifra: sarcinile deschise ale omului pe proiect. Pe un proiect deschis întregii echipe, în listă trebuie puși doar colaboratorii; ca să alegi oamenii unul câte unul, trece-l pe „doar oamenii aleși\".",
+    "no task here": "nicio sarcină aici",
+    "For you": "Pentru tine",
+    "only the chosen people": "doar oamenii aleși"
 }

@@ -127,4 +127,18 @@ class WeeklyDigestTest extends TestCase
         Mail::assertSent(WeeklyDigestMail::class, 1);
         Mail::assertSent(WeeklyDigestMail::class, fn ($mail) => $mail->hasTo($this->admin->email));
     }
+
+    public function test_the_client_sees_what_waits_for_them_first(): void
+    {
+        $task = Task::add($this->shared, $this->ana, 'Textul pentru pagina Despre', assignee: $this->elena);
+        Task::add($this->internal, $this->ana, 'Intern', assignee: $this->ana);
+
+        $rows = collect(WeeklyDigest::for($this->elena, now()->subWeek(), now()))->keyBy('name');
+        $this->assertSame(['Textul pentru pagina Despre'], array_column($rows['Etichete vin']['waiting'], 'title'));
+        $this->assertStringEndsWith('/tasks/'.$task->id, $rows['Etichete vin']['waiting'][0]['url']);
+        $this->assertSame([], collect(WeeklyDigest::for($this->ana, now()->subWeek(), now()))->pluck('waiting')->flatten()->all());   // echipa își are sarcinile în aplicație
+
+        (new WeeklyDigest)->send(now()->subWeek(), now(), $this->elena);
+        Mail::assertSent(WeeklyDigestMail::class, fn (WeeklyDigestMail $m) => str_contains($m->render(), 'Textul pentru pagina Despre'));
+    }
 }

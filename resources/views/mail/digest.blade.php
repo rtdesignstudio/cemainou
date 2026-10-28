@@ -18,6 +18,12 @@
             <tr><td style="padding-bottom:8px;border-bottom:1px solid #0a0a0a;font-size:19px;font-weight:500;letter-spacing:-0.02em;">
                 <a href="{{ $row['url'] }}" style="color:#0a0a0a;text-decoration:none;">{{ $row['name'] }}</a>
             </td></tr>
+            @if ($row['waiting'] ?? [])
+                <tr><td style="padding:12px 0 0;font-size:12px;color:#737373;">{{ __('For you') }}</td></tr>
+                @foreach ($row['waiting'] as $task)
+                    <tr><td style="padding:3px 0 6px;font-size:15px;">&rarr;&nbsp; <a href="{{ $task['url'] }}" style="color:#0a0a0a;">{{ $task['title'] }}</a></td></tr>
+                @endforeach
+            @endif
             @foreach ($row['updates'] as $update)
                 <tr><td style="padding:10px 0;border-bottom:1px solid #e5e5e5;font-size:15px;line-height:1.45;">
                     {{ $update['summary'] }}

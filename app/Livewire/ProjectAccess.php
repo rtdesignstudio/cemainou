@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Enums\Role;
 use App\Models\Project;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
@@ -65,6 +66,7 @@ class ProjectAccess extends Component
                 ? User::query()->team()->where(fn ($q) => $q->where('role', Role::Admin->value)->orWhere('id', $this->project->lead_id ?? 0))->orderBy('name')->get()
                 : User::query()->team()->where('role', '!=', Role::Collaborator->value)->orderBy('name')->get(),
             'members' => $members,
+            'idle' => $members->pluck('id')->diff(Task::where('project_id', $this->project->id)->whereIn('assignee_id', $members->pluck('id'))->distinct()->pluck('assignee_id'))->all(),   // în listă, fără nicio sarcină aici: acces poate uitat
             'candidates' => $this->candidates()->pluck('name', 'id'),
             'clientPeople' => $this->project->client_visible && $this->project->client_id ? User::where('client_id', $this->project->client_id)->where('is_active', true)->orderBy('name')->get() : collect(),
             'canManage' => auth()->user()->can('update', $this->project),

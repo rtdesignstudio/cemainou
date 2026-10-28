@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Enums\TaskEventType;
 use App\Enums\TaskStatus;
 use App\Filament\Resources\Projects\ProjectResource;
+use App\Filament\Resources\Tasks\TaskResource;
 use App\Mail\WeeklyDigestMail;
 use App\Models\DocumentVersion;
 use App\Models\Project;
@@ -20,7 +21,8 @@ use Throwable;
 /**
  * Rezumatul săptămânal pe email: în ziua și la ora din Setări (implicit luni, 8:00, în fusul echipei), fiecare om activ primește ce s-a întâmplat
  * în ultimele 7 zile pe proiectele pe care le vede: update-urile, sarcinile terminate, ce e blocat, documentele schimbate. Clientul primește doar
- * proiectele lui, fără update-urile interne și fără documente. Cine n-are nimic de citit nu primește nimic; cine l-a oprit din profil, la fel.
+ * proiectele lui, fără update-urile interne și fără documente, dar cu „Pentru tine": sarcinile deschise date lui (o întrebare, un material de trimis).
+ * Cine n-are nimic de citit nu primește nimic; cine l-a oprit din profil, la fel.
  * Pleacă la prima cerere de după oră (ca și curățenia, fără cron), o dată pe săptămână; semnul că a plecat stă în baza de date (Once).
  */
 class WeeklyDigest
@@ -70,7 +72,7 @@ class WeeklyDigest
     /**
      * Săptămâna, pe proiectele pe care le vede omul, cele cu ceva de spus.
      *
-     * @return list<array{name: string, url: string, updates: list<array{summary: string, who: ?string, when: string}>, more: int, done: list<string>, done_more: int, blocked: list<string>, documents: list<string>}>
+     * @return list<array{name: string, url: string, waiting: list<array{title: string, url: string}>, updates: list<array{summary: string, who: ?string, when: string}>, more: int, done: list<string>, done_more: int, blocked: list<string>, documents: list<string>}>
      */
     public static function for(User $person, CarbonInterface $from, CarbonInterface $to): array
     {
@@ -86,11 +88,14 @@ class WeeklyDigest
         $documents = $person->isClient() ? collect() : DocumentVersion::with('document')->whereBetween('created_at', $range)
             ->whereHas('document', fn ($document) => $document->whereNull('archived_at'))->get()->groupBy('document.project_id');
 
-        $ids = $updates->keys()->merge($done->keys())->merge($documents->keys())->merge($blocked->keys())->unique();
+        $waiting = $person->isClient() ? Task::visibleTo($person)->open()->where('assignee_id', $person->id)->orderBy('due_on')->orderBy('id')->get()->groupBy('project_id') : collect();   // clientul: ce așteaptă echipa de la el
+
+        $ids = $updates->keys()->merge($done->keys())->merge($documents->keys())->merge($blocked->keys())->merge($waiting->keys())->unique();
 
         return Project::visibleTo($person)->whereIn('id', $ids)->orderBy('name')->get()->map(fn (Project $project) => [
             'name' => $project->name,
             'url' => ProjectResource::getUrl('view', ['record' => $project], panel: 'admin'),
+            'waiting' => ($waiting[$project->id] ?? collect())->map(fn (Task $t) => ['title' => $t->title, 'url' => TaskResource::getUrl('view', ['record' => $t], panel: 'admin')])->values()->all(),
             'updates' => ($updates[$project->id] ?? collect())->take(5)->map(fn (Update $u) => [
                 'summary' => Markdown::plain($u->summary), 'who' => $u->user?->name,
                 'when' => $u->created_at->copy()->setTimezone($tz)->locale(app()->getLocale())->isoFormat('ddd D MMM'),
@@ -100,6 +105,6 @@ class WeeklyDigest
             'done_more' => max(0, ($done[$project->id] ?? collect())->count() - 8),
             'blocked' => ($blocked[$project->id] ?? collect())->map(fn (Task $t) => $t->title.($t->blocked_reason ? ' - '.Markdown::plain($t->blocked_reason) : ''))->values()->all(),
             'documents' => ($documents[$project->id] ?? collect())->groupBy('document_id')->map(fn ($versions) => $versions->first()->document->title)->values()->all(),
-        ])->filter(fn (array $row) => $row['updates'] || $row['done'] || $row['documents'] || $row['blocked'])->values()->all();
+        ])->filter(fn (array $row) => $row['waiting'] || $row['updates'] || $row['done'] || $row['documents'] || $row['blocked'])->values()->all();
     }
 }

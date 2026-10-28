@@ -7,7 +7,7 @@ return [
      *
      * Versiunea aplicației (pagina Setări, serverul MCP).
      */
-    'version' => '0.1.408',
+    'version' => '0.1.409',
 
     /*
      * În spatele unui proxy (imaginea Docker, Cloudflare): TRUSTED_PROXIES=* sau o listă de adrese, ca IP-ul și https să fie cele reale.
@@ -35,7 +35,8 @@ return [
      * și fără schimbarea parolei; totul se reface în fiecare noapte (cemainou:demo-reset, programat).
      */
     'demo' => (bool) env('CEMAINOU_DEMO', false),
-    'demo_locale' => env('CEMAINOU_DEMO_LOCALE', 'ro'),              // limba datelor inventate și a echipei demo (ro sau en)
+    'demo_locale' => env('CEMAINOU_DEMO_LOCALE', 'ro'),
+    'demo_admin' => (bool) env('CEMAINOU_DEMO_ADMIN', false),        // doar local (APP_ENV=local): și un admin la intrarea dintr-un clic (App\Support\Demo::withAdmin)              // limba datelor inventate și a echipei demo (ro sau en)
 
     /*
      * Cererile de acces de pe pagina publică (formularul „Cere acces" de pe rt.md/cemainou): fiecare devine o sarcină pe proiectul cu slug-ul de

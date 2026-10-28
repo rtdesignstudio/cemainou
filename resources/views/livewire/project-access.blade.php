@@ -21,7 +21,7 @@
             <div class="wsa-token" wire:key="member-{{ $member->id }}">
                 <div>
                     <div class="wsa-token-name">{{ $member->name }}</div>
-                    <div class="wsa-meta">{{ $member->role->getLabel() }} · {{ $member->email }}</div>
+                    <div class="wsa-meta">{{ $member->role->getLabel() }} · {{ $member->email }}@if (in_array($member->id, $idle, true)) · <span class="wsa-access-idle">{{ __('no task here') }}</span>@endif</div>
                 </div>
                 @if ($canManage)
                     <button type="button" class="wsa-take" wire:click="remove({{ $member->id }})" wire:confirm="{{ __('Remove :name from this project? They stop seeing it.', ['name' => $member->name]) }}">{{ __('Remove') }}</button>
