@@ -16,6 +16,7 @@
                 <span class="wsa-label">{{ __('Time worked') }}</span><b>{{ $f($day['minutes']) }}</b>
                 @if ($delta !== null && $delta > 0)<span class="wsa-week-delta">{{ __(':delta vs yesterday', ['delta' => '+'.$delta.'%']) }}</span>
                 @elseif ($day['previous'] > 0)<span class="wsa-week-delta">{{ __('yesterday: :time', ['time' => $f($day['previous'])]) }}</span>@endif
+                @if ($day['corrected'] ?? 0)<span class="wsa-week-delta" title="{{ $day['correctionNote'] }}">{{ __('corrected :time', ['time' => ($day['corrected'] < 0 ? '−' : '+').$f(abs($day['corrected']))]) }}</span>@endif
             </div>
             <div><span class="wsa-label">{{ __('From - to') }}</span><b>{{ $day['start'] ? $day['start']->format('H:i').' - '.$day['end']->format('H:i') : '-' }}</b></div>
             <div><span class="wsa-label">{{ __('Longest stretch') }}</span><b>{{ $day['longest'] ? $f($day['longest']) : '-' }}</b></div>
@@ -41,12 +42,13 @@
         </div>
         <div class="wsa-day-axis" aria-hidden="true"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div>
 
-        @if (($day['legend'] || ($day['added'] ?? 0)) && ! ($chartOnly ?? false))
+        @if (($day['legend'] || ($day['added'] ?? 0) || ($day['corrected'] ?? 0)) && ! ($chartOnly ?? false))
             <ul class="wsa-week-legend wsa-day-legend">
                 @foreach ($day['legend'] as $p)
                     <li><i data-shade="{{ $p['shade'] }}"></i><a href="{{ \App\Filament\Resources\Projects\ProjectResource::getUrl('view', ['record' => $p['project']]) }}">{{ $p['project']->name }}</a><span>{{ $f($p['minutes']) }}</span></li>
                 @endforeach
                 @if ($day['rest'])<li><i data-shade="rest"></i><span class="wsa-week-other">{{ __('Other projects, or none') }}</span><span>{{ $f($day['rest']) }}</span></li>@endif
+                @if ($removed = collect($day['hours'])->flatMap(fn ($h) => $h['parts'])->where('shade', 'removed')->sum('minutes'))<li title="{{ $day['correctionNote'] }}"><i data-shade="removed"></i><span class="wsa-week-other">{{ __('Removed by a correction') }}</span><span>−{{ $f($removed) }}</span></li>@endif
                 @if ($day['added'] ?? 0)<li><i data-shade="added"></i><span class="wsa-week-other">{{ $day['addedApprox'] ? __('Added by hand · time approximate') : __('Added by hand') }}</span><span>{{ $f($day['added']) }}</span></li>@endif
             </ul>
         @endif

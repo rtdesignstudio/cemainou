@@ -2981,5 +2981,10 @@
     "With the music panel open, Space pauses or starts the song.": "Cu panoul de muzică deschis, Spațiu pune pauză sau pornește piesa.",
     "Badges reward good habits: an update every working day, tasks closed with proof, a weekend off. Hover one to see what it takes.": "Badge-urile răsplătesc obiceiurile bune: un update în fiecare zi de lucru, sarcini închise cu dovadă, un weekend liber. Ține mouse-ul pe unul ca să vezi ce cere.",
     "A project with an update every working day for 10 days gets its streak badge, next to its name.": "Un proiect cu update în fiecare zi de lucru, 10 zile la rând, primește badge-ul de serie, lângă nume.",
-    "and :count more task|and :count more tasks": "{1} și încă o sarcină|[2,19] și încă :count sarcini|[20,*] și încă :count de sarcini"
+    "and :count more task|and :count more tasks": "{1} și încă o sarcină|[2,19] și încă :count sarcini|[20,*] și încă :count de sarcini",
+    "removed by a correction": "scos la corecție",
+    "Removed by a correction": "Scos la corecție",
+    "corrected :time": "corectat :time",
+    "The extra time started at (optional)": "Timpul în plus a început la (opțional)",
+    "When you take time out: from what time. My day then leaves that stretch out of the chart, too.": "Când scoți timp: de la ce oră. Atunci „Ziua mea” scoate bucata aceea și din grafic."
 }

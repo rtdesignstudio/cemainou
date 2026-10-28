@@ -189,13 +189,16 @@ class ViewUser extends ViewRecord
                     ->helperText(__('E.g. 2h 30m, 90m or 0 if you did not work on it.'))
                     ->rule(fn () => fn (string $attribute, $value, \Closure $fail) => WorkTime::parseDuration((string) $value) === null && trim((string) $value) !== '0'
                         ? $fail(__('Write it as 2h 30m, 2h or 150')) : null),
+                TextInput::make('start')->label(__('The extra time started at (optional)'))->type('time')->rule('date_format:H:i')
+                    ->helperText(__('When you take time out: from what time. My day then leaves that stretch out of the chart, too.')),
                 Textarea::make('reason')->label(__('Why'))->required()->maxLength(200)->rows(2)->placeholder(__('E.g. the agent stayed open over lunch')),
             ])
             ->action(function (array $data) {
                 abort_unless(auth()->user()->can('manageWorkTime', $this->record), 403);
                 $project = Project::visibleTo($this->record)->findOrFail($data['project_id']);
                 $minutes = trim((string) $data['actual']) === '0' ? 0 : (int) WorkTime::parseDuration((string) $data['actual']);
-                $result = CorrectTime::apply($this->record, $project, Carbon::parse($data['date'])->toDateString(), $minutes, $data['reason'], auth()->user());
+                $result = CorrectTime::apply($this->record, $project, Carbon::parse($data['date'])->toDateString(), $minutes, $data['reason'], auth()->user(),
+                    filled($data['start'] ?? null) ? (int) substr($data['start'], 0, 2) * 60 + (int) substr($data['start'], 3, 2) : null);
                 $this->day = Carbon::parse($data['date'])->toDateString();
                 Notification::make()->title(__('Time corrected: :from → :to.', ['from' => WorkTime::format($result['before']), 'to' => WorkTime::format($result['after'])]))->success()->send();
             });

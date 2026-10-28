@@ -2,9 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Actions\CorrectTime;
 use App\Models\Activity;
 use App\Models\Project;
 use App\Models\User;
+use App\Models\WorkSession;
+use App\Support\MyDay;
 use App\Support\TodayLayout;
 use App\Support\WorkTime;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -68,5 +71,32 @@ class MyDayTest extends TestCase
         $keys = collect(TodayLayout::for($ana->fresh(), all: true))->pluck('key')->all();
         $this->assertSame(array_search('my-week', $keys) - 1, array_search('my-day', $keys));   // chiar deasupra
         $this->assertSame('full', collect(TodayLayout::for($ana->fresh(), all: true))->firstWhere('key', 'my-day')['span']);
+    }
+
+    public function test_a_correction_with_its_start_takes_that_stretch_out_of_the_chart_the_interval_and_the_longest_stretch(): void
+    {
+        Carbon::setTestNow(Carbon::parse('today 18:00', 'Europe/Chisinau'));
+        $ana = User::factory()->create(['name' => 'Ana', 'role' => 'lead', 'timezone' => 'Europe/Chisinau']);
+        $site = Project::factory()->create(['name' => 'Site']);
+        $at = fn (string $t) => Carbon::parse("today {$t}", 'Europe/Chisinau')->utc();
+        $session = WorkSession::create(['user_id' => $ana->id, 'project_id' => $site->id, 'agent_session_id' => 's1', 'started_at' => $at('01:00')]);
+        Activity::create(['user_id' => $ana->id, 'project_id' => $site->id, 'work_session_id' => $session->id, 'kind' => 'prompt', 'source' => 'claude-code', 'occurred_at' => $at('01:00')]);
+        Activity::create(['user_id' => $ana->id, 'project_id' => $site->id, 'work_session_id' => $session->id, 'kind' => 'tool', 'source' => 'claude-code', 'occurred_at' => $at('02:00')]);
+        Activity::create(['user_id' => $ana->id, 'project_id' => $site->id, 'work_session_id' => $session->id, 'kind' => 'stop', 'source' => 'claude-code', 'occurred_at' => $at('03:00')->addSeconds(30)]);   // agentul singur, laptopul închis
+        Activity::create(['user_id' => $ana->id, 'project_id' => $site->id, 'work_session_id' => $session->id, 'kind' => 'session_end', 'source' => 'claude-code', 'occurred_at' => $at('03:15')]);
+        foreach (['09:00', '09:10', '09:20', '09:30'] as $t) {
+            Activity::create(['user_id' => $ana->id, 'project_id' => $site->id, 'kind' => 'app', 'source' => 'web', 'occurred_at' => $at($t)]);
+        }
+        CorrectTime::apply($ana, $site, today('Europe/Chisinau')->toDateString(), CorrectTime::total($ana, $site, today('Europe/Chisinau')->toDateString()) - 135, 'agentul singur, noaptea', $ana, 60);
+
+        $day = MyDay::for($ana);
+        $this->assertSame(30, $day['minutes']);
+        $this->assertSame(-135, $day['corrected']);
+        $this->assertSame('09:00 - 09:30', $day['start']->format('H:i').' - '.$day['end']->format('H:i'));
+        $this->assertSame(30, $day['longest']);
+        $this->assertSame([['shade' => 'removed', 'minutes' => 60, 'name' => 'removed by a correction']], array_values(array_filter($day['hours'][1]['parts'], fn ($p) => $p['shade'] !== '0')));
+        $this->assertSame(60, $day['hours'][2]['minutes']);                                 // bara rămâne, estompată: măsurată, dar nesocotită
+
+        $this->actingAs($ana)->get('/')->assertOk()->assertSee(['corrected −2h', 'Removed by a correction', 'agentul singur, noaptea']);
     }
 }

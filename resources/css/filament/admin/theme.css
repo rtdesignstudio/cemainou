@@ -10760,6 +10760,12 @@ html.wsa-search-open {
 .wsa-week-legend i[data-shade="added"] {
     background: repeating-linear-gradient(-45deg, var(--color-gray-500) 0 1px, var(--color-gray-200) 1px 3px);
 }
+/* barele pe ore: bucata scoasă la o corecție, abia vizibilă (măsurată, dar nesocotită) */
+.wsa-day-stack i[data-shade="removed"],
+.wsa-week-legend i[data-shade="removed"] {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--color-gray-300);
+}
 /* pagina unui om, fila Sarcini: titlul întreg (pe două rânduri, dacă trebuie), proiectul și starea în dreapta */
 .wsa-pp .wsa-day-project.wsa-pp-task {
     grid-template-columns: minmax(0, 1fr) auto auto;

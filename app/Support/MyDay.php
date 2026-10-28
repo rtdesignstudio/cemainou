@@ -33,6 +33,16 @@ class MyDay
         [$from, $to] = [$today->copy()->utc(), $today->copy()->endOfDay()->utc()];
         $day = WorkTime::forDay($user, $today);
         $hourly = WorkTime::hourly($user, $today);
+        // corecțiile zilei: cifra le ia deja (added); o corecție în minus cu ora ei de început scoate și bucata aceea din grafic, interval și cea mai lungă bucată
+        $corrections = TimeEntry::where('user_id', $user->id)->whereDate('date', $today->toDateString())->where('is_correction', true)->get(['minutes', 'start_minute', 'note']);
+        $without = $corrections->filter(fn ($c) => $c->minutes < 0 && $c->start_minute !== null)
+            ->map(fn ($c) => [$today->getTimestamp() + $c->start_minute * 60, $today->getTimestamp() + ($c->start_minute - $c->minutes) * 60])->values()->all();
+        $measured = $hourly;
+        if ($without) {
+            $hourly = WorkTime::hourly($user, $today, $without);
+            $day['start'] = $hourly['first'] ? Carbon::createFromTimestampUTC($hourly['first']) : null;
+            $day['end'] = $hourly['last'] ? Carbon::createFromTimestampUTC($hourly['last']) : null;
+        }
         $added = (int) TimeEntry::where('user_id', $user->id)->whereDate('date', $today->toDateString())->sum('minutes');
         $yesterday = $today->copy()->subDay()->toDateString();
         $before = (int) WorkDay::where('user_id', $user->id)->whereDate('date', $yesterday)->value('active_minutes')
@@ -62,6 +72,10 @@ class MyDay
             $today->isSameDay(now($tz)) ? (int) now($tz)->format('G') : 23,
         );
         foreach ($hours as $i => &$h) {
+            if (($removed = $measured['hours'][$i]['minutes'] - $hourly['hours'][$i]['minutes']) > 0) {    // scos la corecție: estompat, peste ce a rămas
+                $h['parts'][] = ['shade' => 'removed', 'minutes' => $removed, 'name' => __('removed by a correction')];
+                $h['minutes'] += $removed;
+            }
             if ($placed['hours'][$i] > 0) {
                 $h['parts'][] = ['shade' => 'added', 'minutes' => $placed['hours'][$i], 'name' => $placed['approx'][$i] ? __('added by hand, time approximate') : __('added by hand')];
                 $h['minutes'] += $placed['hours'][$i];
@@ -96,6 +110,8 @@ class MyDay
             'addedApprox' => in_array(true, $placed['approx'], true),
             'addedLeft' => $placed['left'],                                          // n-a mai încăput în ore (peste 24 de ore pe zi): doar cifra
             'rest' => max(0, $rest),
+            'corrected' => (int) $corrections->sum('minutes'),
+            'correctionNote' => $corrections->pluck('note')->filter()->join(' · '),
             'wins' => $wins,
         ];
     }

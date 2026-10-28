@@ -15,8 +15,13 @@ use Illuminate\Support\Carbon;
  */
 class CorrectTime
 {
-    /** @return array{before: int, after: int, correction: int} minutele zilei înainte, după și corecția păstrată */
-    public static function apply(User $person, Project $project, string $date, int $actual, string $reason, User $by): array
+    /**
+     * $from (minutul zilei, 0-1439): unde începe bucata scoasă, la o corecție în minus; „Ziua mea" o scoate atunci și din grafic, interval
+     * și cea mai lungă bucată (fără ea, doar cifra se schimbă).
+     *
+     * @return array{before: int, after: int, correction: int} minutele zilei înainte, după și corecția păstrată
+     */
+    public static function apply(User $person, Project $project, string $date, int $actual, string $reason, User $by, ?int $from = null): array
     {
         $date = Carbon::parse($date)->toDateString();
         $existing = self::existing($person, $project, $date);
@@ -28,7 +33,8 @@ class CorrectTime
             $existing?->delete();
         } else {
             ($existing ?? new TimeEntry)->fill(['user_id' => $person->id, 'project_id' => $project->id, 'date' => $date, 'minutes' => $correction,
-                'is_correction' => true, 'corrected_by' => $by->id, 'note' => trim($reason)])->save();
+                'is_correction' => true, 'corrected_by' => $by->id, 'note' => trim($reason),
+                'start_minute' => $correction < 0 && $from !== null ? max(0, min(1439, $from)) : null])->save();
         }
 
         return ['before' => $before, 'after' => max(0, $actual), 'correction' => $correction];

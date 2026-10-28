@@ -172,11 +172,13 @@ class WorkTime
     /**
      * Ziua de azi pe ore, pentru graficul din „Ziua mea": cât s-a lucrat în fiecare din cele 24 de ore (aceeași regulă: prompturi + pauze
      * scurte) și cât din fiecare oră pe ce proiect (unde proiectele au lucrat în paralel, ora se împarte între ele, ca la shares; restul
-     * orei lucrate, fără proiect, e „0"); plus cea mai lungă bucată fără pauză.
+     * orei lucrate, fără proiect, e „0"); plus cea mai lungă bucată fără pauză. Cu $without (bucăți scoase la o corecție, [început, sfârșit] în
+     * secunde), ziua se socotește fără ele, iar first/last sunt primul și ultimul semnal rămas.
      *
-     * @return array{hours: list<array{minutes: int, projects: array<int, int>}>, longest: int}
+     * @param  list<array{0: int, 1: int}>  $without
+     * @return array{hours: list<array{minutes: int, projects: array<int, int>}>, longest: int, first: ?int, last: ?int}
      */
-    public static function hourly(User $user, ?CarbonInterface $day = null): array
+    public static function hourly(User $user, ?CarbonInterface $day = null, array $without = []): array
     {
         $tz = $user->tz();
         $day = Carbon::parse($day ?? now(), $tz)->setTimezone($tz)->startOfDay();
@@ -184,7 +186,27 @@ class WorkTime
         $rows = self::rows($user->activities()->whereBetween('occurred_at', [$from, $to])->toBase()->get(['occurred_at', 'kind', 'work_session_id', 'project_id']));
         $points = $user->workSessions()->whereBetween('started_at', [$from, $to])->pluck('started_at')->map(fn ($t) => Carbon::parse($t)->getTimestamp())->all();
 
-        return self::hourlyOf($rows, $points, $day);
+        if ($without) {
+            $outside = fn (int $t) => ! array_filter($without, fn (array $w) => $t >= $w[0] && $t < $w[1] + 60);   // minutul de la capăt intră și el
+            $kept = [];
+            $open = [];
+            foreach ($rows as $row) {
+                if (! $outside($row[0])) {
+                    continue;
+                }
+                $closer = $row[1] === ActivityKind::Stop->value || $row[1] === ActivityKind::SessionEnd->value;
+                if ($closer && empty($open[$row[2]])) {
+                    continue;                                       // un „stop" fără prompt deschis: coada bucății scoase, nu lucru
+                }
+                $open[$row[2]] = $row[1] === ActivityKind::Prompt->value ? true : ($closer ? false : ($open[$row[2]] ?? false));
+                $kept[] = $row;
+            }
+            $rows = $kept;
+            $points = array_values(array_filter($points, $outside));
+        }
+        $times = array_merge(array_column($rows, 0), $points);
+
+        return self::hourlyOf($rows, $points, $day) + ['first' => $times ? min($times) : null, 'last' => $times ? max($times) : null];
     }
 
     /**
