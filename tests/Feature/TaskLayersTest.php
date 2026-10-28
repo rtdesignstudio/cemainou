@@ -88,4 +88,23 @@ class TaskLayersTest extends TestCase
         Livewire::actingAs($radu)->withQueryParams(['tab' => 'done', 'show' => 'week'])->test(ListTasks::class)
             ->assertCanSeeTableRecords([$done]);
     }
+
+    /** Feedback #39: la „Ale mele" rândul proiectelor are doar proiectele unde am sarcini. */
+    public function test_mine_shows_only_my_projects(): void
+    {
+        $sergiu = User::factory()->create(['name' => 'Sergiu', 'role' => 'member']);
+        $alex = User::factory()->create(['name' => 'Alex', 'role' => 'lead']);
+        $web = Project::factory()->create(['name' => 'Webul nostru']);
+        $app = Project::factory()->create(['name' => 'Aplicatia']);
+        $other = Project::factory()->create(['name' => 'Gazduirea']);
+        Task::add($web, $alex, 'Meniul', assignee: $sergiu);
+        Task::add($app, $alex, 'Ecranul', assignee: $sergiu);
+        Task::add($other, $alex, 'Serverul', assignee: $alex);
+
+        $mine = Livewire::actingAs($sergiu)->withQueryParams(['tab' => 'mine'])->test(ListTasks::class);
+        $this->assertSame(['Aplicatia', 'Webul nostru'], $mine->instance()->projectLayer()->pluck('name')->sort()->values()->all());
+
+        $open = Livewire::actingAs($sergiu)->withQueryParams(['tab' => 'open'])->test(ListTasks::class);
+        $this->assertContains('Gazduirea', $open->instance()->projectLayer()->pluck('name')->all());   // la toate deschise: toate, ca să găsească de lucru
+    }
 }

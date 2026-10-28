@@ -73,7 +73,7 @@
     background: transparent !important;
     padding-inline: 0.25rem;
     margin-inline: 0.25rem;
-    border-radius: var(--wsa-r);
+    border-radius: 0;                                         /* doar text, subliniat: colțurile rotunjite îndoiau capetele liniei */
 }
 @media (min-width: 1024px) {
     .fi-topbar-nav-groups {

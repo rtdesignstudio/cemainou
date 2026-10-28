@@ -164,12 +164,16 @@ class ListTasks extends ListRecords
             ->sortBy(fn (User $u) => $u->id === $me->id ? 0 : ($u->isClient() ? 2 : 1))->values();
     }
 
-    /** Proiectele de deasupra: cele cu sarcini deschise (pentru omul ales, dacă e unul), cu numărul lor; cel ales rămâne și la zero. @return Collection<int, array{id: int, name: string, open: int}> */
+    /**
+     * Proiectele de deasupra: cele cu sarcini deschise (pentru omul ales, dacă e unul; la „Ale mele" doar cele unde am eu, feedback #39), cu numărul lor;
+     * cel ales rămâne și la zero. @return Collection<int, array{id: int, name: string, open: int}>
+     */
     public function projectLayer(): Collection
     {
         $me = auth()->user();
         $person = $this->pickedPerson();
         $counts = Task::visibleTo($me)->open()
+            ->when($this->activeTab === 'mine' && ! $person, fn (Builder $q) => $q->openFor($me))
             ->when($person, fn (Builder $q) => $person->isClient()
                 ? $q->where(fn (Builder $w) => $w->where('assignee_id', $person->id)->orWhere('created_by', $person->id))
                 : $q->where('assignee_id', $person->id))
