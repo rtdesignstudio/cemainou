@@ -44,8 +44,10 @@
                             </div>
                         </div>
                         <div class="wsa-music-prog" wire:key="prog-{{ $track->id }}" data-pos="{{ (float) $position }}" data-dur="{{ (float) ($duration ?: $track->duration) }}" data-on="{{ $online && ! $paused ? 1 : 0 }}"
-                            x-data="{ pos: 0, dur: 0, on: false, dragging: false, sync() { if (this.dragging) return; this.pos = +$el.dataset.pos; this.dur = +$el.dataset.dur; this.on = $el.dataset.on === '1' }, at(e) { const r = this.$refs.bar.getBoundingClientRect(); return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * this.dur }, fmt(s) { s = Math.max(0, Math.floor(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') } }"
-                            x-init="sync(); new MutationObserver(() => sync()).observe($el, { attributes: true }); const t = setInterval(() => { if (on && !dragging && (!dur || pos < dur)) pos++ }, 1000); $cleanup?.(() => clearInterval(t))">{{-- același element între reîmprospătări (un salt tras cu mouse-ul nu se pierde); valorile vin prin data-* --}}
+                            x-data="{ pos: 0, dur: 0, on: false, dragging: false, timer: null,
+                                init() { this.sync(); new MutationObserver(() => this.sync()).observe(this.$el, { attributes: true }); this.timer = setInterval(() => { if (this.on && ! this.dragging && (! this.dur || this.pos < this.dur)) this.pos++ }, 1000) },
+                                destroy() { clearInterval(this.timer) },
+                                sync() { if (this.dragging) return; this.pos = +$el.dataset.pos; this.dur = +$el.dataset.dur; this.on = $el.dataset.on === '1' }, at(e) { const r = this.$refs.bar.getBoundingClientRect(); return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * this.dur }, fmt(s) { s = Math.max(0, Math.floor(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') } }">{{-- același element între reîmprospătări (un salt tras cu mouse-ul nu se pierde); valorile vin prin data-* --}}
                             <span x-text="fmt(pos)"></span>
                             <span class="wsa-music-bar is-seek" x-ref="bar" role="slider" aria-label="{{ __('Position in the song') }}" :aria-valuenow="Math.floor(pos)" aria-valuemin="0" :aria-valuemax="Math.floor(dur)"
                                 x-on:pointerdown="if (!dur) return; $el.setPointerCapture($event.pointerId); dragging = true; pos = at($event)"

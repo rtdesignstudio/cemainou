@@ -8,6 +8,6 @@
                 <button type="submit"><b>{{ $person->name }}</b><span>{{ $person->role->getLabel() }}</span></button>
             </form>
         @endforeach
-        <p class="wsa-demo-login-note">{{ __('Made-up people and projects. Everything starts over every night.') }}</p>
+        <p class="wsa-demo-login-note">{{ __('Made-up people and projects. Everything starts over every hour.') }}</p>
     </div>
 @endif

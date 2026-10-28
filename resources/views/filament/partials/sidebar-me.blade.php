@@ -7,6 +7,8 @@
     use App\Filament\Resources\Updates\UpdateResource;
     $me = auth()->user();
     $inBottomBar = [Dashboard::getUrl(), TaskResource::getUrl('index'), UpdateResource::getUrl('index'), ProjectResource::getUrl('index')];
+    // un client are doar paginile din bara de jos: lista din meniu ar rămâne goală, cu liniile ei; atunci contul vine direct sub profil
+    $more = $me && collect(filament()->getNavigation())->flatMap(fn ($group) => $group->getItems())->contains(fn ($item) => $item->isVisible() && ! in_array($item->getUrl(), $inBottomBar, true));
 @endphp
 @if ($me)
     <style>
@@ -14,6 +16,10 @@
             @foreach ($inBottomBar as $url)
                 .fi-main-sidebar .fi-sidebar-item:has(> .fi-sidebar-item-btn[href="{{ $url }}"]) { display: none; }
             @endforeach
+            @unless ($more)
+                .fi-main-sidebar .fi-sidebar-nav-groups { display: none; }
+                .fi-main-sidebar .wsa-sidebar-account { margin-top: 0.5rem; padding-top: 0; border-top: 0; }
+            @endunless
         }
     </style>
     <a href="{{ \App\Filament\Pages\Auth\EditProfile::getUrl() }}" class="wsa-sidebar-me">

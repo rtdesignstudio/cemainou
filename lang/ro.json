@@ -2405,10 +2405,8 @@
     "Monthly report to the client": "Raportul lunar pentru client",
     "Help us improve it": "Ajută-ne să-l facem mai bun",
     "Only what people write with the feedback button: the text, the page (without your address), the browser, the version and the files. Never names, emails or project data. You can turn it off in Settings.": "Doar ce scriu oamenii cu butonul de feedback: textul, pagina (fără adresa voastră), browserul, versiunea și fișierele. Niciodată nume, emailuri sau date din proiecte. Se poate opri din Setări.",
-    "Demo with made-up data. Try anything: it all starts over every night.": "Demo cu date inventate. Încearcă orice: totul se reface în fiecare noapte.",
     "Install it for your team": "Instalează-l pentru echipa ta",
     "Try the demo as": "Intră în demo ca",
-    "Made-up people and projects. Everything starts over every night.": "Oameni și proiecte inventate. Totul se reface în fiecare noapte.",
     "Adding files is turned off in the demo.": "În demo nu se pot adăuga fișiere.",
     "Your cemainou download link": "Linkul tău de descărcare cemainou",
     "Here is cemainou :version": "Iată cemainou :version",
@@ -2992,5 +2990,7 @@
     "h": "ore",
     "min": "min",
     "Write between 1 minute and 12 hours.": "Scrie între 1 minut și 12 ore.",
-    "0 hours and 0 minutes if you did not work on it.": "0 ore și 0 minute dacă n-ai lucrat pe el."
+    "0 hours and 0 minutes if you did not work on it.": "0 ore și 0 minute dacă n-ai lucrat pe el.",
+    "Demo with made-up data. Try anything: it all starts over every hour.": "Demo cu date inventate. Încearcă orice: totul se reface în fiecare oră.",
+    "Made-up people and projects. Everything starts over every hour.": "Oameni și proiecte inventate. Totul se reface în fiecare oră."
 }

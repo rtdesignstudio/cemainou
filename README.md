@@ -5,7 +5,7 @@ Everyone keeps working in the agent they like (Claude Code, Cursor, Codex, Gemin
 the tasks and what got done into cemainou, and the team, the collaborators and the client see in one place who does what and what comes next.
 
 - Product page: https://rt.md/cemainou/?utm_source=github&utm_medium=readme (Romanian: https://rt.md/cemainou/ro/?utm_source=github&utm_medium=readme)
-- Live demo, no account (data resets every night): https://d.rt.md/
+- Live demo, no account (data resets every hour): https://d.rt.md/
 - Documentation: https://rt.md/cemainou/docs/?utm_source=github&utm_medium=readme · What's new: https://rt.md/cemainou/changelog/?utm_source=github&utm_medium=readme
 - Free for any team, with any number of people; supporting it is voluntary ([License](#license)).
 

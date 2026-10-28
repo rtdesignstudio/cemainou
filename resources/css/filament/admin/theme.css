@@ -2343,6 +2343,7 @@ a.wsa-tag:hover {                                             /* clientul de pe 
     background: var(--color-gray-950);
     color: #fff;
     box-shadow: 0 8px 24px rgb(0 0 0 / 0.16);
+    border-radius: var(--wsa-r);
 }
 .wsa-fab:hover {
     background: var(--color-gray-800);
@@ -11490,7 +11491,8 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
 .wsa-connect input, .wsa-item-form input, .wsa-item-form textarea, .wsa-absence-form input, .wsa-badge-kudos input, .wsa-badges-opt select,
 .wsa-joke-add input, .wsa-music-add input, .wsa-music-libhead input, .wsa-search-project, .wsa-estimate-input,
 .wsa-cmds-search input, .fi-fo-markdown-editor .CodeMirror,
-.fi-select-input-btn, .fi-select-input-value-label, .fi-select-input-search-ctn input, .fi-select-input-option {
+.fi-select-input-btn, .fi-select-input-value-label, .fi-select-input-search-ctn input, .fi-select-input-option,
+.fi-fo-date-time-picker-display-text-input, .fi-fo-date-time-picker input {
     font-size: var(--wsa-fs-field);
 }
 .wsa-add input, .wsa-add select, .wsa-task-new-row select, .wsa-access-add select, .wsa-h-select, .wsa-h-date input,
@@ -11557,3 +11559,11 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
 @media (max-width: 1023px) {
     .wsa-search-close { min-height: 44px; margin-right: -0.25rem; }
 }
+
+/* textul din câmpuri centrat pe verticală, oricât de înalt e câmpul (40 / 44 px): conținutul, prefixul și sufixul stau la mijloc;
+   zonele de text (editorul, textarea) rămân sus */
+.fi-input-wrp:not(.fi-fo-markdown-editor):not(:has(textarea)) { align-items: center; }
+.fi-input-wrp:not(.fi-fo-markdown-editor):not(:has(textarea)) > .fi-input-wrp-content-ctn { align-self: stretch; display: flex; align-items: center; }
+.fi-input-wrp:not(.fi-fo-markdown-editor):not(:has(textarea)) > .fi-input-wrp-content-ctn > * { flex: 1 1 auto; min-width: 0; }
+.fi-input-wrp-prefix, .fi-input-wrp-suffix { align-self: center; }
+

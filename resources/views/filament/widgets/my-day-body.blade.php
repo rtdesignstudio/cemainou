@@ -40,21 +40,22 @@
         @endunless
 
         {{-- cele 24 de ore: înălțimea = minutele lucrate în ora aceea, din 60; culorile = proiectele, ca banda săptămânii --}}
-        {{-- pe card: orele trase cu mouse-ul (sau atinse) deschid „Corectează timpul", completat cu ce s-a măsurat în ele --}}
+        {{-- pe card: orele trase cu mouse-ul (sau atinse) deschid „Corectează timpul", completat cu ce s-a măsurat în ele; un singur ascultător pe grafic
+             (nu pe fiecare bară: după schimbarea zilei, Livewire reface barele și Alpine nu le-ar mai lega) --}}
         <div class="wsa-day-chart" role="img" aria-label="{{ __('Time worked by hour') }}"
              @if ($canSelect ?? false)
-                 wire:key="my-day-chart-{{ $day['date'] }}-{{ $day['now'] }}"
                  x-data="{ a: null, b: null, on: false,
-                     move(e) { if (! this.on) return; const el = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-hour]'); if (el) this.b = Math.min(+el.dataset.hour, {{ $day['now'] }}) },
-                     start(h) { this.on = true; this.a = this.b = h },
-                     end() { if (! this.on) return; this.on = false; $wire.selectHours(this.a, this.b); setTimeout(() => this.a = this.b = null, 400) },
-                     sel(h) { return this.a !== null && h >= Math.min(this.a, this.b) && h <= Math.max(this.a, this.b) } }"
-                 x-on:pointermove="move($event)" x-on:pointerup.window="end()"
-                 data-selectable title="{{ __('Drag over the hours to correct them') }}"
+                     hour(e) { const el = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-hour]'); return el ? Math.min(+el.dataset.hour, +this.$root.dataset.now) : null },
+                     paint() { this.$root.querySelectorAll('[data-hour]').forEach((el) => el.classList.toggle('is-picked', this.a !== null && +el.dataset.hour >= Math.min(this.a, this.b) && +el.dataset.hour <= Math.max(this.a, this.b))) },
+                     down(e) { const h = this.hour(e); if (h === null || +e.target.closest('[data-hour]')?.dataset.hour > +this.$root.dataset.now) return; e.preventDefault(); this.on = true; this.a = this.b = h; this.paint() },
+                     move(e) { if (! this.on) return; const h = this.hour(e); if (h !== null) { this.b = h; this.paint() } },
+                     end() { if (! this.on) return; this.on = false; $wire.selectHours(this.a, this.b); setTimeout(() => { this.a = this.b = null; this.paint() }, 400) } }"
+                 x-on:pointerdown="down($event)" x-on:pointermove="move($event)" x-on:pointerup.window="end()"
+                 data-selectable data-now="{{ $day['now'] }}" title="{{ __('Drag over the hours to correct them') }}"
              @endif>
             @foreach ($day['hours'] as $h)
                 <div @class(['wsa-day-hour', 'is-now' => $h['hour'] === $day['now'], 'is-future' => $h['hour'] > $day['now']])
-                     @if (($canSelect ?? false) && $h['hour'] <= $day['now']) data-hour="{{ $h['hour'] }}" x-on:pointerdown.prevent="start({{ $h['hour'] }})" x-bind:class="{ 'is-picked': sel({{ $h['hour'] }}) }" @endif
+                     @if ($canSelect ?? false) data-hour="{{ $h['hour'] }}" @endif
                      title="{{ sprintf('%02d:00-%02d:00', $h['hour'], ($h['hour'] + 1) % 24) }}{{ $h['minutes'] ? ' · '.$f($h['minutes']).collect($h['parts'])->map(fn ($p) => ' · '.$p['name'].' '.$f($p['minutes']))->join('') : '' }}{{ ($h['agents'] ?? []) ? ' · '.implode(', ', $h['agents']) : '' }}">
                     <div class="wsa-day-stack" style="height: {{ $h['minutes'] ? max(4, round($h['minutes'] * 100 / 60)) : 0 }}%">
                         @foreach (array_reverse($h['parts']) as $p)

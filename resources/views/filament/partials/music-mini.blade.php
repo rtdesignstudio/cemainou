@@ -36,7 +36,7 @@
             // clipul se așază peste locul lui din panou (cât panoul e deschis și cântă aici); altfel nu se vede
             const place = () => {
                 const box = $('wsa-mini');
-                const slot = jb.active && document.querySelector('.wsa-music-panel [data-video-slot]');
+                const slot = jb.active ? document.querySelector('.wsa-music-panel [data-video-slot]') : null;   // null, nu false: false?.x aruncă eroare
                 document.body.classList.toggle('wsa-video-here', !!slot);
                 document.body.classList.toggle('wsa-plays-here', jb.active);                     // dispozitivul ăsta cântă (nu doar contul)                       // pe body: reîmprospătarea panoului nu-l atinge
                 const r = slot?.getBoundingClientRect();
