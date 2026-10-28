@@ -30,6 +30,6 @@ class ProjectNotePolicy
 
     public function obsolete(User $user, ProjectNote $note): bool
     {
-        return $note->user_id === $user->id || $user->leads($note->project);
+        return $note->user_id === $user->id || (! $user->isClient() && $user->leads($note->project));   // clientul: doar notele lui
     }
 }

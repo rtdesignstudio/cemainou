@@ -48,6 +48,6 @@ class DocumentPolicy
 
     public function archive(User $user, Document $document): bool
     {
-        return $document->archived_at === null && ($document->user_id === $user->id || $user->leads($document->project));
+        return $document->archived_at === null && ($document->user_id === $user->id || (! $user->isClient() && $user->leads($document->project)));   // clientul: doar documentele lui
     }
 }

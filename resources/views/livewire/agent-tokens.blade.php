@@ -10,8 +10,8 @@
         <x-filament::button x-on:click="$wire.pick(null).then(() => $dispatch('open-modal', { id: 'connect-agent' }))">{{ __('Connect an agent or app') }}</x-filament::button>
     </header>
     @if ($forClient)
-        {{-- clientul: doar aplicațiile, cu contul; ce vede agentul lui e ce vede el aici --}}
-        <p class="wsa-meta wsa-intro">{{ __('Connect the Claude app or ChatGPT with your account: ask what was done on your projects, add a request or read what was shared with you, in a chat. Your agent sees only what you see here.') }}</p>
+        {{-- clientul: agentul de pe calculator (o cheie) sau aplicațiile, cu contul; ce vede agentul lui e ce vede el aici --}}
+        <p class="wsa-meta wsa-intro">{{ __('Connect your agent (Claude Code, Cursor, Codex) or the Claude app or ChatGPT: check the tasks on your projects, answer them, add a request or read what was shared with you, right from your session. Your agent sees only what you see here; time is not measured.') }}</p>
     @else
     <p class="wsa-meta wsa-intro">{{ __('On your computer, time is measured too; in a chat you only ask and report. Each computer gets its own key: revoke it when you change or lose the computer; keys unused for :days days are revoked by themselves.', ['days' => $idleDays]) }}</p>
 
@@ -26,6 +26,7 @@
             </ul>
         @endif
     </div>
+    @endif
 
     <div class="wsa-group">{{ __('On your computers') }}</div>
     @forelse ($tokens as $token)
@@ -47,7 +48,6 @@
         <p class="wsa-revoke-all">
             <button type="button" class="wsa-inline-btn" wire:click="revokeAll" wire:loading.attr="disabled" wire:target="revokeAll" wire:confirm="{{ __('Revoke all your keys? Every connected agent stops working until you connect it again.') }}">{{ __('Revoke all') }}</button>
         </p>
-    @endif
     @endif
 
     <div class="wsa-group">{{ __('Apps connected with your account') }}</div>
@@ -83,7 +83,7 @@
         @if ($target === null)
             {{-- 1. o singură întrebare --}}
             <x-slot name="heading">{{ __('Connect cemainou') }}</x-slot>
-            <x-slot name="description">{{ $forClient ? __('In a chat, with your account: no key.') : __('Where do you work with an agent? On your computer, time is measured too; in a chat you only ask and report.') }}</x-slot>
+            <x-slot name="description">{{ $forClient ? __('Where do you work with an agent? On your computer or in a chat, your agent sees only your projects.') : __('Where do you work with an agent? On your computer, time is measured too; in a chat you only ask and report.') }}</x-slot>
             <div class="wsa-places">
                 @foreach ($places as $p)
                     <button type="button" @class(['wsa-place', 'is-main' => $p['key'] === 'computer', 'is-minor' => $p['key'] === 'other']) wire:click="pick('{{ $p['key'] }}')">
@@ -108,7 +108,7 @@
                     <div class="wsa-step">{{ __('2. It turns green by itself') }}</div>
                     <ul class="wsa-connect-checks" @unless ($progress['tools'] && $progress['session']) wire:poll.3s @endunless role="status">
                         <li @class(['is-ok' => $progress['key']])>{{ $progress['key'] ? __('The key is created on this computer') : __('Waiting for the command…') }}</li>
-                        <li @class(['is-ok' => $progress['session']])>{{ __('The first session arrived: time is measured') }}</li>
+                        @unless ($forClient)<li @class(['is-ok' => $progress['session']])>{{ __('The first session arrived: time is measured') }}</li>@endunless
                         <li @class(['is-ok' => $progress['tools']])>{{ __('The agent used the cemainou tools') }}</li>
                     </ul>
                     @if ($progress['fix'])

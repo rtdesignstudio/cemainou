@@ -5,11 +5,13 @@
 #   curl -fsS <url>/agent/install.sh | sh -s -- <url> <cod>
 # Codul (wsc_..., valabil 10 minute, o dată) se schimbă pe cheie la server; merge și o cheie dată direct ('3|wsa_...').
 # Nimic nu se schimbă până nu merg descărcările și cheia; la orice eșec de după, conectarea MCP abia adăugată se scoate la loc.
+# Al treilea argument, „client" (contul unui client): doar serverul MCP și permisiunea uneltelor; fără /upd, fără hook-uri, fără timp măsurat.
 set -u
 HELP='Nu merge? Problemele știute și soluțiile lor: https://rt.md/cemainou/ro/documentatie/#probleme'
 trap 'c=$?; [ $c -ne 0 ] && [ $c -ne 3 ] && echo "$HELP" >&2' EXIT   # la orice eșec, unde se găsește ajutorul
 URL=${1:-}
 TOKEN=${2:-}
+MODE=${3:-}
 if [ -z "$URL" ] || [ -z "$TOKEN" ]; then
   echo "folosire: install.sh <url> <cod>" >&2
   exit 2
@@ -47,7 +49,9 @@ command -v curl >/dev/null 2>&1 || { echo "Lipsește curl." >&2; exit 1; }
 # 1. descărcările, într-un folder temporar: dacă ceva nu merge, nimic nu s-a schimbat încă
 tmp=$(mktemp -d 2>/dev/null || mktemp -d -t cemainou) || exit 1
 trap 'c=$?; rm -rf "$tmp"; [ $c -ne 0 ] && [ $c -ne 3 ] && echo "$HELP" >&2' EXIT
-for f in upd.md brief.md history.md ctx.md idea.md task.md work.md heartbeat.sh session-start.sh; do   # comenzile vechi: doar pentru cine le are deja
+FILES='upd.md brief.md history.md ctx.md idea.md task.md work.md heartbeat.sh session-start.sh'
+[ "$MODE" = client ] && FILES=''
+for f in $FILES; do   # comenzile vechi: doar pentru cine le are deja
   curl -fsS "$URL/agent/$f" -o "$tmp/$f" || { echo "Nu am putut descărca $URL/agent/$f (serverul e pornit? adresa e bună?)." >&2; exit 1; }
 done
 
@@ -116,7 +120,8 @@ else
   undo() { mcp_json remove; echo "$1 Conectarea a fost scoasă la loc; rulează comanda din nou." >&2; exit 1; }
 fi
 
-# 4. comenzile scurte, scriptul de hook și config-ul cu adresa și cheia (600)
+# 4. comenzile scurte, scriptul de hook și config-ul cu adresa și cheia (600); un client n-are nimic din ele
+if [ "$MODE" != client ]; then
 mkdir -p "$HOME_DIR/.claude/commands" "$HOME_DIR/.config/cemainou" || undo "Nu pot scrie în $HOME_DIR."
 rm -f "$HOME_DIR/.claude/commands/upd-auto.md"            # comanda veche, renunțată
 grep -qs project_context "$HOME_DIR/.claude/commands/context.md" && rm -f "$HOME_DIR/.claude/commands/context.md"   # /context al nostru acoperea comanda Claude Code: acum e /ctx
@@ -135,6 +140,7 @@ ONLY_LINE=$(cat "$HOME_DIR/.config/cemainou/config" "$HOME_DIR/.config/whatsupai
   printf '# Doar sesiunile din aceste foldere ajung la cemainou (separate cu :). Fără rândul de mai jos, din orice folder.\n'
   if [ -n "$ONLY_LINE" ]; then printf '%s\n' "$ONLY_LINE"; else printf '# CEMAINOU_ONLY="$HOME/Clienti:$HOME/RT"\n'; fi
 } > "$HOME_DIR/.config/cemainou/config" || undo "Nu am putut scrie config-ul."
+fi
 
 # 5. hook-urile în ~/.claude/settings.json: se păstrează tot ce e acolo, se înlocuiesc doar intrările cemainou.
 #    SessionStart: session-start.sh, sincron (rândul lui intră în contextul sesiunii); restul: heartbeat.sh, în fundal.
@@ -144,14 +150,15 @@ SETTINGS="$HOME_DIR/.claude/settings.json"
 BEAT='"$HOME/.config/cemainou/heartbeat.sh"'          # cu ghilimele și $HOME neînlocuit: merge și cu spații în cale
 START='"$HOME/.config/cemainou/session-start.sh"'
 if command -v node >/dev/null 2>&1; then
-  node - "$SETTINGS" "$BEAT" "$START" <<'EOF'
+  node - "$SETTINGS" "$BEAT" "$START" "$MODE" <<'EOF'
 const fs = require('fs');
-const [file, beat, start] = process.argv.slice(2);
+const [file, beat, start, mode] = process.argv.slice(2);
 let s = {};
 try { s = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
 s.hooks = s.hooks || {};
 for (const ev of ['SessionStart', 'UserPromptSubmit', 'PostToolUse', 'Stop', 'SessionEnd']) {
   s.hooks[ev] = (s.hooks[ev] || []).filter((g) => !(g.hooks || []).some((h) => /(whatsupai|cemainou)\/(heartbeat|session-start)\.sh/.test(String(h.command || ''))));
+  if (mode === 'client') { if (!s.hooks[ev].length) delete s.hooks[ev]; continue; }   // clientul: fără hook-uri
   s.hooks[ev].push(ev === 'SessionStart'
     ? { hooks: [{ type: 'command', command: start, timeout: 5 }] }
     : { hooks: [{ type: 'command', command: beat, async: true, timeout: 10 }] });
@@ -162,9 +169,9 @@ for (const r of ['mcp__cemainou', 'Bash(git remote -v)']) if (!allow.includes(r)
 fs.writeFileSync(file, JSON.stringify(s, null, 2) + '\n');
 EOF
 elif command -v python3 >/dev/null 2>&1; then
-  python3 - "$SETTINGS" "$BEAT" "$START" <<'EOF'
+  python3 - "$SETTINGS" "$BEAT" "$START" "$MODE" <<'EOF'
 import json, re, sys
-file, beat, start = sys.argv[1:4]
+file, beat, start, mode = sys.argv[1:5]
 try:
     with open(file) as f:
         s = json.load(f)
@@ -173,6 +180,10 @@ except Exception:
 s.setdefault('hooks', {})
 for ev in ['SessionStart', 'UserPromptSubmit', 'PostToolUse', 'Stop', 'SessionEnd']:
     groups = [g for g in s['hooks'].get(ev, []) if not any(re.search(r'(whatsupai|cemainou)/(heartbeat|session-start)\.sh', str(h.get('command', ''))) for h in g.get('hooks', []))]
+    if mode == 'client':
+        if groups: s['hooks'][ev] = groups
+        else: s['hooks'].pop(ev, None)
+        continue
     groups.append({'hooks': [{'type': 'command', 'command': start, 'timeout': 5}]} if ev == 'SessionStart'
                   else {'hooks': [{'type': 'command', 'command': beat, 'async': True, 'timeout': 10}]})
     s['hooks'][ev] = groups
@@ -190,4 +201,8 @@ else
 fi
 
 rm -rf "$HOME_DIR/.config/whatsupai"                          # configurarea de sub numele vechi, dacă era
+if [ "$MODE" = client ]; then
+  echo "Gata: Claude Code e conectat la cemainou ($URL), cu contul tău de client: agentul vede doar proiectele tale, sarcinile, documentele și fișierele arătate ție. Întreabă-l în cuvinte („ce sarcini am pe proiect?”, „răspunde la #12: …”, „adaugă o cerere: …”). Uneltele cemainou sunt permise în Claude Code (regula mcp__cemainou din $SETTINGS). Deschide o sesiune nouă."
+  exit 0
+fi
 echo "Gata: Claude Code e conectat la cemainou ($URL), comanda /upd e instalată, iar hook-urile leagă fiecare sesiune de proiectul ei, îi măsoară timpul și îi aduc ce contează pe proiect. Uneltele cemainou sunt permise în Claude Code (regula mcp__cemainou din $SETTINGS), ca modul automat să nu le blocheze. Restul îl spui agentului în cuvinte („notează o idee: …”, „lucrez la #12”). Deschide o sesiune nouă."

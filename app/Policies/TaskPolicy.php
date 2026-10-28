@@ -46,7 +46,11 @@ class TaskPolicy
 
     public function move(User $user, Task $task, TaskStatus $to): bool
     {
-        if ($user->isClient()) {                                                // clientul: sarcinile lui (pe care le face sau le-a cerut), pe proiectele lui
+        if ($user->isClient()) {                                                // clientul: sarcinile lui (pe care le face sau le-a cerut), pe proiectele lui;
+            if ($to === TaskStatus::Dropped) {                                  // renunțată (aproape o ștergere): doar o cerere de-a lui
+                return $this->view($user, $task) && $task->created_by === $user->id;
+            }
+
             return $this->view($user, $task) && ($task->assignee_id === $user->id || $task->created_by === $user->id);
         }
         if ($to === TaskStatus::Dropped) {

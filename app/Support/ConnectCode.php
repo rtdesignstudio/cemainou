@@ -31,7 +31,7 @@ class ConnectCode
     {
         $data = Cache::lock(self::key($code).':lock', 5)->get(fn () => Cache::pull(self::key($code)));
         $user = $data ? User::find($data['user_id']) : null;
-        if (! $user?->usesAgents()) {                                       // inactiv sau cont de client: fără agenți
+        if (! $user?->connectsAgents()) {                                   // inactiv, sau client fără agenți permiși: fără cheie
             return null;
         }
 

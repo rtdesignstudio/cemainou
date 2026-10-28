@@ -2,7 +2,6 @@
 
 namespace App\Mcp\Tools;
 
-use App\Models\User;
 use App\Support\AgentCharts;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Carbon;
@@ -26,8 +25,11 @@ class MyDayTool extends TeamTool
         $this->record($request);
         $person = $viewer;
         if (filled($data['person'] ?? null)) {
-            $person = User::query()->team()->where(fn ($q) => $q->where('name', 'like', self::like($data['person']))->orWhere('email', 'like', self::like($data['person'])))->first();
-            if (! $person || ! $viewer->can('viewWorkTime', $person)) {
+            [$person, $error] = $this->findPerson($data['person'], $viewer);      // ca peste tot: e-mailul întreg sau o parte din nume; la mai mulți, întreabă
+            if ($error) {
+                return Response::error($error);
+            }
+            if (! $viewer->can('viewWorkTime', $person)) {
                 return Response::error('No one by that name whose hours you can see.');
             }
         }

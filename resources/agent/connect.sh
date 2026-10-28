@@ -9,6 +9,7 @@ set -u
 HELP='Nu merge? Problemele știute și soluțiile lor: https://rt.md/cemainou/ro/documentatie/#probleme'
 URL=${1:-}
 CODE=${2:-}
+MODE=${3:-}                                                       # „client": contul unui client, fără hook-uri și fără timp
 if [ -z "$URL" ] || [ -z "$CODE" ]; then
   echo "folosire: connect.sh <url> <cod>" >&2
   exit 2
@@ -50,7 +51,7 @@ esac
 DONE=''; FAILED=''
 run() {                                                                   # $1 = numele, $2 = scriptul de pe server
   script=$(curl -fsS "$URL/agent/$2") || { FAILED="$FAILED, $1"; return; }
-  printf '%s\n' "$script" | sh -s -- "$URL" "$TOKEN"
+  printf '%s\n' "$script" | sh -s -- "$URL" "$TOKEN" "$MODE"
   case $? in
     0|3) DONE="$DONE, $1" ;;                                             # 3: conectat, dar fără hook-uri (scriptul a spus de ce)
     *) FAILED="$FAILED, $1" ;;
@@ -68,7 +69,7 @@ if [ $CODEX = 1 ] || [ $GEMINI = 1 ]; then                                # Code
   if [ $CODEX = 1 ]; then
     codex mcp remove cemainou >/dev/null 2>&1
     if codex mcp add cemainou --url "$URL/mcp" --bearer-token-env-var CEMAINOU_TOKEN >/dev/null 2>&1; then
-      mkdir -p "$HOME_DIR/.codex/prompts" && curl -fsS "$URL/agent/upd.md" -o "$HOME_DIR/.codex/prompts/upd.md" 2>/dev/null
+      [ "$MODE" = client ] || { mkdir -p "$HOME_DIR/.codex/prompts" && curl -fsS "$URL/agent/upd.md" -o "$HOME_DIR/.codex/prompts/upd.md" 2>/dev/null; }
       DONE="$DONE, Codex"
     else FAILED="$FAILED, Codex"; fi
   fi
@@ -79,6 +80,10 @@ if [ $CODEX = 1 ] || [ $GEMINI = 1 ]; then                                # Code
 fi
 
 echo
-[ -n "$DONE" ] && echo "cemainou e conectat în: ${DONE#, }. Deschide o sesiune nouă (sau repornește aplicația Claude): timpul se măsoară de la prima sesiune."
+if [ "$MODE" = client ]; then
+  [ -n "$DONE" ] && echo "cemainou e conectat în: ${DONE#, }, cu contul tău de client (doar proiectele tale; timpul nu se măsoară). Deschide o sesiune nouă (sau repornește aplicația Claude)."
+else
+  [ -n "$DONE" ] && echo "cemainou e conectat în: ${DONE#, }. Deschide o sesiune nouă (sau repornește aplicația Claude): timpul se măsoară de la prima sesiune."
+fi
 [ -n "$FAILED" ] && { echo "Nu s-a putut conecta: ${FAILED#, } (vezi mesajele de mai sus)." >&2; echo "$HELP" >&2; }
 [ -n "$DONE" ] || exit 1

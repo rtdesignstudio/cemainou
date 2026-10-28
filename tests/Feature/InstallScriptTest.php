@@ -25,9 +25,28 @@ class InstallScriptTest extends TestCase
         return $home;
     }
 
-    private function install(string $home, string $url = 'https://wsa.test/', string $token = self::TOKEN, string $path = '')
+    private function install(string $home, string $url = 'https://wsa.test/', string $token = self::TOKEN, string $path = '', ?string $mode = null)
     {
-        return Process::env(['HOME' => $home, 'PATH' => ($path ?: "{$home}/bin:".getenv('PATH'))])->run(['sh', resource_path('agent/install.sh'), $url, $token]);
+        return Process::env(['HOME' => $home, 'PATH' => ($path ?: "{$home}/bin:".getenv('PATH'))])->run(array_filter(['sh', resource_path('agent/install.sh'), $url, $token, $mode]));
+    }
+
+    public function test_a_clients_install_connects_only_the_mcp_server_and_allows_its_tools_without_commands_hooks_or_time(): void
+    {
+        $home = $this->home();
+        File::ensureDirectoryExists("{$home}/.claude");
+        File::put("{$home}/.claude/settings.json", json_encode(['hooks' => ['Stop' => [['hooks' => [['type' => 'command', 'command' => 'echo existing']]]]]]));
+
+        $result = $this->install($home, mode: 'client');
+        $this->assertTrue($result->successful(), $result->errorOutput());
+        $this->assertStringContainsString('client', $result->output());
+        $this->assertStringContainsString('mcp add --scope user --transport http cemainou https://wsa.test/mcp', File::get("{$home}/claude.log"));
+        $this->assertFileDoesNotExist("{$home}/.claude/commands/upd.md");                             // fără /upd
+        $this->assertFileDoesNotExist("{$home}/.config/cemainou/config");                              // fără hook-uri, deci fără config și fără timp
+        $this->assertFileDoesNotExist("{$home}/.config/cemainou/heartbeat.sh");
+        $settings = json_decode(File::get("{$home}/.claude/settings.json"), true);
+        $this->assertSame(['Stop'], array_keys($settings['hooks']));                                  // doar hook-ul care era
+        $this->assertSame(['mcp__cemainou', 'Bash(git remote -v)'], $settings['permissions']['allow']);   // uneltele, permise
+        File::deleteDirectory($home);
     }
 
     public function test_the_install_script_connects_claude_code_installs_the_commands_and_the_hooks_and_keeps_existing_settings(): void

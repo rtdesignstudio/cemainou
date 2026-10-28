@@ -9,6 +9,7 @@ HELP='Nu merge? Problemele știute și soluțiile lor: https://rt.md/cemainou/ro
 trap 'c=$?; [ $c -ne 0 ] && [ $c -ne 3 ] && echo "$HELP" >&2' EXIT   # la orice eșec, unde se găsește ajutorul
 URL=${1:-}
 TOKEN=${2:-}
+MODE=${3:-}                                                       # „client": doar serverul MCP, fără hook-uri și fără timp
 if [ -z "$URL" ] || [ -z "$TOKEN" ]; then
   echo "folosire: install-cursor.sh <url> <cod>" >&2
   exit 2
@@ -44,7 +45,7 @@ esac
 # 3. serverul MCP și hook-urile, completate în fișierele Cursor (o intrare cemainou veche se înlocuiește; restul rămâne)
 mkdir -p "$HOME_DIR/.cursor" "$HOME_DIR/.config/cemainou" || { echo "Nu pot scrie în $HOME_DIR." >&2; exit 1; }
 BEAT="$HOME_DIR/.config/cemainou/heartbeat.sh"
-WSA_URL="$URL" WSA_TOKEN="$TOKEN" WSA_BEAT="$BEAT" WSA_DIR="$HOME_DIR/.cursor" python3 - <<'PY' || { echo "Nu am putut scrie în ~/.cursor (mcp.json, hooks.json)." >&2; exit 1; }
+WSA_URL="$URL" WSA_TOKEN="$TOKEN" WSA_BEAT="$BEAT" WSA_MODE="$MODE" WSA_DIR="$HOME_DIR/.cursor" python3 - <<'PY' || { echo "Nu am putut scrie în ~/.cursor (mcp.json, hooks.json)." >&2; exit 1; }
 import json, os, re
 d = os.environ["WSA_DIR"]
 def load(name, empty):
@@ -61,7 +62,7 @@ hooks.setdefault("version", 1)
 command = '"' + os.environ["WSA_BEAT"] + '"'
 for event in ("beforeSubmitPrompt", "stop", "afterFileEdit"):
     entries = [e for e in hooks.setdefault("hooks", {}).get(event, []) if not re.search(r"(whatsupai|cemainou)/", str(e.get("command", "")))]
-    hooks["hooks"][event] = entries + [{"command": command}]
+    hooks["hooks"][event] = entries if os.environ.get("WSA_MODE") == "client" else entries + [{"command": command}]
 for name, data in (("mcp.json", mcp), ("hooks.json", hooks)):
     path = os.path.join(d, name)
     with open(path + ".tmp", "w") as f:
@@ -69,6 +70,11 @@ for name, data in (("mcp.json", mcp), ("hooks.json", hooks)):
     os.chmod(path + ".tmp", 0o600)
     os.replace(path + ".tmp", path)
 PY
+
+if [ "$MODE" = client ]; then
+  echo "Gata: Cursor e conectat la cemainou ($URL), cu contul tău de client (doar proiectele tale; timpul nu se măsoară). Repornește Cursor."
+  exit 0
+fi
 
 # 4. scriptul de hook și config-ul cu adresa și cheia (600); filtrul pe foldere al omului rămâne
 cp "$tmp/heartbeat.sh" "$BEAT" && chmod 700 "$BEAT" || { echo "Nu am putut scrie scriptul de hook." >&2; exit 1; }

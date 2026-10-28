@@ -2992,5 +2992,8 @@
     "Write between 1 minute and 12 hours.": "Scrie între 1 minut și 12 ore.",
     "0 hours and 0 minutes if you did not work on it.": "0 ore și 0 minute dacă n-ai lucrat pe el.",
     "Demo with made-up data. Try anything: it all starts over every hour.": "Demo cu date inventate. Încearcă orice: totul se reface în fiecare oră.",
-    "Made-up people and projects. Everything starts over every hour.": "Oameni și proiecte inventate. Totul se reface în fiecare oră."
+    "Made-up people and projects. Everything starts over every hour.": "Oameni și proiecte inventate. Totul se reface în fiecare oră.",
+    "Claude Code (terminal, the Claude desktop app, the editor), Cursor, Codex: one command for the whole computer. Your agent sees only your projects.": "Claude Code (terminal, aplicația desktop Claude, editorul), Cursor, Codex: o singură comandă pentru tot calculatorul. Agentul tău vede doar proiectele tale.",
+    "Connect your agent (Claude Code, Cursor, Codex) or the Claude app or ChatGPT: check the tasks on your projects, answer them, add a request or read what was shared with you, right from your session. Your agent sees only what you see here; time is not measured.": "Conectează-ți agentul (Claude Code, Cursor, Codex) sau aplicația Claude ori ChatGPT: vezi sarcinile proiectelor tale, răspunzi la ele, adaugi o cerere sau citești ce ți s-a arătat, direct din sesiunea ta. Agentul tău vede doar ce vezi tu aici; timpul nu se măsoară.",
+    "Where do you work with an agent? On your computer or in a chat, your agent sees only your projects.": "Unde lucrezi cu un agent? Pe calculator sau în chat, agentul tău vede doar proiectele tale."
 }

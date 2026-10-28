@@ -86,7 +86,7 @@ class AgentCoverageTest extends TestCase
     {
         $company = Client::factory()->create(['name' => 'Auto Nord']);
         $this->site->update(['client_id' => $company->id, 'client_visible' => true]);
-        $dima = User::factory()->create(['role' => 'client', 'client_id' => $company->id]);
+        $dima = User::factory()->create(['name' => 'Dima Toma', 'role' => 'client', 'client_id' => $company->id]);
         // pe HTTP, un client nu intră deloc la agent; dacă ar intra, ar vedea doar uneltele făcute și pentru el (a doua barieră)
         $this->withToken($dima->createToken('claude')->plainTextToken)->withHeaders(['MCP-Protocol-Version' => '2026-07-28', 'Mcp-Method' => 'tools/list'])
             ->postJson('/mcp', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list', 'params' => (object) []])->assertForbidden()->assertSee('not turned on for client accounts');

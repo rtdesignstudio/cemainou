@@ -22,9 +22,10 @@ class AgentCommands
      * Comanda pentru tot calculatorul (resources/agent/connect.sh): caută ce agenți sunt instalați (Claude Code și aplicația desktop, Cursor,
      * Codex, Gemini CLI) și îi leagă pe toți cu aceeași cheie. Codul se schimbă pe cheie o singură dată.
      */
-    public static function connect(string $code): string
+    /** $client: contul unui client (doar serverul MCP, fără hook-uri, fără /upd, fără timp măsurat). */
+    public static function connect(string $code, bool $client = false): string
     {
-        return 'curl -fsS '.route('agent.connect').' | sh -s -- '.self::baseUrl().' '.escapeshellarg($code);
+        return 'curl -fsS '.route('agent.connect').' | sh -s -- '.self::baseUrl().' '.escapeshellarg($code).($client ? ' client' : '');
     }
 
     /** Aceeași comandă, ca mesaj de lipit în chat-ul agentului (aplicația desktop, fără terminal): agentul o rulează, exact cum e. */
@@ -66,7 +67,8 @@ class AgentCommands
     public static function places(): array
     {
         return [
-            ['key' => 'computer', 'name' => __('I work with an agent on my computer'), 'line' => __('Claude Code (terminal, the Claude desktop app, the editor), Cursor, Codex: one command for the whole computer. Time is measured too.'), 'icon' => Heroicon::OutlinedComputerDesktop, 'account' => false],
+            ['key' => 'computer', 'name' => __('I work with an agent on my computer'), 'line' => __('Claude Code (terminal, the Claude desktop app, the editor), Cursor, Codex: one command for the whole computer. Time is measured too.'), 'icon' => Heroicon::OutlinedComputerDesktop, 'account' => false,
+                'client_line' => __('Claude Code (terminal, the Claude desktop app, the editor), Cursor, Codex: one command for the whole computer. Your agent sees only your projects.')],
             ['key' => 'chat', 'name' => __('I only talk in a chat'), 'line' => __('The Claude app or ChatGPT, on the phone or the web: you ask and report, no key.'), 'icon' => Heroicon::OutlinedChatBubbleLeftRight, 'account' => true],
             ['key' => 'other', 'name' => __('Another MCP client'), 'line' => __('Any MCP client over HTTP, with a key.'), 'icon' => Heroicon::OutlinedCpuChip, 'account' => false],
         ];

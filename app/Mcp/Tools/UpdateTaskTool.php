@@ -113,7 +113,7 @@ class UpdateTaskTool extends TeamTool
             if ($due !== null && ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $due)) {
                 return Response::error('due is a date, YYYY-MM-DD, or "none".');
             }
-            if (! $user->can('edit', $task) && ! $user->can('move', [$task, $task->status])) {
+            if (! $user->can('edit', $task) && ($user->isClient() || ! $user->can('move', [$task, $task->status]))) {   // clientul: termenul doar la ce a cerut el (ca pe web)
                 return Response::error($this->refusal($task));
             }
             $task->edit($user, $task->title, $task->notes, $due);

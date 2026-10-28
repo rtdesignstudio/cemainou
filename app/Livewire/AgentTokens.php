@@ -33,6 +33,9 @@ class AgentTokens extends Component
 
     public const APP_TARGETS = ['chat', 'claude-app', 'chatgpt'];
 
+    /** Un client: aplicațiile și calculatorul (o cheie doar pentru MCP, fără hook-uri și fără timp), nu și alt client MCP. */
+    public const CLIENT_TARGETS = ['computer', 'chat', 'claude-app', 'chatgpt'];
+
     /** Linkurile de dinainte de 0.1.341 (Comenzi, emailuri trimise): duc la noul loc. */
     private const LEGACY = ['claude-code' => 'computer', 'cursor' => 'computer'];
 
@@ -54,7 +57,7 @@ class AgentTokens extends Component
     /** Cheia pentru alt client MCP: se arată o singură dată. */
     public ?string $plainToken = null;
 
-    /** Un client: doar din aplicații, cu contul (fără chei pe calculator, fără ore). */
+    /** Un client: din aplicații, cu contul, sau de pe calculator cu o cheie (doar proiectele lui, fără ore). */
     public bool $forClient = false;
 
     public function mount(): void
@@ -65,9 +68,6 @@ class AgentTokens extends Component
         if (is_string($target) && $target !== '') {
             $this->openOnLoad = true;                                                             // ?connect=1: întrebarea; ?connect=<loc>: direct la loc
             $this->pick(self::LEGACY[$target] ?? (in_array($target, $this->targets(), true) ? $target : null));
-        }
-        if ($this->forClient && $this->target === null) {
-            $this->target = 'chat';                                                               // clientul are un singur drum: aplicațiile
         }
     }
 
@@ -86,7 +86,7 @@ class AgentTokens extends Component
     /** „Înapoi": din aplicația aleasă, la alegerea aplicației; în rest, la întrebare. */
     public function back(): void
     {
-        $this->pick(in_array($this->target, ['claude-app', 'chatgpt'], true) && ! $this->forClient ? 'chat' : ($this->forClient ? 'chat' : null));
+        $this->pick(in_array($this->target, ['claude-app', 'chatgpt'], true) ? 'chat' : null);
     }
 
     /** Un loc pus direct din pagină (nu prin pick) trece prin aceeași verificare. */
@@ -100,19 +100,19 @@ class AgentTokens extends Component
     /** @return list<string> locurile pe care le poate alege omul: clientul doar aplicațiile */
     private function targets(): array
     {
-        return $this->forClient ? self::APP_TARGETS : self::TARGETS;
+        return $this->forClient ? self::CLIENT_TARGETS : self::TARGETS;
     }
 
     /** Pe calculator: comanda unică (computer) sau cheia (other), pe un nume automat de dispozitiv. */
     public function connect(): void
     {
-        abort_unless(in_array($this->target, ['computer', 'other'], true) && Auth::user()->usesAgents(), 403);
+        abort_unless(in_array($this->target, ['computer', 'other'], true) && Auth::user()->connectsAgents() && ($this->target === 'computer' || Auth::user()->usesAgents()), 403);
         $user = Auth::user();
         $this->connected = ($this->target === 'other' ? __('MCP client') : __('Computer')).' · '.now($user->tz())->locale(app()->getLocale())->isoFormat('D MMM, HH:mm');
         if ($this->target === 'other') {
             $this->plainToken = $user->createToken($this->connected, ['mcp'])->plainTextToken;   // doar pentru MCP; arătată o dată
         } else {
-            $this->command = AgentCommands::connect(ConnectCode::issue($user, $this->connected));
+            $this->command = AgentCommands::connect(ConnectCode::issue($user, $this->connected), client: $user->isClient());
             $this->issuedAt = now()->toIso8601String();
         }
     }
@@ -139,7 +139,8 @@ class AgentTokens extends Component
             return ['key' => false, 'session' => false, 'tools' => false, 'fix' => Carbon::parse($this->issuedAt)->lt(now()->subMinutes(ConnectCode::MINUTES))
                 ? __('The command expired after :minutes minutes: close this window and connect again.', ['minutes' => ConnectCode::MINUTES]) : null];
         }
-        $session = Activity::where('user_id', Auth::id())->where('occurred_at', '>=', $token->created_at)->where('kind', '!=', ActivityKind::Mcp->value)->exists();
+        $session = $this->forClient                                                               // clientul n-are hook-uri: fără sesiuni, fără timp
+            || Activity::where('user_id', Auth::id())->where('occurred_at', '>=', $token->created_at)->where('kind', '!=', ActivityKind::Mcp->value)->exists();
         $tools = McpCall::where('user_id', Auth::id())->where('created_at', '>=', $token->created_at)->whereNotIn('source', ['claude-app', 'chatgpt'])->exists();
         $fix = match (true) {
             ! $session && $tools => __('The agent uses cemainou, but no session signals arrive, so time is not measured: run the command again, as it is, then open a new session.'),
@@ -222,7 +223,8 @@ class AgentTokens extends Component
             'apps' => OAuthToken::with('client')->where('user_id', Auth::id())->where('revoked', false)->where('created_at', '>', now()->subDays(60))
                 ->latest()->get()->unique('client_id')->values(),
             'mcpUrl' => AgentCommands::mcpUrl(),
-            'places' => collect(AgentCommands::places())->when($this->forClient, fn ($c) => $c->where('account', true))->values()->all(),   // clientul: doar aplicațiile
+            // clientul: calculatorul (cu rândul lui: doar proiectele lui) și aplicațiile, fără alt client MCP
+            'places' => collect(AgentCommands::places())->when($this->forClient, fn ($c) => $c->where('key', '!=', 'other')->map(fn ($p) => isset($p['client_line']) ? ['line' => $p['client_line']] + $p : $p))->values()->all(),
             'idleDays' => Settings::get('token_idle_days'),
             'progress' => $this->progress(),
         ]);

@@ -26,6 +26,7 @@ use App\Models\ProjectNote;
 use App\Models\Task;
 use App\Models\Update;
 use App\Models\User;
+use App\Support\ConnectCode;
 use App\Support\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -77,16 +78,27 @@ class ClientAgentsTest extends TestCase
         $this->assertSame(CemainouServer::CLIENT_INSTRUCTIONS, $init->json('result.instructions'));          // instrucțiunile clientului, nu ale echipei
     }
 
-    public function test_the_profile_offers_a_client_only_the_apps_and_never_a_key(): void
+    public function test_the_profile_offers_a_client_the_apps_and_a_key_for_the_computer_without_hooks_or_time(): void
     {
         Settings::save(['clients_use_agents' => true], User::factory()->create(['role' => 'admin']));
         $this->actingAs($this->dima);
 
-        Livewire::test(AgentTokens::class)->assertSee('ChatGPT')->assertDontSee('Claude Code')
+        Livewire::test(AgentTokens::class)->assertSee(['ChatGPT', 'Claude Code', 'Your agent sees only your projects.'])->assertDontSee('Another MCP client')
             ->call('pick', 'claude-app')->assertSet('target', 'claude-app')
-            ->call('pick', 'claude-code')->assertStatus(400);
+            ->call('pick', 'other')->assertStatus(400);                                     // fără „alt client MCP" (o cheie arătată)
         Livewire::test(AgentTokens::class)->set('target', 'other')->call('connect')->assertForbidden();
-        $this->assertSame(0, $this->dima->tokens()->count());
+
+        $page = Livewire::test(AgentTokens::class)->call('pick', 'computer');
+        $command = $page->get('command');
+        $this->assertStringEndsWith(' client', $command);                                  // scripturile: doar serverul MCP, fără hook-uri, fără /upd
+        preg_match("/'(wsc_[A-Za-z0-9]+)'/", $command, $code);
+        $this->assertSame(0, $this->dima->tokens()->count());                               // cheia se face abia la schimbul codului
+        $this->post('/api/connect', ['code' => $code[1]])->assertOk();
+        $this->assertSame(1, $this->dima->tokens()->count());
+        $this->assertSame(['key' => true, 'session' => true], array_intersect_key($page->instance()->progress(), ['key' => 1, 'session' => 1]));   // fără bifa de timp
+
+        Settings::save(['clients_use_agents' => false], User::factory()->create(['role' => 'admin']));
+        $this->assertNull(ConnectCode::redeem(ConnectCode::issue($this->dima, 'x')));   // oprit pentru clienți: niciun cod nu mai devine cheie
     }
 
     public function test_a_clients_agent_lists_the_project_tasks_asks_for_a_change_and_comments(): void
@@ -148,6 +160,10 @@ class ClientAgentsTest extends TestCase
         $as = fn (string $tool, array $args) => CemainouServer::actingAs($this->dima->fresh())->tool($tool, $args);
 
         $as(ListTasksTool::class, [])->assertOk()->assertSee('Trimite textele pentru pagina Despre');
+        $as(UpdateTaskTool::class, ['id' => $task->id, 'status' => 'dropped'])->assertHasErrors();   // nu renunță la ce n-a cerut el (aproape o ștergere)
+        $as(UpdateTaskTool::class, ['id' => $task->id, 'due' => '2026-12-01'])->assertHasErrors();   // nici termenul echipei
+        $mine = Task::add($tourism, $this->dima->fresh(), 'O cerere a mea');
+        $as(UpdateTaskTool::class, ['id' => $mine->id, 'status' => 'dropped'])->assertOk();          // la cererea lui, da
         $as(UpdateTaskTool::class, ['id' => $task->id, 'status' => 'doing'])->assertOk();
         $as(UpdateTaskTool::class, ['id' => $task->id, 'comment' => 'Le trimit azi după-amiază.'])->assertOk();
         $as(AddAttachmentTool::class, ['task' => $task->id, 'filename' => 'despre.txt', 'text' => 'Textul paginii Despre'])->assertOk();
