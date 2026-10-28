@@ -168,6 +168,10 @@ Route::middleware(['auth', SetLocale::class])->group(function () {
     // o pagină n-a primit răspuns de la server (502/503/504 sau fără legătură) și apoi și-a revenit: notat pentru admin (Admin → Erori)
     Route::post('/client/unreachable', function (Request $request) {
         $data = $request->validate(['status' => ['nullable', 'integer'], 'seconds' => ['required', 'integer', 'min:0', 'max:86400'], 'page' => ['nullable', 'string', 'max:300']]);
+        $updated = @filemtime(base_path('bootstrap/cache/opcache-stamp'));                 // ultima actualizare (Updater o notează)
+        if ($updated && $updated >= time() - $data['seconds'] - 120) {
+            return response()->noContent();                                                  // pauza a fost o actualizare: nu e o eroare
+        }
         Log::error('The server did not answer'.($data['status'] ? ' (HTTP '.$data['status'].')' : ' (no connection)').' for '.$data['seconds'].' s', ['page' => $data['page'] ?? null, 'user' => $request->user()->id]);
 
         return response()->noContent();

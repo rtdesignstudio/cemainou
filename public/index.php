@@ -13,10 +13,17 @@ if (function_exists('opcache_reset') && is_file($stamp = __DIR__.'/../bootstrap/
 }
 
 // Mentenanța (artisan down, în timpul unei actualizări): răspunde 503 înainte să pornească aplicația, ca nicio cerere să nu dea peste
-// cache-urile golite. storage/ stă în data/ când există (App\Support\Installer::paths), deci semnul e căutat acolo.
+// cache-urile golite (maintenance.php din Laravel lasă cererea să treacă mai departe când nu e o pagină pregătită cu --render, și atunci
+// aplicația pornea fără events.php). storage/ stă în data/ când există (App\Support\Installer::paths), deci semnul e căutat acolo.
 $storage = is_dir(__DIR__.'/../data/storage/framework') ? __DIR__.'/../data/storage' : __DIR__.'/../storage';
-if (file_exists($maintenance = $storage.'/framework/maintenance.php')) {
-    require $maintenance;
+if (is_file($storage.'/framework/down')) {
+    http_response_code(503);
+    header('Retry-After: 30');
+    header('Cache-Control: no-store');
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>cemainou</title>'
+        .'<p style="font:16px system-ui,sans-serif;margin:3rem auto;max-width:30rem;padding:0 1rem">Updating, back in a few seconds.</p>';
+    exit;
 }
 
 // Register the Composer autoloader...

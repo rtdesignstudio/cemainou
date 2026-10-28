@@ -12,11 +12,37 @@ class ClientUnreachableTest extends TestCase
 {
     use RefreshDatabase;
 
+    private ?string $stamp = null;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $path = base_path('bootstrap/cache/opcache-stamp');
+        $this->stamp = is_file($path) ? (string) filemtime($path) : null;
+        is_file($path) || file_put_contents($path, '1');
+        touch($path, time() - 3600);                                                        // ultima actualizare: acum o oră
+    }
+
+    protected function tearDown(): void
+    {
+        $path = base_path('bootstrap/cache/opcache-stamp');
+        $this->stamp ? touch($path, (int) $this->stamp) : @unlink($path);
+        parent::tearDown();
+    }
+
     public function test_a_page_that_got_no_answer_is_noted_for_the_admin(): void
     {
         Log::shouldReceive('error')->once()->withArgs(fn ($message, $context) => $message === 'The server did not answer (HTTP 503) for 12 s' && $context['page'] === '/tasks');
         $this->actingAs(User::factory()->create(['role' => 'member']))
             ->postJson(route('client.unreachable'), ['status' => 503, 'seconds' => 12, 'page' => '/tasks'])->assertNoContent();
         $this->postJson(route('client.unreachable'), ['seconds' => 'x'])->assertUnprocessable();
+    }
+
+    public function test_a_pause_during_an_update_is_not_an_error(): void
+    {
+        touch(base_path('bootstrap/cache/opcache-stamp'), time() - 30);                     // o actualizare acum 30 de secunde
+        Log::shouldReceive('error')->never();
+        $this->actingAs(User::factory()->create(['role' => 'member']))
+            ->postJson(route('client.unreachable'), ['seconds' => 54, 'page' => '/updates/677'])->assertNoContent();
     }
 }
