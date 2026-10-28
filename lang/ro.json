@@ -452,7 +452,6 @@
     "text": "text",
     "The address from `git remote get-url origin`: agents find the project by it.": "Adresa din `git remote get-url origin`: după ea agenții își găsesc proiectul.",
     "The client does not see it, even on a project visible to them.": "Clientul nu-l vede, nici pe un proiect vizibil lui.",
-    "The client's people (accounts with the Client role) see this project's tasks, blockers and updates, except internal ones; they can add tasks and comment. Never hours, notes or documents.": "Oamenii clientului (conturile cu rolul Client) văd sarcinile, blocajele și update-urile proiectului, mai puțin cele interne; pot adăuga sarcini și comenta. Niciodată ore, note sau documente.",
     "The command works once, for :minutes minutes: the key is created when you run it and never shows up anywhere.": "Comanda merge o singură dată, :minutes minute: cheia se creează când o rulezi și nu apare nicăieri.",
     "The database": "Baza de date",
     "The database and the files, in data/backups. APP_KEY (from .env) is not in the archive: keep it separately, the encrypted settings need it.": "Baza de date și fișierele, în data/backups. APP_KEY (din .env) nu intră în arhivă: păstreaz-o separat, setările criptate au nevoie de ea.",
@@ -2995,5 +2994,8 @@
     "Made-up people and projects. Everything starts over every hour.": "Oameni și proiecte inventate. Totul se reface în fiecare oră.",
     "Claude Code (terminal, the Claude desktop app, the editor), Cursor, Codex: one command for the whole computer. Your agent sees only your projects.": "Claude Code (terminal, aplicația desktop Claude, editorul), Cursor, Codex: o singură comandă pentru tot calculatorul. Agentul tău vede doar proiectele tale.",
     "Connect your agent (Claude Code, Cursor, Codex) or the Claude app or ChatGPT: check the tasks on your projects, answer them, add a request or read what was shared with you, right from your session. Your agent sees only what you see here; time is not measured.": "Conectează-ți agentul (Claude Code, Cursor, Codex) sau aplicația Claude ori ChatGPT: vezi sarcinile proiectelor tale, răspunzi la ele, adaugi o cerere sau citești ce ți s-a arătat, direct din sesiunea ta. Agentul tău vede doar ce vezi tu aici; timpul nu se măsoară.",
-    "Where do you work with an agent? On your computer or in a chat, your agent sees only your projects.": "Unde lucrezi cu un agent? Pe calculator sau în chat, agentul tău vede doar proiectele tale."
+    "Where do you work with an agent? On your computer or in a chat, your agent sees only your projects.": "Unde lucrezi cu un agent? Pe calculator sau în chat, agentul tău vede doar proiectele tale.",
+    "The client's people (accounts with the Client role) see this project's tasks, blockers and updates, except internal ones; they can add tasks and comment. Never hours or team notes; documents and files only when shared with them.": "Oamenii clientului (conturile cu rolul Client) văd sarcinile, blocajele și update-urile proiectului, fără cele interne; pot adăuga sarcini și comenta. Niciodată orele sau notele echipei; documentele și fișierele doar când le sunt arătate.",
+    "The client also sees the team's comments on updates": "Clientul vede și comentariile echipei la update-uri",
+    "Off: on an update, the client sees only their own comments.": "Oprit: la un update, clientul vede doar comentariile lui."
 }

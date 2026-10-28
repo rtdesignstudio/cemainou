@@ -24,11 +24,12 @@ class UpdateComment extends Model
         static::created(fn (UpdateComment $comment) => Inbox::updateCommented($comment));   // clopoțelul: autorul update-ului și cei care au mai scris
     }
 
-    /** Ce comentarii vede omul: echipa pe toate; clientul doar pe ale lui. */
+    /** Ce comentarii vede omul: echipa pe toate; clientul pe ale lui și, pe proiectele unde echipa a ales asta, și pe ale celorlalți. */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
         if ($user->isClient()) {
-            $query->where('user_id', $user->id);
+            $query->where(fn ($q) => $q->where('user_id', $user->id)->orWhereHas('statusUpdate', fn ($u) => $u->visibleTo($user)
+                ->whereIn('project_id', Project::visibleTo($user)->where('client_sees_comments', true)->select('id'))));
         }
     }
 

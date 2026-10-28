@@ -19,13 +19,13 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-#[Fillable(['client_id', 'client_visible', 'lead_id', 'name', 'slug', 'description', 'repo_url', 'categories', 'color', 'notify_slack_webhook', 'notify_telegram_chat', 'is_archived', 'restricted', 'widget_enabled', 'widget_domains', 'widget_key', 'stages'])]
+#[Fillable(['client_id', 'client_visible', 'client_sees_comments', 'lead_id', 'name', 'slug', 'description', 'repo_url', 'categories', 'color', 'notify_slack_webhook', 'notify_telegram_chat', 'is_archived', 'restricted', 'widget_enabled', 'widget_domains', 'widget_key', 'stages'])]
 class Project extends Model
 {
     use HasFactory, StoresTimesInUtc;
 
     /** Aceleași valori implicite ca în baza de date, ca un model proaspăt creat să le aibă și în memorie. */
-    protected $attributes = ['restricted' => false, 'client_id' => null, 'client_visible' => false, 'lead_id' => null, 'description' => null, 'repo_url' => null, 'categories' => null, 'repo_key' => null, 'category' => null, 'color' => null, 'notify_slack_webhook' => null, 'notify_telegram_chat' => null, 'is_archived' => false];
+    protected $attributes = ['restricted' => false, 'client_id' => null, 'client_visible' => false, 'client_sees_comments' => false, 'lead_id' => null, 'description' => null, 'repo_url' => null, 'categories' => null, 'repo_key' => null, 'category' => null, 'color' => null, 'notify_slack_webhook' => null, 'notify_telegram_chat' => null, 'is_archived' => false];
 
     protected static function booted(): void
     {
@@ -210,6 +210,6 @@ class Project extends Model
 
     protected function casts(): array
     {
-        return ['notify_slack_webhook' => 'encrypted', 'client_visible' => 'boolean', 'categories' => AsEnumCollection::of(WorkCategory::class), 'is_archived' => 'boolean', 'restricted' => 'boolean', 'widget_enabled' => 'boolean', 'widget_domains' => 'array', 'stages' => 'array'];
+        return ['notify_slack_webhook' => 'encrypted', 'client_visible' => 'boolean', 'client_sees_comments' => 'boolean', 'categories' => AsEnumCollection::of(WorkCategory::class), 'is_archived' => 'boolean', 'restricted' => 'boolean', 'widget_enabled' => 'boolean', 'widget_domains' => 'array', 'stages' => 'array'];
     }
 }

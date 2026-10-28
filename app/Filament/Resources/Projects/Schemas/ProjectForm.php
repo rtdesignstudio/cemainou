@@ -42,7 +42,9 @@ class ProjectForm
                 Select::make('client_id')->label(__('Client'))->relationship('client', 'name', fn ($query) => $query->visibleTo(auth()->user()))->searchable()->preload()->live()
                     ->createOptionForm([TextInput::make('name')->label(__('Name'))->required()->maxLength(255)]),
                 Toggle::make('client_visible')->label(__('Visible to the client'))->visible(fn ($get) => filled($get('client_id')))
-                    ->helperText(__('The client\'s people (accounts with the Client role) see this project\'s tasks, blockers and updates, except internal ones; they can add tasks and comment. Never hours, notes or documents.')),
+                    ->live()->helperText(__('The client\'s people (accounts with the Client role) see this project\'s tasks, blockers and updates, except internal ones; they can add tasks and comment. Never hours or team notes; documents and files only when shared with them.')),
+                Toggle::make('client_sees_comments')->label(__('The client also sees the team\'s comments on updates'))->visible(fn ($get) => filled($get('client_id')) && $get('client_visible'))
+                    ->helperText(__('Off: on an update, the client sees only their own comments.')),
                 Select::make('lead_id')->label(__('Lead'))->relationship('lead', 'name', fn ($query) => $query->team()->visibleTo(auth()->user()))->searchable()->preload()
                     ->hidden(fn (string $operation) => $operation === 'create' && auth()->user()->isCollaborator())   // colaboratorul își conduce proiectul
                     ->helperText(__('The lead sees the team hours on this project.')),

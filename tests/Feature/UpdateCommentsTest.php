@@ -56,6 +56,12 @@ class UpdateCommentsTest extends TestCase
             ->assertSee(['Merge și pe telefon?', 'Putem adăuga și un câmp pentru telefon?', 'client']);
         Livewire::actingAs($this->maria)->test(UpdateComments::class, ['update' => $this->update])
             ->assertSee('Putem adăuga și un câmp pentru telefon?')->assertDontSee('Merge și pe telefon?');
+
+        $this->site->update(['client_sees_comments' => true]);                                   // proiectul ales: clientul vede și comentariile echipei
+        Livewire::actingAs($this->maria)->test(UpdateComments::class, ['update' => $this->update])
+            ->assertSee(['Putem adăuga și un câmp pentru telefon?', 'Merge și pe telefon?']);
+        $this->update->update(['is_internal' => true]);                                           // un update intern rămâne ascuns cu totul
+        $this->assertSame(1, UpdateComment::visibleTo($this->maria)->count());                     // doar al ei
     }
 
     public function test_a_client_cannot_comment_on_an_internal_update(): void
