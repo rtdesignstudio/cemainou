@@ -162,7 +162,9 @@ class ClientAgentsTest extends TestCase
         $as(ListTasksTool::class, [])->assertOk()->assertSee('Trimite textele pentru pagina Despre');
         $as(UpdateTaskTool::class, ['id' => $task->id, 'status' => 'dropped'])->assertHasErrors();   // nu renunță la ce n-a cerut el (aproape o ștergere)
         $as(UpdateTaskTool::class, ['id' => $task->id, 'due' => '2026-12-01'])->assertHasErrors();   // nici termenul echipei
-        $mine = Task::add($tourism, $this->dima->fresh(), 'O cerere a mea');
+        $before = $lead->notifications()->count();
+        $mine = Task::add($tourism, $this->dima->fresh(), 'O cerere a mea', assignee: $lead);   // cererea clientului merge la lider:
+        $this->assertSame($before + 1, $lead->notifications()->count());                        // o singură notificare, „de la client"
         $as(UpdateTaskTool::class, ['id' => $mine->id, 'status' => 'dropped'])->assertOk();          // la cererea lui, da
         $as(UpdateTaskTool::class, ['id' => $task->id, 'status' => 'doing'])->assertOk();
         $as(UpdateTaskTool::class, ['id' => $task->id, 'comment' => 'Le trimit azi după-amiază.'])->assertOk();

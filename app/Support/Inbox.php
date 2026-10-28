@@ -25,13 +25,21 @@ use Illuminate\Support\Str;
  */
 class Inbox
 {
-    /** O sarcină nouă: omului căruia i s-a dat (dacă n-a scris-o el) și, de la client, liderului proiectului (fără lider, adminilor). */
+    /**
+     * O sarcină nouă: omului căruia i s-a dat (dacă n-a scris-o el) și, de la client, liderului proiectului (fără lider, adminilor).
+     * Cererea unui client ajunge de obicei chiar la lider: atunci primește o singură notificare, „de la client", nu și „ți-a dat o sarcină".
+     */
     public static function added(Task $task, User $by): void
     {
         $task->loadMissing(['assignee', 'creator']);
-        self::assigned($task, $by);
-        if ($task->fromClient()) {
-            self::send($task, $task->loadMissing('project.lead')->project->lead ? collect([$task->project->lead]) : User::where('role', 'admin')->get(), $by, 'added');
+        $leads = $task->fromClient()
+            ? ($task->loadMissing('project.lead')->project->lead ? collect([$task->project->lead]) : User::where('role', 'admin')->get())
+            : collect();
+        if (! $leads->contains('id', $task->assignee_id)) {
+            self::assigned($task, $by);
+        }
+        if ($leads->isNotEmpty()) {
+            self::send($task, $leads, $by, 'added');
         }
     }
 
