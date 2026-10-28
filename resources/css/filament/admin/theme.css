@@ -78,6 +78,17 @@
 @media (min-width: 1024px) {
     .fi-topbar-nav-groups {
         column-gap: 0.5rem;                                   /* meniul de sus mai strâns: ~24 px între itemi, nu ~40 */
+        align-self: stretch;                                  /* itemii pe toată înălțimea barei: linia activă stă pe linia de jos, peste gri, ca la file */
+        align-items: stretch;
+        margin-block: 0;
+    }
+    .fi-topbar-nav-groups .fi-topbar-item {
+        display: flex;
+    }
+    .fi-topbar-item-btn {
+        display: flex;
+        align-items: center;
+        padding-block: 0;
     }
 }
 .fi-topbar-item-btn > .fi-icon {
