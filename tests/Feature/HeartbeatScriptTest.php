@@ -98,4 +98,18 @@ class HeartbeatScriptTest extends TestCase
         $this->hook('UserPromptSubmit');
         $this->assertStringContainsString('event=UserPromptSubmit', $this->sent(1));   // sub folderul ales: pleacă
     }
+
+    public function test_a_turn_the_agent_started_by_itself_after_a_background_task_is_sent_as_a_tool_signal_not_a_prompt(): void
+    {
+        $this->hook('UserPromptSubmit', ['prompt' => "<task-notification>\n<task-id>b1</task-id>\n<status>completed</status>"]);
+        $sent = $this->sent(1);
+        $this->assertStringContainsString('event=PostToolUse', $sent);                // agentul a lucrat, omul nu era acolo (laptop închis)
+        $this->assertStringNotContainsString('event=UserPromptSubmit', $sent);
+        $this->assertStringNotContainsString('task-notification', $sent);            // textul promptului nu pleacă
+
+        File::delete($this->log);
+        File::delete("{$this->home}/.cache/cemainou/abc");
+        $this->hook('UserPromptSubmit', ['prompt' => 'fă <task-notification> în README']);   // scris de om: prompt
+        $this->assertStringContainsString('event=UserPromptSubmit', $this->sent(1));
+    }
 }

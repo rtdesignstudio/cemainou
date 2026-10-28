@@ -2,6 +2,8 @@
 # cemainou - bătaia de inimă a agentului, chemată de hook-urile Claude Code (UserPromptSubmit, PostToolUse, Stop, SessionEnd; pornirea e session-start.sh)
 # și de cele Cursor (beforeSubmitPrompt, stop, afterFileEdit: aceleași margini ale promptului; sesiunea = conversation_id, folderul = primul workspace).
 # Trimite doar: evenimentul, id-ul sesiunii, amprenta folderului (sha256 al căii; calea nu pleacă), remote-urile git (fără parole) și proiectul dintr-un .cemainou (sau .whatsupai).
+# Un prompt pe care nu l-a scris omul (Claude Code pornește singur o tură când se termină o sarcină din fundal: <task-notification>, chiar
+# cu laptopul închis) pleacă drept semnal de unealtă, nu drept prompt: agentul a lucrat, dar omul nu era acolo.
 # Niciodată prompturi, cod sau căi de fișiere. Trimiterea și sfârșitul fiecărui prompt pleacă mereu; uneltele, cel mult o dată pe minut.
 # Cererea pleacă în fundal, iar scriptul nu scrie nimic pe ecran (Claude Code ar lua textul drept context), cu o excepție: rândul pentru update-ul
 # de azi, cerut pe loc cel mult o dată la 30 de minute (vezi jos). Lui Cursor îi răspunde „continuă" la prompt.
@@ -16,7 +18,10 @@ except Exception:
 raw = str(d.get("hook_event_name", ""))
 cursor = {"beforeSubmitPrompt": "UserPromptSubmit", "stop": "Stop", "afterFileEdit": "PostToolUse"}
 roots = d.get("workspace_roots") or [""]
-for value in (cursor.get(raw, raw), d.get("session_id") or d.get("conversation_id") or "", d.get("cwd") or roots[0], "cursor" if raw in cursor else "claude-code", raw):
+event = cursor.get(raw, raw)
+if event == "UserPromptSubmit" and str(d.get("prompt", "")).lstrip().startswith("<task-notification"):
+    event = "PostToolUse"
+for value in (event, d.get("session_id") or d.get("conversation_id") or "", d.get("cwd") or roots[0], "cursor" if raw in cursor else "claude-code", raw):
     print(str(value).replace("\n", " "))
 ' 2>/dev/null)
 else
@@ -26,6 +31,7 @@ else
   case "$raw" in
     beforeSubmitPrompt) ev=UserPromptSubmit; ag=cursor ;; stop) ev=Stop; ag=cursor ;; afterFileEdit) ev=PostToolUse; ag=cursor ;; *) ev=$raw; ag=claude-code ;;
   esac
+  [ "$ev" = UserPromptSubmit ] && printf '%s' "$flat" | grep -q '"prompt" *: *" *<task-notification' && ev=PostToolUse
   fields=$(printf '%s\n%s\n%s\n%s\n%s\n' "$ev" "$(field session_id)$(field conversation_id)" "$(field cwd)" "$ag" "$raw")
 fi
 event=$(printf '%s\n' "$fields" | sed -n 1p)
