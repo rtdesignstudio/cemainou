@@ -36,8 +36,16 @@ class EverythingSearch extends DefaultGlobalSearchProvider
 
     public function getResults(string $query): ?GlobalSearchResults
     {
-        $results = parent::getResults($query) ?? GlobalSearchResults::make();
         $user = auth()->user();
+        $results = GlobalSearchResults::make();
+        // „179" sau „#179": sarcina cu numărul acela, prima, chiar dacă numărul nu e în titlul ei (căutarea Filament se uită doar în titluri)
+        if ($user && preg_match('/^#?(\d{1,7})$/', trim($query), $m) && ($task = Task::visibleTo($user)->with('project')->find((int) $m[1]))) {
+            $results->category(__('Task').' #'.$task->id, [new GlobalSearchResult("#{$task->id} {$task->title}", TaskResource::getUrl('view', ['record' => $task]),
+                array_filter([__('Project') => $task->project?->name, __('Status') => $task->status->getLabel()]))]);
+        }
+        foreach ((parent::getResults($query)?->getCategories() ?? []) as $label => $found) {
+            $results->category($label, $found);
+        }
         $query = trim($query);
         if ($user && ($actions = $this->actions($user, $query))->isNotEmpty()) {
             $results->category(__('Actions'), $actions->values());             // ⌘K: „sarcină" → Sarcină nouă, „ore" → Mergi la Ore

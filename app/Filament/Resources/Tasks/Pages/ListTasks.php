@@ -413,11 +413,24 @@ class ListTasks extends ListRecords
         $note->markObsolete(auth()->user());
     }
 
-    /** Tabelul, cu selecția de deasupra (proiectul, omul) peste fila aleasă; „Pe proiecte": grupat pe proiect. */
+    /** Tabelul, cu selecția de deasupra (proiectul, omul) peste fila aleasă; „Pe proiecte": grupat pe proiect. Căutat după număr: peste toate. */
     public function table(Table $table): Table
     {
-        return parent::table($table)->modifyQueryUsing(fn (Builder $query) => $this->shown($this->narrow($query->with(['project', 'assignee']))))
+        return parent::table($table)->modifyQueryUsing(fn (Builder $query) => $this->searchedNumber()
+            ? $query->with(['project', 'assignee'])
+            : $this->shown($this->narrow($query->with(['project', 'assignee']))))
             ->groups([Group::make('project.name')->label(__('Project'))->collapsible()])->groupingSettingsHidden();
+    }
+
+    /** „179" sau „#179" în căutare, când omul vede sarcina aceea: se caută în toate sarcinile, nu doar în fila aleasă (o sarcină încheiată nu apărea pe „Toate deschise"). */
+    public function searchedNumber(): ?int
+    {
+        return preg_match('/^#?(\d{1,7})$/', (string) $this->getTableSearch(), $m) && Task::visibleTo(auth()->user())->whereKey((int) $m[1])->exists() ? (int) $m[1] : null;
+    }
+
+    protected function modifyQueryWithActiveTab(Builder $query, bool $isResolvingRecord = false): Builder
+    {
+        return ! $isResolvingRecord && $this->searchedNumber() ? $query : parent::modifyQueryWithActiveTab($query, $isResolvingRecord);
     }
 
     public function getTabs(): array
