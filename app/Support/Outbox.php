@@ -106,6 +106,9 @@ class Outbox
         if (! $row->task || ($row->comment_id !== null && ! $row->comment) || ! $row->user || ! Task::visibleTo($row->user)->whereKey($row->task_id)->exists()) {
             return false;
         }
+        if (AccessGuard::blocks($row->user, $row->task, 'email')) {
+            return false;
+        }
         $page = rtrim(strtok(strtok($row->url, '#'), '?'), '/');
         $about = $row->user->notifications()->where('created_at', '>=', $row->created_at->copy()->subMinute())->get()
             ->filter(fn ($n) => ($url = Notifications::urlOf($n)) && rtrim(strtok(strtok($url, '#'), '?'), '/') === $page);

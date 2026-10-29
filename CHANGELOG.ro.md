@@ -2,6 +2,10 @@
 
 Schimbările importante, cele mai noi întâi. Îmbunătățirile mici și reparațiile vin în fiecare versiune și nu sunt trecute una câte una.
 
+## 0.1.412 - 2026-10-29
+
+**Accesul din afară, sub ochi.** cemainou ține jurnalul a ce deschid clienții și colaboratorii: pagini, fișiere și ce citesc agenții lor. De fiecare dată, și înainte să le plece ceva (notificare, email, Telegram, rezumatul săptămânal, raportul lunar), o a doua verificare, scrisă separat de regulile de acces, se asigură că au voie să vadă. Dacă nu, adminul află imediat, pe email și în clopoțel, iar mesajul nu pleacă. Cine încearcă multe pagini care nu există e anunțat și el. Totul, în Admin → Acces din afară.
+
 ## 0.1.389 - 2026-10-26
 
 **Muzica biroului.** Un tonomat YouTube pentru echipă, fără cont și fără cheie: oricine lipește un link și vine următorul, cântă pe un singur calculator (adminul alege cine o poate porni), iar toți văd ce cântă din nota din bara de sus. Playerul stă într-un panou negru lângă pagină și cântă mai departe cât te miști prin aplicație. O singură bibliotecă pentru tot ce a ascultat echipa: o tragi în ordinea dorită, dai Îmi place, filtrezi pe oameni sau pe preferate și le pui pe toate; după coadă cântă toată biblioteca. Amestecat, repetă (piesa, coada, tot), volum și o linie a timpului pe care sari; agenții pot adăuga un link și spun ce cântă.

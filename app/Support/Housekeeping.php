@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Filament\Pages\Notifications;
 use App\Http\Controllers\ShareController;
+use App\Models\AccessEvent;
 use App\Models\Activity;
 use App\Models\MailOutbox;
 use App\Models\McpCall;
@@ -80,6 +81,7 @@ class Housekeeping
                 Activity::where('occurred_at', '<', $cutoff)->delete();
                 WorkSession::where('started_at', '<', $cutoff)->delete();
                 McpCall::where('created_at', '<', $cutoff)->delete();
+                AccessEvent::where('created_at', '<', now()->subDays(AccessGuard::KEEP_DAYS))->delete();   // jurnalul accesului din afară: un an
             },
             'idle-keys' => function () {                // cheile agenților nefolosite de token_idle_days zile (sau niciodată folosite, de atunci) se revocă singure
                 $idle = now()->subDays(Settings::get('token_idle_days'));

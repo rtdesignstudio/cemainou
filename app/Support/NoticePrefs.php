@@ -32,6 +32,7 @@ class NoticePrefs
             'errors' => ['label' => __('Server errors'), 'hint' => __('In the morning, the errors from the day before, grouped.')],
             'badges' => ['label' => __('Badges'), 'hint' => __('A colleague says well done for one of your badges.')],
             'feedback' => ['label' => __('Feedback'), 'hint' => __('Feedback about cemainou from the team, and the answer to yours.')],
+            'access' => ['label' => __('Outside access'), 'hint' => __('A client or collaborator opens something they should not see, or tries pages that do not exist. Also by email.')],
         ];
         $keys = match (true) {
             $user->isClient() => ['done', 'comments'],

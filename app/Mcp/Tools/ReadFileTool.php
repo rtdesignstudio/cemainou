@@ -3,6 +3,7 @@
 namespace App\Mcp\Tools;
 
 use App\Models\Attachment;
+use App\Support\AccessGuard;
 use App\Support\AgentImage;
 use App\Support\Files;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -47,8 +48,11 @@ class ReadFileTool extends TeamTool
         $data = $request->validate(['id' => 'required|integer', 'session' => 'nullable|string|max:100']);
         $attachment = Attachment::with(['task', 'project', 'author'])->find($data['id']);
         if (! $attachment || ! $user->can('view', $attachment)) {
+            AccessGuard::denied($user, "read_file #{$data['id']}", 'agent');
+
             return Response::error("There is no file #{$data['id']} you can see.");
         }
+        AccessGuard::opened($user, $attachment, 'agent');
         $this->record($request, $attachment->project);
 
         $where = $attachment->task ? "task #{$attachment->task_id} «{$attachment->task->title}»" : "the project {$attachment->project?->name}";

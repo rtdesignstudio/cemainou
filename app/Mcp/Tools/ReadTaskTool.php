@@ -4,6 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Models\Task;
 use App\Models\TaskEvent;
+use App\Support\AccessGuard;
 use App\Support\Checklist;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
@@ -33,8 +34,11 @@ class ReadTaskTool extends TeamTool
         $task = Task::visibleTo($user)->with(['project.client', 'assignee', 'creator'])->find($data['id']);
         $this->record($request, $task?->project);
         if (! $task) {
+            AccessGuard::denied($user, "read_task #{$data['id']}", 'agent');      // din afară: numere încercate prin agent
+
             return Response::error("There is no task #{$data['id']} that you can see.");
         }
+        AccessGuard::opened($user, $task, 'agent');
 
         $comments = $task->comments()->with('author')->latest()->limit(self::MAX_COMMENTS)->get()->reverse()->values();
         $total = $task->comments()->count();

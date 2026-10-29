@@ -17,6 +17,7 @@ use App\Http\Middleware\EnsureAdminsUseTwoFactor;
 use App\Http\Middleware\EnsureUpToDate;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\TrackVisit;
+use App\Http\Middleware\WatchDenied;
 use App\Livewire\Bell;
 use App\Livewire\MobileSidebar;
 use App\Support\Settings;
@@ -173,6 +174,7 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
                 TrackVisit::class,                                       // „de la ultima ta vizită"
+                WatchDenied::class,                                      // paginile „nu există” cerute de clienți și colaboratori (AccessGuard)
             ]);
     }
 }

@@ -2,6 +2,10 @@
 
 The important changes, newest first. Small improvements and fixes come in every version and are not listed one by one.
 
+## 0.1.412 - 2026-10-29
+
+**Outside access, watched.** cemainou keeps a log of what clients and collaborators open: pages, files and what their agents read. Each time, and before anything is sent to them (notification, email, Telegram, weekly digest, monthly report), a second check written apart from the access rules makes sure they are allowed to see it. If not, the admin learns at once, by email and in the bell, and the message does not leave. Someone trying many pages that do not exist is reported too. Everything is under Admin → Outside access.
+
 ## 0.1.389 - 2026-10-26
 
 **Office music.** A YouTube jukebox for the team, with no account or key: anyone pastes a link and it comes next, it plays on one computer (the admin chooses who may play it), and everyone sees what plays from the note in the top bar. The player lives in a black panel next to the page and keeps playing while you move around the app. One library for everything the team played: drag it into order, like songs, filter by person or favorites and play them all; after the queue, the whole library plays. Shuffle, repeat (song, queue, everything), volume and a timeline you can jump on; agents can add a link and tell what plays.

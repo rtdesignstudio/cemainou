@@ -4,6 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Models\Document;
+use App\Support\AccessGuard;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -47,6 +48,7 @@ class ReadDocumentTool extends TeamTool
 
             return Response::error("{$project->name} has no document «{$data['title']}».".($titles ? " Its documents: {$titles}." : ' It has no documents yet.'));
         }
+        AccessGuard::opened($viewer, $document, 'agent');
 
         if (isset($data['version']) && $viewer->isClient()) {
             return Response::error('Only the current version of a document is shown to a client.');

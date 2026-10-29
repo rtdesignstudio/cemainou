@@ -5,6 +5,7 @@ use App\Http\Middleware\RunHousekeeping;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\ThrottleBeforeAuth;
+use App\Http\Middleware\WatchDenied;
 use App\Livewire\MobileSidebar;
 use App\Support\ErrorLog;
 use App\Support\Installer;
@@ -34,7 +35,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         $middleware->append([SecurityHeaders::class, EnsureInstalled::class, RunHousekeeping::class]);   // neinstalat: totul trimite la /install
 
         // limba și pe paginile din afara panoului (linkul de încărcare, aprobarea unui conector OAuth, erori): a contului, altfel a echipei
-        $middleware->web(append: [SetLocale::class]);
+        $middleware->web(append: [SetLocale::class, WatchDenied::class]);   // și paginile „nu există” cerute de clienți și colaboratori (AccessGuard)
 
         // „Share" din telefon (share_target din manifest): sistemul trimite un POST fără token CSRF; pagina doar pune deoparte, omul salvează
         $middleware->validateCsrfTokens(except: ['share']);

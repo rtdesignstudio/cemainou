@@ -13,6 +13,7 @@ use App\Models\TimeEntry;
 use App\Models\Update;
 use App\Models\UpdateRevision;
 use App\Models\User;
+use App\Support\AccessGuard;
 use App\Support\BackLinks;
 use App\Support\ClientSeen;
 use App\Support\ContextDecisions;
@@ -51,6 +52,7 @@ class ViewUpdate extends ViewRecord
         parent::mount($record);
         Inbox::readAbout(auth()->user(), static::getResource()::getUrl('view', ['record' => $this->record]));   // notificările despre pagina asta: citite
         ClientSeen::record(auth()->user(), $this->record);                          // clientul l-a deschis: echipa vede „văzut de"
+        AccessGuard::opened(auth()->user(), $this->record, 'web');                 // din afară: în jurnal, iar ce n-ar trebui văzut ajunge la admin
     }
 
     protected static string $resource = UpdateResource::class;

@@ -6,6 +6,7 @@ use App\Enums\Source;
 use App\Exceptions\DocumentConflict;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Models\Document;
+use App\Support\AccessGuard;
 use App\Support\BackLinks;
 use App\Support\ClientSeen;
 use App\Support\LineDiff;
@@ -69,6 +70,7 @@ class ViewDocument extends Page
         abort_unless(Gate::allows('view', $found), 404);                       // clientul: doar ce i-a arătat echipa; restul, ca și cum n-ar exista
         $this->documentId = $found->id;
         ClientSeen::record(auth()->user(), $found);                                 // clientul l-a deschis: echipa vede „văzut de"
+        AccessGuard::opened(auth()->user(), $found, 'web');                        // din afară: în jurnal, iar ce n-ar trebui văzut ajunge la admin
         if (auth()->user()->isClient()) {                                      // clientul vede doar versiunea de acum; editează doar documentele lui
             [$this->v, $this->changes, $this->edit] = [null, false, $this->edit && Gate::allows('update', $found)];
         }

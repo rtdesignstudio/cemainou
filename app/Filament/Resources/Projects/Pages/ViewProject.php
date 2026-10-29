@@ -20,6 +20,7 @@ use App\Models\Update;
 use App\Models\UpdateItem;
 use App\Models\User;
 use App\Models\WidgetInvite;
+use App\Support\AccessGuard;
 use App\Support\BackLinks;
 use App\Support\Estimates;
 use App\Support\FeedbackWidget;
@@ -51,6 +52,7 @@ class ViewProject extends ViewRecord
     {
         parent::mount($record);
         Inbox::readAbout(auth()->user(), static::getResource()::getUrl('view', ['record' => $this->record]));   // notificările despre pagina asta: citite
+        AccessGuard::opened(auth()->user(), $this->record, 'web');                 // din afară: în jurnal, iar ce n-ar trebui văzut ajunge la admin
     }
 
     protected static string $resource = ProjectResource::class;

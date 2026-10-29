@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Mail\MonthlyReport;
 use App\Models\Concerns\StoresTimesInUtc;
+use App\Support\AccessGuard;
 use App\Support\TeamMail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -32,7 +33,7 @@ class ProjectReport extends Model
     /** Trimis pe email oamenilor clientului (în numele lui $by); câți l-au primit. Fără email configurat sau fără oameni, 0 și rămâne netrimis. */
     public function send(User $by): int
     {
-        $people = TeamMail::ready() ? $this->project->clientPeople() : collect();
+        $people = (TeamMail::ready() ? $this->project->clientPeople() : collect())->reject(fn (User $person) => AccessGuard::blocks($person, $this->project, 'report'))->values();
         foreach ($people as $person) {
             Mail::to($person)->send(new MonthlyReport($this, $by, $person));
         }

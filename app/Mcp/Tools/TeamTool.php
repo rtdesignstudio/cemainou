@@ -12,6 +12,7 @@ use App\Models\Task;
 use App\Models\Update;
 use App\Models\UpdateComment;
 use App\Models\User;
+use App\Support\AccessGuard;
 use App\Support\AgentSessions;
 use App\Support\Files;
 use App\Support\TaskFileRules;
@@ -267,6 +268,7 @@ abstract class TeamTool extends Tool
     protected function record(Request $request, ?Project $project = null): void
     {
         McpCall::create(['user_id' => $request->user()?->id, 'tool' => $this->name(), 'source' => Source::fromRequest(request())->value, 'project_id' => $project?->id]);
+        AccessGuard::opened($request->user(), $project, 'agent');                   // din afară: proiectul atins de agent, verificat și notat
     }
 
     protected function tz(User $user): string

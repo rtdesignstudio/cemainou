@@ -170,6 +170,9 @@ class Inbox
      */
     public static function notify(User $person, string $title, string $body, string $url, Heroicon $icon, string $locale, string $type, ?string $group = null, ?string $by = null): void
     {
+        if (AccessGuard::blocks($person, $url, 'notice')) {
+            return;                                                             // cuiva din afară, despre ce n-ar trebui să vadă: nu pleacă pe niciun canal
+        }
         if (NoticePrefs::wants($person, $type, 'bell')) {
             $meta = ['type' => $type, 'url' => $url, 'group' => $group, 'by' => array_values(array_filter([$by])), 'count' => 1];
             $open = $group ? $person->unreadNotifications()->where('created_at', '>=', now()->subDays(2))->where('data', 'like', '%"group":"'.$group.'"%')->latest()->first() : null;

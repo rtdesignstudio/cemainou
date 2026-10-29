@@ -6,6 +6,7 @@ use App\Enums\TaskStatus;
 use App\Filament\Resources\Tasks\TaskActions;
 use App\Filament\Resources\Tasks\TaskResource;
 use App\Models\UpdateItem;
+use App\Support\AccessGuard;
 use App\Support\BackLinks;
 use App\Support\Checklist;
 use App\Support\ClientSeen;
@@ -44,6 +45,7 @@ class ViewTask extends ViewRecord
         }
         Inbox::readAbout(auth()->user(), static::getResource()::getUrl('view', ['record' => $this->record]));   // notificările despre ea: citite
         ClientSeen::record(auth()->user(), $this->record);                          // clientul a deschis-o: echipa vede „văzut de"
+        AccessGuard::opened(auth()->user(), $this->record, 'web');                 // din afară: în jurnal, iar ce n-ar trebui văzut ajunge la admin
         $this->askUnblock = request()->boolean('unblock') && $this->record->status === TaskStatus::Blocked
             && auth()->user()->can('move', [$this->record, TaskStatus::Doing]);    // din notificarea „Elena a răspuns · Deblochezi?"
     }

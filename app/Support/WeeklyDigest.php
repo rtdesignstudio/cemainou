@@ -54,7 +54,7 @@ class WeeklyDigest
         $sent = 0;
         $people = $only ? collect([$only]) : User::where('is_active', true)->where('wants_digest', true)->get();
         foreach ($people as $person) {
-            $projects = self::for($person, $from, $to);
+            $projects = array_values(array_filter(self::for($person, $from, $to), fn (array $p) => ! AccessGuard::blocks($person, $p['url'], 'digest')));   // din afară: fără ce n-ar trebui să vadă
             if ($projects === [] && ! $only) {
                 continue;
             }

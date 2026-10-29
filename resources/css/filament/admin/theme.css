@@ -11687,3 +11687,12 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
     margin-right: 0.3rem;
     background: #d97706;                                   /* cardul „Acces": în listă, fără nicio sarcină pe proiect */
 }
+
+/* Accesul din afară: ce n-ar fi trebuit văzut sau a fost oprit, cu o linie neagră în stânga */
+.wsa-access-event.is-alert {
+    padding-left: 0.75rem;
+    box-shadow: inset 2px 0 0 var(--color-gray-950);
+}
+.wsa-access-event.is-alert .wsa-row-title {
+    font-weight: 600;
+}

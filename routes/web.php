@@ -21,6 +21,7 @@ use App\Models\DownloadRequest;
 use App\Models\Feedback;
 use App\Models\Project;
 use App\Models\User;
+use App\Support\AccessGuard;
 use App\Support\AgentFiles;
 use App\Support\Backups;
 use App\Support\Branding;
@@ -91,6 +92,7 @@ Route::get('/brand/logo', function () {
 
 Route::get('/files/{attachment}', function (Request $request, Attachment $attachment) {
     abort_unless($request->user()->is_active && $attachment->isFile() && Gate::allows('view', $attachment), 404);   // unul pe care nu-l vede: ca și cum n-ar exista
+    AccessGuard::opened($request->user(), $attachment, 'file');
 
     return Files::response($attachment);
 })->middleware('auth')->name('files.show');
@@ -98,6 +100,7 @@ Route::get('/files/{attachment}', function (Request $request, Attachment $attach
 // un fișier descărcat de agentul cuiva (read_file): link semnat, 15 minute, doar dacă omul e activ și încă vede sarcina sau proiectul fișierului
 Route::get('/files/{attachment}/agent/{user}', function (Attachment $attachment, User $user) {
     abort_unless($user->is_active && $attachment->isFile() && Gate::forUser($user)->allows('view', $attachment), 404);
+    AccessGuard::opened($user, $attachment, 'agent');
 
     return Files::response($attachment);
 })->middleware(['signed', 'throttle:60,1'])->name('files.agent');
