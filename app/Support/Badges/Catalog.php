@@ -183,8 +183,13 @@ class Catalog
     /** Pragul unei trepte, spus omului: „20 de zile", „4 la rând", „o dată". */
     public static function levelLabel(string $key, int $tier): string
     {
+        return self::amount($key, self::levels($key)[$tier - 1] ?? 0);
+    }
+
+    /** Un număr în unitatea badge-ului: „1 coleg", „3 zile", „4 la rând". */
+    public static function amount(string $key, int $n): string
+    {
         $b = self::get($key);
-        $n = self::levels($key)[$tier - 1] ?? 0;
 
         return match ($b['unit']) {
             'once' => __('once'),

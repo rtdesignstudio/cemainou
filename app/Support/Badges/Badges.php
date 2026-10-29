@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Throwable;
 
 /**
@@ -163,22 +164,30 @@ class Badges
             })->filter(fn ($p) => $p && $p['ratio'] > 0 && $p['ratio'] < 1)->sortByDesc('ratio')->take($limit)->values()->all();
     }
 
-    /** Pentru agent, la /upd: badge-urile noi, plus o singură frază când lipsește puțin până la o treaptă (cel mult 3 sau sub 15%). */
+    /**
+     * Pentru agent, la /upd: badge-urile noi, plus o singură frază când lipsește puțin până la o treaptă (cel mult 3 sau sub 15%), cu unitatea
+     * și criteriul („încă 1 coleg până la Welcome II (un coleg invitat de tine…)"), ca agentul să nu ghicească „încă un update". Aceeași treaptă
+     * apropiată se spune cel mult o dată pe săptămână: multe nu se mișcă din update-uri și ar suna la fiecare raport.
+     */
     public static function forAgent(User $user, Collection $new): ?array
     {
         if (! self::for($user)) {
             return null;
         }
-        $near = collect(self::progress($user, 5))->first(fn (array $p) => $p['left'] <= 3 || $p['left'] / max(1, $p['target']) <= 0.15);
+        $near = collect(self::progress($user, 5))->first(fn (array $p) => ($p['left'] <= 3 || $p['left'] / max(1, $p['target']) <= 0.15)
+            && Cache::add("badges.almost.{$user->id}.{$p['key']}.{$p['next']}", 1, now()->addWeek()));
         if ($new->isEmpty() && ! $near) {
             return null;
         }
 
         return array_filter([
             'new' => $new->map(fn (Badge $b) => ['name' => Catalog::name($b->key), 'tier' => $b->tier, 'level' => Catalog::levelLabel($b->key, $b->tier), 'why' => Catalog::criterion($b->key)])->values()->all() ?: null,
-            'almost' => $near ? ($near['next'] === 1 ? __(':left more until :name', ['left' => $near['left'], 'name' => Catalog::name($near['key'])])
-                : __(':left more until :name :tier', ['left' => $near['left'], 'name' => Catalog::name($near['key']), 'tier' => self::roman($near['next'])])) : null,
-            'note' => 'In one short sentence, after the link: congratulate the person on the new badges (name and tier), or mention "almost" if there is no new one. Never more than one sentence.',
+            'almost' => $near ? __(':left more until :name (:why)', [
+                'left' => Catalog::amount($near['key'], $near['left']),
+                'name' => Catalog::name($near['key']).($near['next'] > 1 ? ' '.self::roman($near['next']) : ''),
+                'why' => rtrim(Str::lcfirst(Catalog::criterion($near['key'])), '.'),
+            ]) : null,
+            'note' => 'In one short sentence, after the link: congratulate the person on the new badges (name and tier), or mention "almost" if there is no new one, keeping its unit and reason (it is often not about updates). Never more than one sentence.',
         ]);
     }
 

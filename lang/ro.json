@@ -3056,5 +3056,6 @@
     "opened": "deschis",
     "Nothing to look at in the last :days days.": "Nimic de văzut în ultimele :days zile.",
     "No outside access in the last :days days.": "Niciun acces din afară în ultimele :days zile.",
-    "A client or collaborator opens something they should not see, or tries pages that do not exist. Also by email.": "Un client sau un colaborator deschide ceva ce n-ar trebui să vadă sau încearcă pagini care nu există. Și pe email."
+    "A client or collaborator opens something they should not see, or tries pages that do not exist. Also by email.": "Un client sau un colaborator deschide ceva ce n-ar trebui să vadă sau încearcă pagini care nu există. Și pe email.",
+    ":left more until :name (:why)": "Încă :left până la :name (:why)"
 }
