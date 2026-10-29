@@ -10,6 +10,9 @@ define('LARAVEL_START', microtime(true));
 if (function_exists('opcache_reset') && is_file($stamp = __DIR__.'/../bootstrap/cache/opcache-stamp') && @file_get_contents($stamp) !== @file_get_contents($stamp.'.done')) {
     @copy($stamp, $stamp.'.done');
     @opcache_reset();
+    foreach (glob(__DIR__.'/../bootstrap/cache/*.php') ?: [] as $cached) {
+        @opcache_invalidate($cached, true);   // opcache_reset se aplică abia după cererea asta: cache-urile proaspete le citește și ea
+    }
 }
 
 // Mentenanța (artisan down, în timpul unei actualizări): răspunde 503 înainte să pornească aplicația, ca nicio cerere să nu dea peste

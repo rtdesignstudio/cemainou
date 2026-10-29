@@ -48,15 +48,27 @@ class AppServiceProvider extends ServiceProvider
     public static function dropStaleCaches(): void
     {
         $app = app();
-        if (! $app->configurationIsCached()) {
+        if (! $app->configurationIsCached() || ! self::staleCache($app->getCachedConfigPath(), config_path('cemainou.php'))) {
             return;
         }
-        preg_match("/'version'\s*=>\s*'([^']+)'/", (string) @file_get_contents(config_path('cemainou.php')), $m);
-        if (($m[1] ?? null) && $m[1] !== config('cemainou.version')) {
-            foreach ([$app->getCachedConfigPath(), $app->getCachedRoutesPath(), $app->getCachedEventsPath()] as $path) {
-                @unlink($path);
+        foreach ([$app->getCachedConfigPath(), $app->getCachedRoutesPath(), $app->getCachedEventsPath()] as $path) {
+            @unlink($path);
+            if (function_exists('opcache_invalidate')) {
+                @opcache_invalidate($path, true);   // altfel OPcache (cu opcache.enable_file_override) încă zice că fișierul există și require pică
             }
         }
+    }
+
+    /**
+     * Cache-ul configurației e al altei versiuni decât config/cemainou.php de pe disc. Se citesc fișierele, nu config(): la prima cerere după
+     * o actualizare, OPcache încă dă config.php de dinainte (opcache_reset din public/index.php se aplică abia după cererea aceea), iar
+     * cache-urile proaspăt făcute de Updater se ștergeau degeaba - de aici „events.php: Failed to open stream" la cereri întâmplătoare.
+     */
+    public static function staleCache(string $cachedConfig, string $diskConfig): bool
+    {
+        preg_match("/'version'\s*=>\s*'([^']+)'/", (string) @file_get_contents($diskConfig), $m);
+
+        return ($m[1] ?? null) && ! str_contains((string) @file_get_contents($cachedConfig), "'version' => '{$m[1]}'");
     }
 
     /**
