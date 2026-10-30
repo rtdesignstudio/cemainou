@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::call(fn () => app(Housekeeping::class)->runIfDue())->daily()->name('cemainou-housekeeping');
 Schedule::call(fn () => app(WeeklyDigest::class)->sendIfDue())->hourly()->name('cemainou-weekly-digest');   // cu cron: rezumatul pleacă la ora lui, nu la prima cerere
 // instanța demo publică: datele inventate se refac în fiecare oră (ce lasă cineva acolo, de ex. linkuri, nu stă mult) (doar cu CEMAINOU_DEMO=true)
-Schedule::command('cemainou:demo-reset')->hourly()->when(fn () => (bool) config('cemainou.demo'))->name('cemainou-demo-reset');
+Schedule::command('cemainou:demo-reset')->hourly()->when(fn () => (bool) config('cemainou.demo'))->name('cemainou-demo-reset')->withoutOverlapping(30);
 
 // doar la RT: câte instalări verifică versiunile, din jurnalele rt.md (nimic de la instanțe)
 Schedule::command('cemainou:install-estimate')->dailyAt('05:30')->timezone('Europe/Chisinau')->when(fn () => filled(config('cemainou.install_logs')));
