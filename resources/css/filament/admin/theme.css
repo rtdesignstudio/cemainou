@@ -11696,3 +11696,16 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
 .wsa-access-event.is-alert .wsa-row-title {
     font-weight: 600;
 }
+
+/* telefon: un buton cu meniu în antet („Feedback pe site") e un .fi-dropdown; ca celelalte, umple celula și are textul centrat (feedback #40) */
+@media (max-width: 639px) {
+    .fi-page:not(.wsa-today):not(.fi-resource-tasks.fi-resource-list-records-page) .fi-header-actions-ctn .fi-ac > .fi-dropdown,
+    .fi-page:not(.wsa-today):not(.fi-resource-tasks.fi-resource-list-records-page) .fi-header-actions-ctn .fi-ac > .fi-dropdown > .fi-dropdown-trigger {
+        display: flex;
+        width: 100%;
+    }
+    .fi-page:not(.wsa-today):not(.fi-resource-tasks.fi-resource-list-records-page) .fi-header-actions-ctn .fi-ac > .fi-dropdown .fi-btn {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+}
