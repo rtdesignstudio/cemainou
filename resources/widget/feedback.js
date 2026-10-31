@@ -466,7 +466,20 @@
             });
         }
         root.querySelector('input[type=file]').onchange = function (e) { addFiles(e.target.files); e.target.value = ''; };
-        panel.addEventListener('paste', function (e) { var f = e.clipboardData && e.clipboardData.files; if (f && f.length) { e.preventDefault(); addFiles(f); } });
+        // cât panoul e deschis, ce lipești ajunge doar în el: pagina nu primește nimic, oriunde ar fi cursorul (imaginile la capturi, textul în câmpul lui)
+        window.addEventListener('paste', function (e) {
+            if (!w.classList.contains('open')) return;
+            e.stopPropagation();
+            var path = e.composedPath(), t = path[0], c = e.clipboardData, f = c && c.files;
+            if (f && f.length) { e.preventDefault(); if (!form.hidden) addFiles(f); return; }
+            if (path.indexOf(host) !== -1 && t.matches && t.matches('input,textarea')) return;   // într-un câmp al widget-ului: lipirea obișnuită
+            e.preventDefault();
+            var text = c ? c.getData('text') : '';
+            if (!text || form.hidden) return;
+            ta.setRangeText(text, ta.selectionStart, ta.selectionEnd, 'end');
+            ta.dispatchEvent(new Event('input', { bubbles: true }));             // ciorna și sugestiile, ca la scris
+            ta.focus();
+        }, true);
         panel.addEventListener('dragover', function (e) { e.preventDefault(); });
         panel.addEventListener('drop', function (e) { e.preventDefault(); addFiles(e.dataTransfer.files); });
 
