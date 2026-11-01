@@ -76,6 +76,16 @@ class TaskPagesTest extends TestCase
             ->set('files', [UploadedFile::fake()->create('script.exe', 2)])->call('add')->assertHasErrors('files.0');
     }
 
+    public function test_a_new_task_page_has_a_way_back(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $project = Project::factory()->create();
+
+        $this->assertSame([['label' => __('Tasks'), 'url' => TaskResource::getUrl('index')]], Livewire::test(CreateTask::class)->instance()->backLinks());
+        $this->assertSame($project->name, collect(Livewire::withQueryParams(['project' => $project->id])->test(CreateTask::class)->instance()->backLinks())->last()['label']);
+        $this->assertSame(__('Tasks'), Livewire::withQueryParams(['project' => 999999])->test(CreateTask::class)->instance()->backLinks()[0]['label']);
+    }
+
     public function test_task_page_shows_history_marks_it_seen_and_closes_it(): void
     {
         $ana = User::factory()->create(['name' => 'Ana Popescu']);

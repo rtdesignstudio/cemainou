@@ -9,6 +9,7 @@ use App\Filament\Resources\Tasks\TaskResource;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Support\BackLinks;
 use App\Support\Files;
 use Filament\Resources\Pages\Page;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
@@ -64,6 +65,14 @@ class CreateTask extends Page implements HasSchemas
     public function getTitle(): string|Htmlable
     {
         return __('New task');
+    }
+
+    /** Drumul înapoi (pe telefon, altă ieșire vizibilă nu e, feedback #41): proiectul din link, altfel Sarcini. */
+    public function backLinks(): array
+    {
+        $project = $this->project ? Project::active()->visibleTo(auth()->user())->find($this->project) : null;
+
+        return $project ? BackLinks::project($project, auth()->user()) : BackLinks::to(__('Tasks'), TaskResource::getUrl('index'));
     }
 
     public function form(Schema $schema): Schema
