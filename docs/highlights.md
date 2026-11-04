@@ -2,6 +2,10 @@
 
 The important changes, newest first. Small improvements and fixes come in every version and are not listed one by one.
 
+## 0.1.419 - 2026-11-04
+
+**Handing a task over, cleanly.** When a task goes to someone else, the agent offers to leave one handoff note (what is done, what is left, which file is the final one) and to mark the earlier files as older versions; nothing is deleted. Whoever takes it over sees the note first and the final file on top, with the older versions dimmed below. While working, agents comment only on results and questions, and put a new version of a file in place of the old one.
+
 ## 0.1.418 - 2026-11-04
 
 **cemainou for Claude Code, as a plugin.** Connect Claude Code from inside it: `/plugin install cemainou --marketplace rtdesignstudio/cemainou`, then your cemainou address and an agent key. It brings the same time measuring, project linking and team context as the one-line command, and `/cemainou:upd` for the daily update. In the feedback widget, ⌘ / Ctrl + Enter now sends.

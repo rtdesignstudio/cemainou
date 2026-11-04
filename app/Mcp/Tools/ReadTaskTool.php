@@ -54,13 +54,14 @@ class ReadTaskTool extends TeamTool
                 'by' => $c->author?->name.($c->author?->isClient() ? ' (client)' : ''),
                 'mine' => $c->user_id === $user->id ? true : null,
                 'when' => $c->created_at->setTimezone($this->tz($user))->format('Y-m-d H:i'),
+                'handoff' => $c->handoff ? true : null,
                 'text' => $c->body,
             ], fn ($v) => $v !== null))->all() ?: null,
             'older_comments' => $total > self::MAX_COMMENTS ? $total - self::MAX_COMMENTS : null,
             'history' => $user->isClient() ? null : (TaskEvent::with(['user', 'statusUpdate'])->where('task_id', $task->id)->latest()->limit(15)->get()->reverse()
                 ->map(fn (TaskEvent $e) => $e->created_at->setTimezone($this->tz($user))->format('Y-m-d H:i').' · '.$e->describe())->values()->all() ?: null),
             'project' => array_filter(['name' => $task->project?->name, 'client' => $task->project?->client?->name]),
-            'next_steps' => 'Tell the person what matters (what was asked, by whom, what is still open), in their language. To answer on the task, draft the comment and use update_task with comment only after they confirm.',
+            'next_steps' => ($present['handoff'] ?? null ? 'Start from the handoff note (handoff): it says what is done, what is left and which file is the final one; files marked older_version are earlier versions. ' : '').'Tell the person what matters (what was asked, by whom, what is still open), in their language. To answer on the task, draft the comment and use update_task with comment only after they confirm.',
         ], fn ($v) => $v !== null && $v !== []));
     }
 

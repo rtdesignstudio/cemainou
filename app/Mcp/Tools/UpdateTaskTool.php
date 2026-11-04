@@ -19,7 +19,7 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 
 #[Name('update_task')]
-#[Description('Changes a task: edit its title or details (title, notes: the whole new text, read it first with start_task or list_tasks; add_steps appends new - [ ] steps), take it (assignee "me", status "doing"), move it (todo, doing, blocked with a reason, done, dropped; todo turns an idea into a task), move it to another project (move_to_project), remove its files you added (remove_files; to swap a changed file, use add_attachment with replaces instead), give it to someone ("none" frees it), tick its steps (check) or comment on it. Progress on a task with steps is shown by ticking the finished steps (check: [numbers]), not by listing them in a comment; a comment is for questions, answers and what the steps do not cover. Only when the person asked for it.')]
+#[Description('Changes a task: edit its title or details (title, notes: the whole new text, read it first with start_task or list_tasks; add_steps appends new - [ ] steps), take it (assignee "me", status "doing"), move it (todo, doing, blocked with a reason, done, dropped; todo turns an idea into a task), move it to another project (move_to_project), remove its files you added (remove_files; to swap a changed file, use add_attachment with replaces instead), give it to someone ("none" frees it), tick its steps (check) or comment on it. Progress on a task with steps is shown by ticking the finished steps (check: [numbers]), not by listing them in a comment; a comment is for questions, answers and what the steps do not cover; while working on your own, do not comment on every small change: one comment when there is a result or a question. Before giving a task to someone else, when it has gathered several comments or file versions, ask the person once whether to leave a handoff note (handoff: what is done, what is left, which file is the final one) and mark the earlier files as older versions (old_files); nothing is deleted. Only when the person asked for it.')]
 #[IsIdempotent]
 class UpdateTaskTool extends TeamTool
 {
@@ -30,8 +30,10 @@ class UpdateTaskTool extends TeamTool
         $data = $request->validate(['id' => 'required|integer', 'status' => 'nullable|in:todo,doing,blocked,done,dropped',
             'assignee' => 'nullable|string|max:100', 'reason' => 'nullable|string|max:300', 'proof' => 'nullable|string|max:500', 'comment' => 'nullable|string|max:5000', 'due' => 'nullable|string|max:10',
             'title' => 'nullable|string|max:200', 'notes' => 'nullable|string|max:'.Task::MAX_NOTES, 'add_steps' => 'nullable|array|max:30', 'add_steps.*' => 'string|max:300',
-            'repeat' => 'nullable|in:weekly,biweekly,monthly,quarterly,yearly,none', 'check' => 'nullable|array|max:50', 'check.*' => 'integer|min:1', 'uncheck' => 'nullable|array|max:50', 'uncheck.*' => 'integer|min:1', 'move_to_project' => 'nullable|string|max:200', 'remove_files' => 'nullable|array|max:20', 'remove_files.*' => 'integer']);
+            'repeat' => 'nullable|in:weekly,biweekly,monthly,quarterly,yearly,none', 'check' => 'nullable|array|max:50', 'check.*' => 'integer|min:1', 'uncheck' => 'nullable|array|max:50', 'uncheck.*' => 'integer|min:1', 'move_to_project' => 'nullable|string|max:200', 'remove_files' => 'nullable|array|max:20', 'remove_files.*' => 'integer',
+            'handoff' => 'nullable|string|max:5000', 'old_files' => 'nullable|array|max:30', 'old_files.*' => 'integer']);
         $user = $request->user();
+        $says = filled($data['comment'] ?? null) || filled($data['handoff'] ?? null);   // un comentariu sau nota de predare
         $task = Task::visibleTo($user)->with(['project', 'assignee', 'creator'])->find($data['id']);
         $this->record($request, $task?->project);
         if (! $task) {
@@ -98,7 +100,7 @@ class UpdateTaskTool extends TeamTool
             if ($changed) {
                 $task->edit($user, filled($data['title'] ?? null) ? $data['title'] : $task->title, $notes !== '' ? $notes : null);
             }
-            $others = isset($data['status']) || filled($data['assignee'] ?? null) || filled($data['comment'] ?? null) || array_key_exists('due', $data)
+            $others = isset($data['status']) || filled($data['assignee'] ?? null) || $says || array_key_exists('due', $data)
                 || filled($data['repeat'] ?? null) || filled($data['check'] ?? null) || filled($data['uncheck'] ?? null);
             if (! $others) {
                 return Response::structured(array_filter(['task' => $this->presentTask($task->refresh()->load(['project', 'assignee', 'creator']), $user),
@@ -117,7 +119,7 @@ class UpdateTaskTool extends TeamTool
                 return Response::error($this->refusal($task));
             }
             $task->edit($user, $task->title, $task->notes, $due);
-            if (! isset($data['status']) && ! filled($data['assignee'] ?? null) && ! filled($data['comment'] ?? null)) {
+            if (! isset($data['status']) && ! filled($data['assignee'] ?? null) && ! $says) {
                 return Response::structured(['task' => $this->presentTask($task->refresh()->load(['project', 'assignee', 'creator']), $user), 'message' => $due ? "Task #{$task->id} is due {$due}." : "Task #{$task->id} has no due date now."]);
             }
         }
@@ -135,7 +137,7 @@ class UpdateTaskTool extends TeamTool
             if ($notes !== (string) $task->notes) {
                 $task->forceFill(['notes' => $notes])->save();
             }
-            if (! isset($data['status']) && ! filled($data['assignee'] ?? null) && ! filled($data['comment'] ?? null) && ! array_key_exists('due', $data) && ! filled($data['repeat'] ?? null)) {
+            if (! isset($data['status']) && ! filled($data['assignee'] ?? null) && ! $says && ! array_key_exists('due', $data) && ! filled($data['repeat'] ?? null)) {
                 $list = $task->checklist();
 
                 return Response::structured(['task' => $this->presentTask($task->refresh()->load(['project', 'assignee', 'creator']), $user), 'steps' => Checklist::steps($task->notes),
@@ -148,21 +150,40 @@ class UpdateTaskTool extends TeamTool
             }
             $repeat = $data['repeat'] === 'none' ? null : TaskRepeat::from($data['repeat']);
             $task->edit($user, $task->title, $task->notes, false, $repeat);
-            if (! isset($data['status']) && ! filled($data['assignee'] ?? null) && ! filled($data['comment'] ?? null)) {
+            if (! isset($data['status']) && ! filled($data['assignee'] ?? null) && ! $says) {
                 return Response::structured(['task' => $this->presentTask($task->refresh()->load(['project', 'assignee', 'creator']), $user), 'message' => $repeat ? "Task #{$task->id} repeats: {$repeat->value}." : "Task #{$task->id} no longer repeats."]);
             }
         }
-        if (! isset($data['status']) && ! filled($data['assignee'] ?? null) && ! filled($data['comment'] ?? null)) {
-            return Response::error('Pass a title, notes, steps to add, a status, an assignee, a comment, a due date, a repeat or several.');
+        $marked = [];
+        if (filled($data['old_files'] ?? null)) {                  // versiunile vechi ale fișierelor: rămân, dar strânse sub cele de acum, ca cine preia să știe care e cel final
+            if ($user->isClient() || ! $user->can('move', [$task, $task->status])) {
+                return Response::error($this->refusal($task).' Nothing was changed.');
+            }
+            $files = $task->attachments()->whereIn('id', $data['old_files'])->get();
+            if ($missing = array_diff($data['old_files'], $files->pluck('id')->all())) {
+                return Response::error('Task #'.$task->id.' has no file '.implode(', ', array_map(fn ($id) => "#{$id}", $missing)).' (read_task lists its files). Nothing was changed.');
+            }
+            foreach ($files as $file) {
+                $file->superseded_at ??= now();
+                $file->save();
+                $marked[] = $file->title ?: $file->name;
+            }
+            if (! isset($data['status']) && ! filled($data['assignee'] ?? null) && ! $says) {
+                return Response::structured(['task' => $this->presentTask($task->refresh()->load(['project', 'assignee', 'creator']), $user, true),
+                    'message' => 'Marked as older versions on #'.$task->id.': «'.implode('», «', $marked).'». They stay on the task, under the current files.']);
+            }
         }
-        if (filled($data['comment'] ?? null) && ! isset($data['status']) && ! filled($data['assignee'] ?? null)) {
-            $task->comments()->create(['user_id' => $user->id, 'body' => trim($data['comment']), 'source' => Source::fromRequest(request())]);
+        if (! isset($data['status']) && ! filled($data['assignee'] ?? null) && ! $says) {
+            return Response::error('Pass a title, notes, steps to add, a status, an assignee, a comment, a handoff note, older files, a due date, a repeat or several.');
+        }
+        if ($says && ! isset($data['status']) && ! filled($data['assignee'] ?? null)) {
+            $this->say($task, $user, $data);
             // o sarcină cu pași nebifați: dacă un comentariu spune că s-au făcut, bifele sunt progresul pe care îl vede echipa
             $open = collect(Checklist::steps($task->notes))->where('done', false)->values();
 
             return Response::structured(array_filter(['task' => $this->presentTask($task->load('comments.author'), $user),
                 'unticked_steps' => $open->isNotEmpty() ? $open->map(fn (array $s) => ['n' => $s['n'], 'text' => $s['text']])->all() : null,
-                'message' => "Comment added on task #{$task->id}.".($open->isNotEmpty()
+                'message' => (filled($data['handoff'] ?? null) ? "Handoff note added on task #{$task->id}: whoever opens it sees it first." : "Comment added on task #{$task->id}.").($open->isNotEmpty()
                     ? ' The task has '.$open->count().' unticked step(s) (unticked_steps): if the comment reports any of them as done, tick them now with update_task (id, check: [numbers]) - the team follows the steps, not the comments.' : ''),
             ], fn ($v) => $v !== null));
         }
@@ -190,9 +211,7 @@ class UpdateTaskTool extends TeamTool
         }
 
         DB::transaction(function () use ($task, $assignee, $status, $user, $data) {
-            if (filled($data['comment'] ?? null)) {
-                $task->comments()->create(['user_id' => $user->id, 'body' => trim($data['comment']), 'source' => Source::fromRequest(request())]);
-            }
+            $this->say($task, $user, $data);
             if ($assignee && $assignee->is($user) && in_array($status, [null, TaskStatus::Doing], true)) {
                 $task->take($user);                          // „iau eu": a mea, în lucru, focusul meu
             } else {
@@ -209,11 +228,25 @@ class UpdateTaskTool extends TeamTool
         $task->refresh()->load(['project', 'assignee', 'creator']);
 
         $left = $status === TaskStatus::Done ? $task->uncheckedSteps() : 0;
+        $handedOver = $assignee instanceof User && ! $assignee->is($user);
+        $busy = $handedOver && blank($data['handoff'] ?? null) && ($task->comments()->count() >= 3 || $task->attachments()->whereNull('superseded_at')->count() >= 2);
 
         return Response::structured(array_filter(['task' => $this->presentTask($task, $user), 'unchecked_steps' => $left ?: null,
             'message' => "Task #{$task->id} updated.".($left ? " It was closed with {$left} checklist step(s) not ticked: tell the person (tick them with check, if they were done)." : '')
-                .($status === TaskStatus::Done && blank($task->proof) ? ' No proof was given: if there is a commit or an address where it shows, it can still be added with a comment.' : ''),
+                .($status === TaskStatus::Done && blank($task->proof) ? ' No proof was given: if there is a commit or an address where it shows, it can still be added with a comment.' : '')
+                .($busy ? " The task has gathered several comments or files and has no handoff note: ask the person once whether to leave one for {$task->assignee?->name} (update_task with handoff: what is done, what is left, which file is the final one; and old_files: the ids of the earlier versions)." : '')
+                .($marked ? ' Marked as older versions: «'.implode('», «', $marked).'».' : ''),
         ], fn ($v) => $v !== null));
+    }
+
+    /** Comentariul și/sau nota de predare (un comentariu marcat: cine deschide sarcina o vede întâi). */
+    private function say(Task $task, User $user, array $data): void
+    {
+        foreach (['comment' => false, 'handoff' => true] as $key => $handoff) {
+            if (filled($data[$key] ?? null)) {
+                $task->comments()->create(['user_id' => $user->id, 'body' => trim($data[$key]), 'handoff' => $handoff, 'source' => Source::fromRequest(request())]);
+            }
+        }
     }
 
     public function schema(JsonSchema $schema): array
@@ -233,6 +266,8 @@ class UpdateTaskTool extends TeamTool
             'repeat' => $schema->string()->enum(['weekly', 'biweekly', 'monthly', 'quarterly', 'yearly', 'none'])->description('Makes the task come back: when it is done, the next one is added, due one interval later; "none" stops it.'),
             'remove_files' => $schema->array()->items($schema->integer())->description('Ids of the task\'s files to remove (from start_task: those with can_replace). Only the files you added, and only while the task is open: on a closed task they stay as reference. To put a new version in place of a file, use add_attachment with replaces instead.'),
             'move_to_project' => $schema->string()->max(200)->description('Moves the task, with its files, to another project (slug or name) the person can see. Whoever does it stays on it only if they work on that project too. Only when the person asks.'),
+            'handoff' => $schema->string()->description('A handoff note, usually with assignee when the task goes to someone else: what is done, what is left, which file is the final one (by name), in Markdown. Whoever opens the task sees it first, above the comments. Only after the person agreed.'),
+            'old_files' => $schema->array()->items($schema->integer())->description('Ids of the task\'s files that are earlier versions (from read_task): they stay on the task, shown under the current ones as older versions, so whoever takes it over knows which file is the final one. Nothing is deleted. Only after the person agreed.'),
             'comment' => $schema->string()->description('A comment on the task (a question, a clarification, an answer), in Markdown; colleagues and, on projects visible to the client, the client see it. Not for reporting finished steps: tick them with check (both can go in the same call). Only when the person asks.'),
         ];
     }

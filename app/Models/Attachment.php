@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
  * Un atașament de proiect: un fișier (imagine, PDF, prezentare HTML, machetă; păstrat în data/files, servit doar celor logați)
  * sau un link extern (Figma, Drive, Behance). Ce tipuri se primesc și cum se servesc: App\Support\Files.
  */
-#[Fillable(['project_id', 'task_id', 'client_visible', 'user_id', 'kind', 'role', 'title', 'url', 'path', 'name', 'mime', 'size', 'source'])]
+#[Fillable(['project_id', 'task_id', 'client_visible', 'user_id', 'kind', 'role', 'title', 'url', 'path', 'name', 'mime', 'size', 'superseded_at', 'source'])]
 class Attachment extends Model
 {
     use StoresTimesInUtc;
@@ -26,7 +26,7 @@ class Attachment extends Model
     public const DISK = 'data';
 
     /** Aceleași valori implicite ca în baza de date, ca un model proaspăt creat să le aibă și în memorie. */
-    protected $attributes = ['task_id' => null, 'role' => null, 'client_visible' => false, 'user_id' => null, 'url' => null, 'path' => null, 'name' => null, 'mime' => null, 'size' => null, 'source' => 'web'];
+    protected $attributes = ['task_id' => null, 'role' => null, 'superseded_at' => null, 'client_visible' => false, 'user_id' => null, 'url' => null, 'path' => null, 'name' => null, 'mime' => null, 'size' => null, 'source' => 'web'];
 
     protected static function booted(): void
     {
@@ -107,6 +107,6 @@ class Attachment extends Model
 
     protected function casts(): array
     {
-        return ['client_visible' => 'boolean', 'kind' => AttachmentKind::class, 'role' => AttachmentRole::class, 'source' => Source::class, 'size' => 'integer'];
+        return ['client_visible' => 'boolean', 'kind' => AttachmentKind::class, 'role' => AttachmentRole::class, 'source' => Source::class, 'size' => 'integer', 'superseded_at' => 'datetime'];
     }
 }

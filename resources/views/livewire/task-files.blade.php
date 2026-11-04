@@ -5,7 +5,11 @@
     </header>
 
     @foreach ($attachments as $attachment)
-        <div class="wsa-doc" wire:key="tatt-{{ $attachment->id }}">
+        @if ($attachment->superseded_at && ! ($olderShown ?? false))
+            @php($olderShown = true)
+            <p class="wsa-meta wsa-doc-older">{{ __('Older versions') }}</p>
+        @endif
+        <div @class(['wsa-doc', 'is-older' => $attachment->superseded_at]) wire:key="tatt-{{ $attachment->id }}">
             @if ($attachment->isImage())
                 <a href="{{ $attachment->href() }}" class="wsa-doc-thumb" data-wsa-lightbox data-caption="{{ $attachment->title }}" aria-label="{{ $attachment->title }}"><img src="{{ $attachment->href() }}" alt="" loading="lazy"></a>
                 <a href="{{ $attachment->href() }}" class="wsa-doc-title" data-wsa-lightbox data-caption="{{ $attachment->title }}">{{ $attachment->title }}</a>

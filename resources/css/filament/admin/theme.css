@@ -11709,3 +11709,15 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
         justify-content: center;
     }
 }
+
+/* predarea unei sarcini: nota de predare întâi, cu o linie neagră; versiunile vechi ale fișierelor, mai stinse, sub cele de acum */
+.wsa-comment.is-handoff {
+    padding-left: 0.85rem;
+    border-left: 2px solid var(--color-gray-950);
+}
+.wsa-doc-older {
+    margin-top: 0.75rem;
+}
+.wsa-doc.is-older {
+    opacity: 0.55;
+}

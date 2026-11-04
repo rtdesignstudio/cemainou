@@ -2,6 +2,10 @@
 
 Schimbările importante, cele mai noi întâi. Îmbunătățirile mici și reparațiile vin în fiecare versiune și nu sunt trecute una câte una.
 
+## 0.1.419 - 2026-11-04
+
+**Predarea unei sarcini, curată.** Când sarcina trece la altcineva, agentul propune o singură notă de predare (ce e făcut, ce rămâne, care e fișierul final) și marchează fișierele de dinainte ca versiuni vechi; nimic nu se șterge. Cine preia vede întâi nota și fișierul final sus, cu versiunile vechi stinse dedesubt. Cât lucrează, agenții comentează doar rezultatele și întrebările, iar versiunea nouă a unui fișier o pun în locul celei vechi.
+
 ## 0.1.418 - 2026-11-04
 
 **cemainou pentru Claude Code, ca plugin.** Conectezi Claude Code din el însuși: `/plugin install cemainou --marketplace rtdesignstudio/cemainou`, apoi adresa cemainou și o cheie de agent. Aduce aceeași măsurare a timpului, legarea de proiect și contextul echipei ca instalarea cu o comandă, plus `/cemainou:upd` pentru update-ul zilei. În widget-ul de feedback, ⌘ / Ctrl + Enter trimite.

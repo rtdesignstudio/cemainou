@@ -72,6 +72,6 @@ class TaskFiles extends Component
 
     public function render(): View
     {
-        return view('livewire.task-files', ['attachments' => $this->task->attachments()->with(['author', 'project'])->latest()->get()]);
+        return view('livewire.task-files', ['attachments' => $this->task->attachments()->with(['author', 'project'])->orderByRaw('superseded_at is not null')->latest()->get()]);
     }
 }

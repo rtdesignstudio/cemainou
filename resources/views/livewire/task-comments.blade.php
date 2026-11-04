@@ -4,9 +4,12 @@
         <span>{{ trans_choice(':count comment|:count comments', $comments->count(), ['count' => $comments->count()]) }}</span>
     </header>
 
-    @foreach ($comments as $comment)
-        <div class="wsa-comment" wire:key="comment-{{ $comment->id }}">
+    {{-- nota de predare (ce e făcut, ce rămâne, fișierul final): prima, ca cine preia sarcina să știe de unde pornește --}}
+    @php($handoff = $comments->where('handoff', true)->last())
+    @foreach ($handoff ? [$handoff, ...$comments->reject(fn ($c) => $c->is($handoff))] : $comments as $comment)
+        <div @class(['wsa-comment', 'is-handoff' => $handoff && $comment->is($handoff)]) wire:key="comment-{{ $comment->id }}">
             <div class="wsa-meta">
+                @if ($handoff && $comment->is($handoff))<em class="wsa-tag">{{ __('Handoff') }}</em> @endif
                 <b>{{ $comment->author?->name ?? __('Someone') }}</b>@if ($comment->author?->isClient()) · {{ __('client') }}@endif · <x-wsa.time :at="$comment->created_at" />
                 @if ($comment->user_id === auth()->id())
                     · <button type="button" class="wsa-inline-btn" wire:click="remove({{ $comment->id }})" wire:confirm="{{ __('Delete this comment?') }}">{{ __('Delete') }}</button>

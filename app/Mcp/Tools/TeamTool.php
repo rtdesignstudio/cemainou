@@ -187,7 +187,9 @@ abstract class TeamTool extends Tool
             'notes' => $withNotes ? $task->notes : null,
             'from_client' => $task->fromClient() ? true : null,
             'site_context' => $withNotes ? $task->site_context : null,     // trimisă din widget-ul de pe site: pagina, browserul, ecranul, elementul, erorile
-            'files' => $withNotes ? ($task->attachments()->latest()->limit(10)->get()->each->setRelation('task', $task)->map(fn ($a) => $this->presentFile($a, $viewer))->all() ?: null) : null,
+            'handoff' => $withNotes && ($h = $task->comments()->where('handoff', true)->with('author')->latest()->first())   // nota de predare: întâi, ca cine preia să știe unde a rămas
+                ? ['by' => $h->author?->name, 'when' => $h->created_at->diffForHumans(), 'text' => $h->body] : null,
+            'files' => $withNotes ? ($task->attachments()->orderByRaw('superseded_at is not null')->latest()->limit(10)->get()->each->setRelation('task', $task)->map(fn ($a) => $this->presentFile($a, $viewer))->all() ?: null) : null,
             'comments' => $withNotes ? ($task->comments()->with('author')->latest()->limit(5)->get()->reverse()
                 ->map(fn ($c) => array_filter(['id' => $c->id, 'by' => $c->author?->name.($c->author?->isClient() ? ' (client)' : ''), 'mine' => $c->user_id === $viewer->id ? true : null,
                     'when' => $c->created_at->diffForHumans(), 'text' => $c->body], fn ($v) => $v !== null))->values()->all() ?: null) : null,
@@ -220,7 +222,8 @@ abstract class TeamTool extends Tool
             'url' => $attachment->href(),
             'read' => $attachment->isFile() ? 'read_file' : null,
             'yours' => $onTask && $attachment->user_id === $viewer->id ? true : null,
-            'can_replace' => $onTask && TaskFileRules::removable($viewer, $attachment) ? true : null,   // update_task remove_files, add_attachment replaces
+            'can_replace' => $onTask && TaskFileRules::removable($viewer, $attachment) ? true : null,
+            'older_version' => $attachment->superseded_at ? true : null,                // marcată la predare: nu e fișierul final   // update_task remove_files, add_attachment replaces
         ], fn ($value) => $value !== null && $value !== '');
     }
 

@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** Un comentariu pe o sarcină: o clarificare, o întrebare, un răspuns (și de la client, pe proiectele vizibile lui). Markdown. */
-#[Fillable(['task_id', 'user_id', 'body', 'source'])]
+#[Fillable(['task_id', 'user_id', 'body', 'handoff', 'source'])]
 class TaskComment extends Model
 {
     use StoresTimesInUtc;
 
     /** Aceleași valori implicite ca în baza de date, ca un model proaspăt creat să le aibă și în memorie. */
-    protected $attributes = ['user_id' => null, 'source' => 'web'];
+    protected $attributes = ['user_id' => null, 'handoff' => false, 'source' => 'web'];
 
     /** Un comentariu nou: emailul la cine trebuie să afle (TaskNotices), după răspuns. */
     protected static function booted(): void
@@ -40,6 +40,6 @@ class TaskComment extends Model
 
     protected function casts(): array
     {
-        return ['source' => Source::class];
+        return ['source' => Source::class, 'handoff' => 'boolean'];
     }
 }
