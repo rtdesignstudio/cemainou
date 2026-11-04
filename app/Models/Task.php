@@ -37,7 +37,7 @@ class Task extends Model
     use HasFactory, StoresTimesInUtc;
 
     /** Aceleași valori implicite ca în baza de date, ca un model proaspăt creat să le aibă și în memorie. */
-    protected $attributes = ['notes' => null, 'due_on' => null, 'repeat' => null, 'repeated_from_id' => null, 'status' => 'todo', 'blocked_reason' => null, 'created_by' => null, 'assignee_id' => null, 'assignee_seen_at' => null, 'started_at' => null, 'done_at' => null, 'time_minutes' => null, 'source' => 'web'];
+    protected $attributes = ['notes' => null, 'due_on' => null, 'repeat' => null, 'repeated_from_id' => null, 'status' => 'todo', 'blocked_reason' => null, 'created_by' => null, 'assignee_id' => null, 'assignee_seen_at' => null, 'started_at' => null, 'done_at' => null, 'time_minutes' => null, 'time_people' => null, 'source' => 'web'];
 
     /** Regulile stau aici, nu doar în formulare și unelte: niciun proiect arhivat, niciun cont inactiv. */
     public static function add(Project $project, User $by, string $title, ?string $notes = null, ?User $assignee = null, Source $source = Source::Web, ?Update $update = null, bool $idea = false, ?string $due = null, ?TaskRepeat $repeat = null): self
@@ -374,6 +374,7 @@ class Task extends Model
             'status' => TaskStatus::class,
             'source' => Source::class,
             'time_minutes' => 'integer',
+            'time_people' => 'array',
             'site_context' => 'array',
             'assignee_seen_at' => 'datetime',
             'started_at' => 'datetime',

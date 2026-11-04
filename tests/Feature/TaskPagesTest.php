@@ -114,6 +114,10 @@ class TaskPagesTest extends TestCase
         $maria = User::factory()->create(['name' => 'Maria Ceban']);
         $page->mountAction('boardAssign', ['task' => $todo->id])->setActionData(['assignee_id' => $maria->id])->callMountedAction();
         $this->assertSame($maria->id, $todo->fresh()->assignee_id);
+        $done = Task::add($project, $ion, 'Banner nou', assignee: $ion);                              // gata: cât a lucrat fiecare, din ce s-a păstrat la închidere
+        $done->close($ion);
+        $done->forceFill(['time_minutes' => 150, 'time_people' => [[$ion->id, 90], [$maria->id, 60]]])->save();
+        $page->call('setMode', 'board')->assertSeeInOrder(['Banner nou', '2h 30m', 'Ion', '1h 30m', 'Maria', '1h']);
         Livewire::test(ListTasks::class)->assertSet('mode', 'board')->call('setMode', 'list')->assertSee('Galeria foto')->assertDontSee('wsa-board-cols', false);
     }
 

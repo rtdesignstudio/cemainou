@@ -3,12 +3,16 @@
 namespace App\Filament\Resources\Tasks\Pages;
 
 use App\Enums\Role;
+use App\Enums\TaskEventType;
 use App\Enums\TaskStatus;
 use App\Enums\UpdateItemType;
 use App\Filament\Resources\Tasks\TaskResource;
+use App\Models\Attachment;
 use App\Models\Project;
 use App\Models\ProjectNote;
 use App\Models\Task;
+use App\Models\TaskEvent;
+use App\Models\TaskSession;
 use App\Models\UpdateItem;
 use App\Models\User;
 use App\Support\TaskTrail;
@@ -388,6 +392,24 @@ class ListTasks extends ListRecords
         $this->rememberTrail(collect($columns)->flatMap(fn (array $c) => $c['tasks']->pluck('id'))->all(), __('Board'));
 
         return $columns;
+    }
+
+    /**
+     * Cine a mai lucrat pe sarcini, în afară de omul ei: cu timp măsurat pe ele (/work), le-a preluat, le-a trecut într-un update sau le-a pus fișiere.
+     * Doar oameni activi; întâi cei cu timp. @param  list<int>  $ids @return array<int, Collection<int, User>>
+     */
+    public function boardWorkers(array $ids): array
+    {
+        if (! $ids) {
+            return [];
+        }
+        $pairs = TaskSession::whereIn('task_id', $ids)->distinct()->get(['task_id', 'user_id'])->map(fn ($r) => [$r->task_id, $r->user_id])
+            ->concat(TaskEvent::whereIn('task_id', $ids)->whereIn('type', [TaskEventType::Taken->value, TaskEventType::Mentioned->value])->whereNotNull('user_id')
+                ->distinct()->get(['task_id', 'user_id'])->map(fn ($r) => [$r->task_id, $r->user_id]))
+            ->concat(Attachment::whereIn('task_id', $ids)->whereNotNull('user_id')->distinct()->get(['task_id', 'user_id'])->map(fn ($r) => [$r->task_id, $r->user_id]));
+        $people = User::whereIn('id', $pairs->pluck(1)->unique())->where('is_active', true)->get(['id', 'name', 'role'])->keyBy('id');
+
+        return $pairs->groupBy(0)->map(fn (Collection $rows) => $rows->pluck(1)->unique()->map(fn ($id) => $people->get($id))->filter()->values())->all();
     }
 
     /** „Anulează" după o mutare de pe panou: sarcina se întoarce unde era (cu motivul blocajului, dacă era blocată). */

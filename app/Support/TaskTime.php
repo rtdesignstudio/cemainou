@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\TaskStatus;
 use App\Models\Activity;
 use App\Models\Task;
 use App\Models\TaskSession;
@@ -31,17 +32,39 @@ class TaskTime
         return ['total' => (int) $people->sum('minutes'), 'people' => $people];
     }
 
-    /** Păstrează pe sarcină timpul măsurat pe ea (time_minutes), cât semnalele încă există; fără timp măsurat, rămâne gol. */
+    /** Păstrează pe sarcină timpul măsurat pe ea (time_minutes) și cât a lucrat fiecare (time_people), cât semnalele încă există; fără timp măsurat, rămân goale. */
     public static function remember(Task $task): ?int
     {
         if (! TaskSession::where('task_id', $task->id)->exists()) {
             return $task->time_minutes;
         }
-        $total = self::for($task)['total'];
-        if ($total > 0 && $total !== $task->time_minutes) {
-            $task->forceFill(['time_minutes' => $total])->saveQuietly();
+        $time = self::for($task);
+        $total = $time['total'];
+        $people = $time['people']->map(fn (array $p) => [$p['user']->id, $p['minutes']])->values()->all();   // cât a lucrat fiecare, nu doar totalul
+        if ($total > 0 && ($total !== $task->time_minutes || $people !== $task->time_people)) {
+            $task->forceFill(['time_minutes' => $total, 'time_people' => $people])->saveQuietly();
         }
 
         return $total > 0 ? $total : $task->time_minutes;
+    }
+
+    /**
+     * Cât a lucrat fiecare om pe sarcină: la una încheiată, din ce s-a păstrat; la una deschisă, din semnale (doar dacă a fost pornită cu /work).
+     *
+     * @return array{total: int, people: list<array{name: string, minutes: int}>}|null
+     */
+    public static function people(Task $task): ?array
+    {
+        if ($task->status === TaskStatus::Done && $task->time_people) {
+            $names = User::whereIn('id', array_column($task->time_people, 0))->pluck('name', 'id');
+
+            return ['total' => (int) $task->time_minutes, 'people' => collect($task->time_people)->map(fn (array $p) => ['name' => $names[$p[0]] ?? __('Someone'), 'minutes' => (int) $p[1]])->all()];
+        }
+        if (! TaskSession::where('task_id', $task->id)->exists()) {
+            return $task->time_minutes ? ['total' => (int) $task->time_minutes, 'people' => []] : null;
+        }
+        $time = $task->status === TaskStatus::Done ? (self::remember($task) ? self::for($task) : null) : self::for($task);
+
+        return $time && $time['total'] ? ['total' => $time['total'], 'people' => $time['people']->map(fn (array $p) => ['name' => $p['user']->name, 'minutes' => $p['minutes']])->all()] : null;
     }
 }

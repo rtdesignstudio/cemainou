@@ -3103,5 +3103,6 @@
     "Due date for #:id": "Termenul pentru #:id",
     "Empty: no due date.": "Gol: fără termen.",
     "Drop #:id?": "Renunți la #:id?",
-    "It leaves the board and the lists of open tasks; its history stays.": "Iese de pe panou și din listele de sarcini deschise; istoria ei rămâne."
+    "It leaves the board and the lists of open tasks; its history stays.": "Iese de pe panou și din listele de sarcini deschise; istoria ei rămâne.",
+    "Also worked on it: :names": "Au mai lucrat: :names"
 }

@@ -12070,6 +12070,7 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
 .wsa-card-facts {
     display: flex;
     flex-wrap: wrap;
+    align-items: baseline;                               /* „în 3 zile" pe aceeași linie cu „lucrate", nu mai sus (cifra e mai mare) */
     gap: 0.25rem 0.75rem;
     font-size: var(--wsa-fs-label);
     color: var(--color-gray-600);
@@ -12120,3 +12121,43 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
 }
 .wsa-card-menu-list button:hover, .wsa-card-menu-list button:focus-visible { background: var(--color-gray-100); outline: 0; }
 .wsa-card-menu-list button.is-danger { color: #dc2626; border-top: 1px solid var(--color-gray-100); margin-top: 0.25rem; padding-top: 0.6rem; }
+
+/* telefon: coloana nouă intră din partea spre care ai glisat */
+@media (max-width: 639px) {
+    .wsa-board-cols { touch-action: pan-y; }
+    .wsa-board-cols[data-slide="1"] .wsa-board-col.is-shown { animation: wsa-col-in-right 0.22s ease-out; }
+    .wsa-board-cols[data-slide="-1"] .wsa-board-col.is-shown { animation: wsa-col-in-left 0.22s ease-out; }
+}
+@keyframes wsa-col-in-right { from { opacity: 0; transform: translateX(24px); } }
+@keyframes wsa-col-in-left { from { opacity: 0; transform: translateX(-24px); } }
+@media (prefers-reduced-motion: reduce) { .wsa-board-col.is-shown { animation: none !important; } }
+
+/* cine a mai lucrat pe sarcină, lângă omul ei: cercuri albe cu linie, suprapuse puțin */
+.wsa-card-helpers { display: inline-flex; align-items: center; }
+.wsa-card-helpers b {
+    display: inline-grid;
+    place-items: center;
+    width: 1.375rem;
+    height: 1.375rem;
+    margin-left: -0.3rem;
+    border: 1px solid var(--color-gray-950);
+    border-radius: 999px;
+    background: #fff;
+    font-size: 0.5625rem;
+    font-weight: 600;
+    color: var(--color-gray-950);
+}
+.wsa-card-helpers b:first-child { margin-left: 0; }
+.wsa-card-helpers b.is-more { border-style: dashed; color: var(--color-gray-500); border-color: var(--color-gray-400); }
+
+/* cât a lucrat fiecare, sub timpul total (când au fost mai mulți) */
+.wsa-card-people {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 0.75rem;
+    margin-top: -0.25rem;
+    font-size: var(--wsa-fs-label);
+    color: var(--color-gray-600);
+}
+.wsa-card-people b { font-weight: 600; color: var(--color-gray-950); font-variant-numeric: tabular-nums; }
