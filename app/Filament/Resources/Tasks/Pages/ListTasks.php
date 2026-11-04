@@ -13,8 +13,11 @@ use App\Models\UpdateItem;
 use App\Models\User;
 use App\Support\TaskTrail;
 use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -26,6 +29,7 @@ use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 
 /**
@@ -92,7 +96,7 @@ class ListTasks extends ListRecords
     #[Url(as: 'view')]
     public ?string $mode = null;
 
-    public const BOARD = ['todo', 'doing', 'blocked', 'done'];
+    public const BOARD = ['todo', 'blocked', 'doing', 'done'];   // blocatele lângă „De făcut”, ca să sară în ochi
 
     /** Câte sarcini arată o coloană; restul, în listă. */
     public const BOARD_LIMIT = 60;
@@ -344,7 +348,7 @@ class ListTasks extends ListRecords
         abort_unless($task && $status && in_array($status, [TaskStatus::Doing, TaskStatus::Todo, TaskStatus::Blocked, TaskStatus::Done], true)
             && $task->status !== $status && auth()->user()->can('move', [$task, $status]), 403);
         if (! in_array($status, [TaskStatus::Blocked, TaskStatus::Done], true)) {
-            $this->noteMove($task);
+            $this->noteMove($task, $status);
         }
         match ($status) {
             TaskStatus::Blocked => $this->mountAction('mineBlock', ['task' => $id]),
@@ -366,13 +370,13 @@ class ListTasks extends ListRecords
     }
 
     /**
-     * Panoul: de făcut, în lucru, blocate și gata săptămâna asta, pe selecția de deasupra (omul, proiectul) și cifra apăsată; ordinea e automată:
+     * Panoul: de făcut, blocate, în lucru și gata săptămâna asta, pe selecția de deasupra (omul, proiectul) și cifra apăsată; ordinea e automată:
      * termenul (cele fără termen la urmă), apoi cele mai noi; la „Gata", cele încheiate cel mai recent. @return array<string, array{tasks: Collection, more: int}>
      */
     public function board(): array
     {
         $me = auth()->user();
-        $base = fn () => $this->shown($this->narrow(Task::visibleTo($me)))->with(['project', 'assignee'])->withCount('attachments');
+        $base = fn () => $this->shown($this->narrow(Task::visibleTo($me)))->with(['project', 'assignee', 'creator'])->withCount(['attachments', 'comments'])->withMax('comments', 'created_at');
         $columns = [];
         foreach (self::BOARD as $status) {
             $query = $status === 'done'
@@ -387,8 +391,12 @@ class ListTasks extends ListRecords
     }
 
     /** „Anulează" după o mutare de pe panou: sarcina se întoarce unde era (cu motivul blocajului, dacă era blocată). */
+    #[On('board-undo')]
     public function undoMove(): void
     {
+        if (! $this->lastMove) {
+            return;                                                             // a trecut: „Anulează" nu mai era pe ecran
+        }
         [$id, $from, $reason] = $this->lastMove + [null, null, null];
         $this->lastMove = null;
         $task = $this->mineTask(['task' => $id]);
@@ -397,9 +405,12 @@ class ListTasks extends ListRecords
         $task->moveTo($status, auth()->user(), $reason);
     }
 
-    private function noteMove(Task $task): void
+    /** Ține minte de unde a plecat sarcina și arată notificarea obișnuită, cu „Anulează" (câteva secunde). */
+    private function noteMove(Task $task, TaskStatus $to): void
     {
         $this->lastMove = [$task->id, $task->status->value, $task->blocked_reason];
+        Notification::make()->title(__('Moved to :status: #:id', ['status' => $to->getLabel(), 'id' => $task->id]))->success()->duration(6000)
+            ->actions([Action::make('undo')->label(__('Undo the move'))->link()->dispatch('board-undo')->close()])->send();
     }
 
     /** „Redeschide" o sarcină încheiată (din nou în lucru, dacă e a cuiva). */
@@ -422,7 +433,7 @@ class ListTasks extends ListRecords
             ->action(function (array $arguments, array $data) {
                 $task = $this->mineTask($arguments);
                 abort_unless($task && $task->status->isOpen() && auth()->user()->can('move', [$task, TaskStatus::Done]), 403);
-                $this->noteMove($task);
+                $this->noteMove($task, TaskStatus::Done);
                 $task->close(auth()->user(), $data['proof'] ?? null);
                 $this->justDone = $task->id;                                    // bifa ei se desenează în „Încheiate"
             });
@@ -436,8 +447,54 @@ class ListTasks extends ListRecords
             ->action(function (array $arguments, array $data) {
                 $task = $this->mineTask($arguments);
                 abort_unless($task && $task->status->isOpen() && auth()->user()->can('move', [$task, TaskStatus::Blocked]), 403);
-                $this->noteMove($task);
+                $this->noteMove($task, TaskStatus::Blocked);
                 $task->moveTo(TaskStatus::Blocked, auth()->user(), $data['reason']);
+            });
+    }
+
+    /** Din meniul „⋯" al cardului: cine o face (doar oamenii proiectului; gol = liberă), ca pe pagina sarcinii. */
+    public function boardAssignAction(): Action
+    {
+        return Action::make('boardAssign')->label(__('Give it to someone'))->modalHeading(fn (array $arguments) => __('Who does #:id?', ['id' => $arguments['task'] ?? '']))->modalWidth('md')
+            ->modalSubmitActionLabel(__('Save'))
+            ->schema(fn (array $arguments) => [Select::make('assignee_id')->label(__('Who does it'))->placeholder(__('Free'))->searchable()   // oamenii proiectului: din argumentele acțiunii
+                ->options(($t = $this->mineTask($arguments)) ? User::assignableOn($t->project)->orderBy('name')->pluck('name', 'id')->all() : [])
+                ->helperText(__('Leave it empty and anyone can take it.'))])
+            ->fillForm(fn (array $arguments) => ['assignee_id' => $this->mineTask($arguments)?->assignee_id])
+            ->action(function (array $arguments, array $data) {
+                $task = $this->mineTask($arguments);
+                abort_unless($task && $task->status->isOpen() && auth()->user()->can('assign', $task), 403);
+                $who = filled($data['assignee_id'] ?? null) ? User::find($data['assignee_id']) : null;
+                abort_if($who && ! User::assignableOn($task->project)->whereKey($who->id)->exists(), 403);
+                $task->assignTo($who, auth()->user());
+                Notification::make()->title($who ? __('#:id is now :name\'s.', ['id' => $task->id, 'name' => $who->name]) : __('#:id is free now.', ['id' => $task->id]))->success()->send();
+            });
+    }
+
+    /** Din meniul „⋯": termenul (gol = fără termen). */
+    public function boardDueAction(): Action
+    {
+        return Action::make('boardDue')->label(__('Due date'))->modalHeading(fn (array $arguments) => __('Due date for #:id', ['id' => $arguments['task'] ?? '']))->modalWidth('sm')
+            ->modalSubmitActionLabel(__('Save'))
+            ->schema([DatePicker::make('due_on')->label(__('Due'))->native(false)->displayFormat('j M Y')->helperText(__('Empty: no due date.'))])
+            ->fillForm(fn (array $arguments) => ['due_on' => $this->mineTask($arguments)?->due_on?->toDateString()])
+            ->action(function (array $arguments, array $data) {
+                $task = $this->mineTask($arguments);
+                abort_unless($task && $task->status->isOpen() && auth()->user()->can('edit', $task), 403);
+                $task->edit(auth()->user(), $task->title, $task->notes, $data['due_on'] ?? null);
+            });
+    }
+
+    /** Din meniul „⋯": renunță la sarcină (rămâne în istorie), cu o confirmare. */
+    public function boardDropAction(): Action
+    {
+        return Action::make('boardDrop')->label(__('Drop'))->requiresConfirmation()->color('danger')
+            ->modalHeading(fn (array $arguments) => __('Drop #:id?', ['id' => $arguments['task'] ?? '']))->modalDescription(__('It leaves the board and the lists of open tasks; its history stays.'))
+            ->action(function (array $arguments) {
+                $task = $this->mineTask($arguments);
+                abort_unless($task && $task->status->isOpen() && auth()->user()->can('move', [$task, TaskStatus::Dropped]), 403);
+                $this->noteMove($task, TaskStatus::Dropped);
+                $task->moveTo(TaskStatus::Dropped, auth()->user());
             });
     }
 

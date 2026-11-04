@@ -99,17 +99,22 @@ class TaskPagesTest extends TestCase
         $old->forceFill(['done_at' => now()->subWeeks(2)])->save();
 
         $page = Livewire::test(ListTasks::class)->call('setMode', 'board')
-            ->assertSeeInOrder(['To do', 'Pagina de contact', 'In progress', 'Galeria foto', 'Done this week'])
+            ->assertSeeInOrder(['To do', 'Pagina de contact', 'Blocked', 'In progress', 'Galeria foto', 'Done this week'])
             ->assertDontSee('Logo vechi');                                                            // gata doar săptămâna asta
         $this->assertSame('board', session('tasks.view'));
 
-        $page->call('dropTask', $todo->id, 'doing')->assertSee('Moved.');
+        $page->call('dropTask', $todo->id, 'doing')->assertNotified(__('Moved to :status: #:id', ['status' => TaskStatus::Doing->getLabel(), 'id' => $todo->id]));
         $this->assertSame(TaskStatus::Doing, $todo->fresh()->status);
-        $page->call('undoMove');
+        $page->dispatch('board-undo');                                                                // „Anulează" din notificare
         $this->assertSame(TaskStatus::Todo, $todo->fresh()->status);
 
-        $page->call('dropTask', $doing->id, 'blocked')->assertActionMounted('mineBlock');             // blocat cere motivul
-        Livewire::test(ListTasks::class)->assertSet('mode', 'board')->call('setMode', 'list')->assertSee('Pagina de contact');
+        $page->call('dropTask', $doing->id, 'blocked')->assertActionMounted('mineBlock');   // blocat cere motivul, în fereastra de pe panou
+        $page->setActionData(['reason' => 'Textele de la client'])->callMountedAction();
+        $this->assertSame([TaskStatus::Blocked, 'Textele de la client'], [$doing->fresh()->status, $doing->fresh()->blocked_reason]);
+        $maria = User::factory()->create(['name' => 'Maria Ceban']);
+        $page->mountAction('boardAssign', ['task' => $todo->id])->setActionData(['assignee_id' => $maria->id])->callMountedAction();
+        $this->assertSame($maria->id, $todo->fresh()->assignee_id);
+        Livewire::test(ListTasks::class)->assertSet('mode', 'board')->call('setMode', 'list')->assertSee('Galeria foto')->assertDontSee('wsa-board-cols', false);
     }
 
     public function test_task_page_shows_history_marks_it_seen_and_closes_it(): void

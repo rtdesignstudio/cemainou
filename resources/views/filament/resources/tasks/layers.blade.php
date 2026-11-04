@@ -33,7 +33,7 @@
             <button type="button" class="is-on" wire:click="clearShow" title="{{ __('Show all') }}">{{ ['overdue' => __('Only overdue'), 'blocked' => __('Only blocked'), 'week' => __('Only done this week')][$this->show] }} ×</button>
         </nav>
     @endif
-    @if (! $onMine && ! $this->projectPick && $projects->count() > 1)
+    @if (! $onMine && ! $this->onBoard() && ! $this->projectPick && $projects->count() > 1)
         <label class="wsa-layer-group"><input type="checkbox" wire:model.live="byProject"> {{ __('Group by project') }}</label>
     @endif
 </div>

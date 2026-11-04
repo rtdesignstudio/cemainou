@@ -11840,22 +11840,6 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.wsa-card-files { display: inline-flex; align-items: center; gap: 0.2rem; }
-.wsa-card-files .fi-icon { width: 0.875rem; height: 0.875rem; }
-.wsa-card-who {
-    margin-left: auto;
-    display: inline-grid;
-    place-items: center;
-    min-width: 1.5rem;
-    height: 1.5rem;
-    padding: 0 0.25rem;
-    border: 1px solid var(--color-gray-950);
-    border-radius: 999px;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    color: var(--color-gray-950);
-}
-.wsa-card-who.is-free { border-style: dashed; border-color: var(--color-gray-400); color: var(--color-gray-400); }
 .wsa-card-move { display: none; }
 .wsa-board-empty {
     padding: 1rem 0;
@@ -11869,29 +11853,6 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
     text-underline-offset: 3px;
 }
 .wsa-board-tabs { display: none; }
-.wsa-board-undo {
-    position: fixed;
-    left: 50%;
-    bottom: 1.5rem;
-    z-index: 40;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    transform: translateX(-50%);
-    padding: 0.65rem 1rem;
-    background: var(--color-gray-950);
-    color: #fff;
-    font-size: 0.9375rem;
-}
-.wsa-board-undo button {
-    border: 0;
-    background: none;
-    color: #fff;
-    font: inherit;
-    font-weight: 600;
-    text-decoration: underline;
-    cursor: pointer;
-}
 .wsa-board-hint { margin-top: 0.5rem; }
 /* tabletă: două coloane pe rând */
 @media (max-width: 1023px) {
@@ -11923,21 +11884,239 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
     .wsa-board-col.is-shown { display: grid; }
     .wsa-board-head { display: none; }
     .wsa-card { cursor: default; }
-    .wsa-card-move {
+    .wsa-card-move {                                     /* pe telefon, „Mută” stă jos în dreapta, în locul vechimii */
         display: block;
         position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
-    }
-    .wsa-card-move select {
+        right: 0.75rem;
+        bottom: 0.6rem;
         height: 1.75rem;
-        max-width: 7.5rem;
-        padding: 0 1.5rem 0 0.5rem;
+        padding: 0 0.75rem;
         border: 1px solid var(--color-gray-300);
         border-radius: var(--wsa-r);
-        background-color: #fff;
+        background: #fff;
         font-size: var(--wsa-fs-label);
+        color: var(--color-gray-950);
     }
-    .wsa-card-top { padding-right: 7.75rem; }
+    .wsa-card { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+    .wsa-card-age { display: none; }
     .wsa-board-hint { display: none; }
 }
+
+/* cardul panoului, bogat: sus numărul, eticheta (client, nouă) și termenul; titlul; ce așteaptă o blocată și de câte zile; pașii ca bară;
+   proiectul, comentariile, fișierele, timpul măsurat; jos omul, de cât timp e acolo și, la trecerea mouse-ului, Încep / Gata */
+.wsa-card { gap: 0.55rem; padding: 0.85rem 0.95rem 0.75rem; }
+.wsa-card.is-overdue { box-shadow: inset 3px 0 0 var(--color-gray-950); }
+.wsa-card.is-blocked { border-color: #fca5a5; }
+.wsa-card-top { justify-content: flex-start; align-items: center; }
+.wsa-card-due { margin-left: auto; white-space: nowrap; }
+.wsa-card-due.is-overdue { color: var(--color-gray-950); font-weight: 600; }
+.wsa-card-due.is-today { color: var(--color-gray-950); font-weight: 600; }
+.wsa-card-tag {
+    padding: 0 0.35rem;
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--wsa-r);
+    font-size: 0.6875rem;
+    line-height: 1.25rem;
+    color: var(--color-gray-700);
+}
+.wsa-card-tag.is-new { border-color: var(--color-gray-950); color: var(--color-gray-950); }
+.wsa-card-reason {
+    display: grid;
+    gap: 0.15rem;
+    padding: 0.45rem 0.55rem;
+    background: #fef2f2;
+    color: #b91c1c;
+}
+.wsa-card-reason small { font-size: 0.6875rem; color: #dc2626; }
+.wsa-card-steps { display: flex; align-items: center; gap: 0.5rem; }
+.wsa-card-bar { flex: 1; height: 3px; background: var(--color-gray-200); }
+.wsa-card-bar i { display: block; height: 100%; background: var(--color-gray-950); }
+.wsa-card-steps small { font-size: 0.6875rem; color: var(--color-gray-500); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.wsa-card-meta span { display: inline-flex; align-items: center; gap: 0.2rem; }
+.wsa-card-meta .wsa-card-project { display: block; }
+.wsa-card-ico { width: 0.875rem; height: 0.875rem; flex-shrink: 0; }
+.wsa-card-foot {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 1.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--color-gray-100);
+}
+.wsa-card-who {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: var(--wsa-fs-label);
+    color: var(--color-gray-950);
+    white-space: nowrap;
+}
+.wsa-card-who b {
+    display: inline-grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    background: var(--color-gray-950);
+    color: #fff;
+    font-size: 0.625rem;
+    font-weight: 600;
+}
+.wsa-card-who.is-free { color: var(--color-gray-500); }
+.wsa-card-who.is-free b { background: none; border: 1px dashed var(--color-gray-400); color: var(--color-gray-400); }
+.wsa-card-age {
+    margin-left: auto;
+    font-size: 0.6875rem;
+    color: var(--color-gray-500);
+    white-space: nowrap;
+}
+.wsa-card-acts { display: none; gap: 0.35rem; margin-left: auto; }
+.wsa-card-acts button {
+    height: 1.75rem;
+    padding: 0 0.6rem;
+    border: 1px solid var(--color-gray-950);
+    border-radius: var(--wsa-r);
+    background: #fff;
+    font-size: var(--wsa-fs-label);
+    color: var(--color-gray-950);
+    cursor: pointer;
+}
+.wsa-card-acts button.is-done { display: inline-grid; place-items: center; width: 1.75rem; padding: 0; background: var(--color-gray-950); color: #fff; }
+.wsa-card-acts button:hover { background: var(--color-gray-950); color: #fff; }
+@media (hover: hover) and (min-width: 640px) {
+    .wsa-card:hover .wsa-card-acts, .wsa-card:focus-within .wsa-card-acts { display: inline-flex; }
+    .wsa-card:hover .wsa-card-age, .wsa-card:focus-within .wsa-card-age { display: none; }
+}
+
+/* telefon: panoul de jos cu stările în care poate merge cardul ținut apăsat; zona de sub deget se înnegrește */
+.wsa-board-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483000;                                 /* peste bara de jos a telefonului */
+    display: flex;
+    align-items: flex-end;
+    background: rgba(10, 10, 10, 0.35);
+}
+.wsa-board-sheet-panel {
+    width: 100%;
+    padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
+    background: #fff;
+    border-top: 2px solid var(--color-gray-950);
+}
+.wsa-board-sheet-title {
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--wsa-fs-label);
+    color: var(--color-gray-500);
+}
+.wsa-board-sheet-zones { display: grid; gap: 0.5rem; }
+.wsa-board-sheet-zones button {
+    height: 3.5rem;
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--wsa-r);
+    background: #fff;
+    font-size: 1.0625rem;
+    font-weight: 500;
+    color: var(--color-gray-950);
+    transition: background-color 0.1s, color 0.1s;
+}
+.wsa-board-sheet-zones button.is-blocked { border-color: #fca5a5; color: #b91c1c; }
+.wsa-board-sheet-zones button.is-over { background: var(--color-gray-950); border-color: var(--color-gray-950); color: #fff; }
+.wsa-board-sheet-zones button.is-blocked.is-over { background: #dc2626; border-color: #dc2626; color: #fff; }
+.wsa-board-sheet-cancel {
+    width: 100%;
+    height: var(--wsa-h);
+    margin-top: 0.5rem;
+    border: 0;
+    background: none;
+    font-size: var(--wsa-fs-button);
+    color: var(--color-gray-500);
+}
+
+/* îndemnul de pe telefon, până la prima mutare: o bandă gri deschis, ca sfaturile din aplicație */
+.wsa-board-nudge { display: none; }
+@media (max-width: 639px) {
+    .wsa-board-nudge {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 0.75rem;
+        padding: 0.75rem 0.85rem;
+        background: var(--color-gray-100);
+        font-size: 0.9375rem;
+        line-height: 1.35;
+        color: var(--color-gray-950);
+    }
+    .wsa-board-nudge span { flex: 1; }
+    .wsa-board-nudge .wsa-card-ico { width: 1.25rem; height: 1.25rem; }
+    .wsa-board-nudge button { border: 0; background: none; font-size: 1.25rem; line-height: 1; color: var(--color-gray-500); }
+}
+
+/* la „Gata”: bifa în fața titlului, cardul mai liniștit, dovada sub titlu */
+.wsa-card.is-done { background: var(--color-gray-50); }
+.wsa-card.is-done .wsa-card-title { color: var(--color-gray-700); }
+.wsa-card-check { display: inline-block; width: 1rem; height: 1rem; margin: -0.15rem 0.35rem 0 0; vertical-align: middle; color: var(--color-gray-950); }
+.wsa-card-proof {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--wsa-fs-label);
+    color: var(--color-gray-500);
+}
+
+/* rândul cu faptele stării: timpul lucrat, în câte zile, ultima mișcare, cine a cerut-o */
+.wsa-card-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    font-size: var(--wsa-fs-label);
+    color: var(--color-gray-600);
+}
+.wsa-card-facts b { font-weight: 600; color: var(--color-gray-950); font-variant-numeric: tabular-nums; }
+.wsa-card-facts.is-done b { font-size: 0.9375rem; }
+
+/* meniul „⋯" al cardului: sus în dreapta, liniștit până la trecerea mouse-ului; lista ca meniurile din aplicație */
+.wsa-card-menu { position: relative; margin-left: auto; }
+.wsa-card-due + .wsa-card-menu { margin-left: 0.25rem; }
+.wsa-card-dots {
+    display: inline-grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: -0.25rem -0.4rem -0.25rem 0;
+    border: 0;
+    border-radius: var(--wsa-r);
+    background: none;
+    color: var(--color-gray-400);
+    cursor: pointer;
+}
+.wsa-card:hover .wsa-card-dots, .wsa-card-dots[aria-expanded="true"] { color: var(--color-gray-950); }
+.wsa-card-dots:hover { background: var(--color-gray-100); }
+.wsa-card-dots .wsa-card-ico { width: 1.125rem; height: 1.125rem; }
+.wsa-card-menu-list {
+    position: absolute;
+    top: calc(100% + 0.35rem);
+    right: -0.4rem;
+    z-index: 30;
+    display: grid;
+    min-width: 13rem;
+    padding: 0.35rem 0;
+    background: #fff;
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--wsa-r);
+    box-shadow: 0 12px 32px rgb(0 0 0 / 0.12);
+}
+.wsa-card-menu-list button {
+    padding: 0.5rem 0.85rem;
+    border: 0;
+    background: none;
+    font-size: 0.9375rem;
+    text-align: left;
+    color: var(--color-gray-950);
+    cursor: pointer;
+    white-space: nowrap;
+}
+.wsa-card-menu-list button:hover, .wsa-card-menu-list button:focus-visible { background: var(--color-gray-100); outline: 0; }
+.wsa-card-menu-list button.is-danger { color: #dc2626; border-top: 1px solid var(--color-gray-100); margin-top: 0.25rem; padding-top: 0.6rem; }
