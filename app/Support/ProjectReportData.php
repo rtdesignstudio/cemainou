@@ -36,7 +36,7 @@ class ProjectReportData
         $updates = Update::with(['items', 'user'])->where('project_id', $project->id)->where('is_internal', false)->whereBetween('created_at', [$from, $to])->orderBy('created_at')->get();
         $done = Task::where('project_id', $project->id)->where('status', TaskStatus::Done->value)->whereBetween('done_at', [$from, $to])->orderBy('done_at')->get(['id', 'title', 'done_at', 'time_minutes']);
         // orele: doar dacă echipa a ales să le arate (bifa „cu ore"); de aici ies și grila oamenilor și timpul pe sarcini
-        $hours = $report->include_hours ? Hours::between(collect([$project->id]), $start->toDateString(), $end->toDateString()) : collect();
+        $hours = Hours::between(collect([$project->id]), $start->toDateString(), $end->toDateString());   // pentru grila oamenilor, mereu; orele în cifre doar cu bifa
         $minutes = $report->include_hours ? (int) $hours->sum(fn (array $r) => $r['measured'] + $r['added'] + $r['estimated']) : null;
         $taskMinutes = fn (Task $t) => $t->time_minutes ?? ($t->done_at->gt(now()->subDays(89)) ? TaskTime::remember($t) : null);   // păstrat la închidere; cele vechi, o dată
         $share = fn (?int $m) => $m && $minutes ? max(1, (int) round($m * 100 / $minutes)) : null;
@@ -69,18 +69,19 @@ class ProjectReportData
             ->concat(ProjectDay::where('project_id', $project->id)->whereDate('date', '>=', $start->toDateString())->whereDate('date', '<=', $end->toDateString())->pluck('date')
                 ->map(fn ($d) => substr((string) $d, 0, 10)))
             ->unique()->count();
-        // cine a lucrat, zi de zi (ca grila om × zi de la Săptămâna): doar cu orele bifate
+        // cine a lucrat, zi de zi (ca grila om × zi de la Săptămâna): mereu, ca imagine; orele (totalul omului, ziua la trecerea mouse-ului) doar cu bifa
         $people = [];
+        $withTime = (bool) $report->include_hours;
         $taskShare = (int) collect($lines)->flatMap(fn (array $w) => $w['items'])->sum(fn (array $i) => $i['share'] ?? 0);
-        if ($minutes) {
+        if ($hours->sum(fn (array $r) => $r['measured'] + $r['added'] + $r['estimated']) > 0) {
             $names = User::whereIn('id', $hours->pluck('user_id')->unique())->pluck('name', 'id');
             $dates = collect(CarbonPeriod::create($start, $end))->map(fn ($d) => $d->toDateString());
-            $people = $hours->groupBy('user_id')->map(function (Collection $rows, $userId) use ($dates, $names) {
+            $people = $hours->groupBy('user_id')->map(function (Collection $rows, $userId) use ($dates, $names, $withTime) {
                 $byDay = $rows->groupBy('date')->map(fn (Collection $r) => (int) $r->sum(fn (array $x) => $x['measured'] + $x['added'] + $x['estimated']));
 
                 return ['name' => $names[$userId] ?? __('Someone'), 'total' => (int) $byDay->sum(),
-                    'days' => $dates->map(fn (string $d) => ['date' => $d, 'level' => self::level($byDay[$d] ?? 0), 'time' => ($byDay[$d] ?? 0) ? WorkTime::format($byDay[$d]) : null])->all()];
-            })->filter(fn (array $p) => $p['total'] > 0)->sortByDesc('total')->map(fn (array $p) => $p + ['time' => WorkTime::format($p['total'])])->values()->all();
+                    'days' => $dates->map(fn (string $d) => ['date' => $d, 'level' => self::level($byDay[$d] ?? 0), 'time' => $withTime && ($byDay[$d] ?? 0) ? WorkTime::format($byDay[$d]) : null])->all()];
+            })->filter(fn (array $p) => $p['total'] > 0)->sortByDesc('total')->map(fn (array $p) => $p + ['time' => $withTime ? WorkTime::format($p['total']) : null])->values()->all();
         }
 
         $files = Attachment::where('project_id', $project->id)->whereNull('task_id')->where('client_visible', true)->whereBetween('created_at', [$from, $to])->latest()->get(['id', 'title', 'name', 'kind'])
@@ -105,7 +106,7 @@ class ProjectReportData
             ]),
             'weeks' => $lines,
             'people' => $people,
-            'days' => $minutes ? collect(CarbonPeriod::create($start, $end))->map(fn ($d) => ['n' => $d->day, 'weekend' => $d->isWeekend()])->all() : [],
+            'days' => $people ? collect(CarbonPeriod::create($start, $end))->map(fn ($d) => ['n' => $d->day, 'weekend' => $d->isWeekend()])->all() : [],
             'other_share' => $minutes && $taskShare > 0 ? max(0, 100 - $taskShare) : null,     // ce n-a fost legat de o sarcină: ca procentele să nu pară mai mari
             'decisions' => $decisions,
             'next' => $next,

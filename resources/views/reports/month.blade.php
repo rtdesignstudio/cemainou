@@ -32,7 +32,7 @@
         .figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
         .go .figures { animation: fade 1s .8s backwards; }
         .figures div { padding: 1.5rem 1.5rem 1.5rem 0; }
-        .figures b { display: block; font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 500; letter-spacing: -.03em; line-height: 1; margin-top: .5rem; font-variant-numeric: tabular-nums; }
+        .figures b { display: block; white-space: nowrap; font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 500; letter-spacing: -.03em; line-height: 1; margin-top: .5rem; font-variant-numeric: tabular-nums; }
         .label { font-size: .8125rem; color: var(--mute); }
         section { padding: 4rem 0 0; }
         h2 { font-size: clamp(2rem, 4.5vw, 3rem); font-weight: 500; letter-spacing: -.025em; line-height: 1.05; padding-bottom: 1.25rem; border-bottom: 1px solid var(--ink); }
@@ -46,7 +46,7 @@
         .files div { border: 1px solid var(--line); padding: 1rem; font-size: 1rem; line-height: 1.35; }
         .files .label { display: block; margin-bottom: .35rem; }
         .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: 0 3rem; }
-        /* cine a lucrat: grila om × zi a lunii, ca la Săptămâna (doar cu orele bifate); intensitatea în gri, ca pe pagina omului */
+        /* ritmul lunii: grila om × zi a lunii, ca la Săptămâna (doar cu orele bifate); intensitatea în gri, ca pe pagina omului */
         .people-scroll { overflow-x: auto; padding: 1.5rem 0 .5rem; }
         .people { display: grid; grid-template-columns: minmax(8rem, 12rem) repeat(var(--days), minmax(.9rem, 1fr)) auto; gap: 3px; align-items: center; min-width: 40rem; }
         .people .name { font-size: 1rem; padding-right: .75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -76,9 +76,6 @@
         .team-state, .team-acts { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; }
         .team-state b { font-weight: 600; }
         .team .ghost { background: none; color: #fff; border: 1px solid #fff; padding: .45rem .9rem; }
-        .team-intro summary { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
-        .team-intro[open] form { position: absolute; z-index: 5; margin-top: .5rem; display: grid; gap: .5rem; width: min(26rem, calc(100vw - 2rem)); padding: .75rem; background: var(--ink); border: 1px solid #fff; }
-        .team-intro textarea { width: 100%; font: inherit; padding: .5rem; border: 0; }
         @media print { .print, .team { display: none; } .go h1 span, .go .intro, .go .figures { animation: none; } section { break-inside: avoid; } body { font-size: 12px; } }
         @media (prefers-reduced-motion: reduce) { .go h1 span, .go .intro, .go .figures { animation: none; } }
     </style>
@@ -106,14 +103,8 @@
         <span class="team-acts">
             @if ($team['hours'] !== null)
                 <form method="post" action="{{ $team['saveUrl'] }}">@csrf<input type="hidden" name="include_hours" value="{{ $team['hours'] ? 0 : 1 }}">
-                    <button type="submit" class="ghost">{{ $team['hours'] ? __('With hours') : __('Without hours') }}</button></form>
+                    <button type="submit" class="ghost">{{ $team['hours'] ? __('Hide the hours') : __('Add the hours') }}</button></form>
             @endif
-            <details class="team-intro"><summary>{{ __('A few words at the start') }}</summary>
-                <form method="post" action="{{ $team['saveUrl'] }}">@csrf
-                    <textarea name="intro" rows="3" maxlength="1500" placeholder="{{ __('e.g. A month with the new gallery and the faster mobile site.') }}">{{ $team['intro'] }}</textarea>
-                    <button type="submit">{{ __('Save') }}</button>
-                </form>
-            </details>
             @if ($team['sentAt'] || $team['people'] === '')
                 <button type="button" class="ghost" onclick="navigator.clipboard && navigator.clipboard.writeText(@js($team['link'])).then(() => { this.textContent = @js(__('Copied')) })">{{ __('Copy the link') }}</button>
             @endif
@@ -142,7 +133,7 @@
 
     @if ($r['people'])
         <section>
-            <h2>{{ __('Who worked') }}</h2>
+            <h2>{{ __('The month\'s rhythm') }}</h2>
             <div class="people-scroll">
                 <div class="people" style="--days: {{ count($r['days']) }}">
                     <span></span>
@@ -151,7 +142,7 @@
                     @foreach ($r['people'] as $p)
                         <span class="name">{{ $p['name'] }}</span>
                         @foreach ($p['days'] as $c)<i class="l{{ $c['level'] }}" title="{{ $c['date'] }}{{ $c['time'] ? ' · '.$c['time'] : '' }}"></i>@endforeach
-                        <span class="tot">{{ $p['time'] }}</span>
+                        <span class="tot">{{ $p['time'] ?? '' }}</span>
                     @endforeach
                 </div>
             </div>

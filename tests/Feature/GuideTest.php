@@ -33,6 +33,7 @@ class GuideTest extends TestCase
         $widget->assertSee(Guide::tipAt($first)['text'])->call('next');
         $this->assertNotSame($first, $widget->get('index'));                                       // „Alt sfat": altul, la întâmplare
         $widget->assertSee(Guide::tipAt($widget->get('index'))['text']);
+        Livewire::withoutLazyLoading();                                                             // Livewire::test de mai sus repornește încărcarea amânată
         $this->actingAs($ana)->get('/')->assertSee('Did you know?');
 
         $widget->call('hide');

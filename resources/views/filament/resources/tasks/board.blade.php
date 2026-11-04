@@ -6,6 +6,7 @@
 @php
     $me = auth()->user();
     $columns = $this->board();
+    $newComments = $this->boardNewComments();                                               // comentariile noi pentru mine, din clopoțel
     $workers = $this->boardWorkers(collect($columns)->flatMap(fn ($c) => $c['tasks']->pluck('id'))->all());   // cine a mai lucrat pe fiecare
     $labels = ['todo' => __('To do'), 'blocked' => __('Blocked'), 'doing' => __('In progress'), 'done' => __('Done this week')];
     $url = fn ($task) => \App\Filament\Resources\Tasks\TaskResource::getUrl('view', ['record' => $task]);
@@ -100,7 +101,14 @@
                             <span class="wsa-id">#{{ $task->id }}</span>
                             @if ($task->fromClient())<span class="wsa-card-tag">{{ __('from the client') }}</span>@endif
                             @if ($task->isNew() && $task->assignee_id === $me->id)<span class="wsa-card-tag is-new">{{ __('new') }}</span>@endif
-                            @if ($due)<span @class(['wsa-card-due', 'is-overdue' => $overdue, 'is-today' => $due['today'] ?? false])>{{ $overdue ? trans_choice('Overdue by :count day|Overdue by :count days', abs($due['days'])) : (($due['today'] ?? false) ? __('Due today') : $due['label']) }}</span>@endif
+                            @if ($due)
+                                @php($dueText = $overdue ? trans_choice('Overdue by :count day|Overdue by :count days', abs($due['days'])) : (($due['today'] ?? false) ? __('Due today') : $due['label']))
+                                @if ($open && $me->can('edit', $task))
+                                    <button type="button" @class(['wsa-card-due', 'is-edit', 'is-overdue' => $overdue, 'is-today' => $due['today'] ?? false]) x-on:click.stop="$wire.mountAction('boardDue', { task: {{ $task->id }} })" x-on:touchstart.stop title="{{ __('Change the due date') }}">{{ $dueText }}</button>
+                                @else
+                                    <span @class(['wsa-card-due', 'is-overdue' => $overdue, 'is-today' => $due['today'] ?? false])>{{ $dueText }}</span>
+                                @endif
+                            @endif
                             <span class="wsa-card-menu" x-data="{ menu: false }" x-on:click.outside="menu = false" x-on:keydown.escape.stop="menu = false" x-on:touchstart.stop>
                                 <button type="button" class="wsa-card-dots" x-on:click.stop="menu = ! menu" :aria-expanded="menu" aria-label="{{ __('Actions for #:id', ['id' => $task->id]) }}">{{ svg('heroicon-o-ellipsis-horizontal', 'wsa-card-ico', ['aria-hidden' => 'true']) }}</button>
                                 <span class="wsa-card-menu-list" x-show="menu" x-cloak x-transition.opacity.duration.100ms role="menu">
@@ -142,16 +150,19 @@
                         @endif
                         <div class="wsa-card-meta">
                             @unless ($this->projectPick)<span class="wsa-card-project">{{ $task->project?->name }}</span>@endunless
-                            @if ($task->comments_count)<span title="{{ trans_choice(':count comment|:count comments', $task->comments_count) }}">{{ svg('heroicon-o-chat-bubble-left', 'wsa-card-ico', ['aria-hidden' => 'true']) }}{{ $task->comments_count }}</span>@endif
+                            @if ($fresh = $newComments[$task->id] ?? 0)
+                                <a class="wsa-card-new" href="{{ $url($task) }}#comments" draggable="false" title="{{ trans_choice(':count new comment for you|:count new comments for you', $fresh) }}">{{ svg('heroicon-o-chat-bubble-left', 'wsa-card-ico', ['aria-hidden' => 'true']) }}{{ trans_choice(':count new|:count new', $fresh) }}</a>
+                            @elseif ($task->comments_count)<span title="{{ trans_choice(':count comment|:count comments', $task->comments_count) }}">{{ svg('heroicon-o-chat-bubble-left', 'wsa-card-ico', ['aria-hidden' => 'true']) }}{{ $task->comments_count }}</span>@endif
                             @if ($task->attachments_count)<span title="{{ trans_choice(':count file|:count files', $task->attachments_count) }}">{{ svg('heroicon-o-paper-clip', 'wsa-card-ico', ['aria-hidden' => 'true']) }}{{ $task->attachments_count }}</span>@endif
                         </div>
                         {{-- jos: omul și de cât timp e aici; la trecerea mouse-ului, pașii următori (doar ce are voie omul) --}}
                         <div class="wsa-card-foot">
-                            @if ($task->assignee)
-                                <span class="wsa-card-who" title="{{ $task->assignee->name }}"><b>{{ $initials($task->assignee) }}</b>{{ $task->assignee->id === $me->id ? __('Me') : \Illuminate\Support\Str::before($task->assignee->name, ' ') }}</span>
-                            @else
-                                <span class="wsa-card-who is-free"><b>–</b>{{ __('Free') }}</span>
-                            @endif
+                            @php($canGive = $open && $me->can('assign', $task))
+                            <{{ $canGive ? 'button type=button' : 'span' }} @class(['wsa-card-who', 'is-free' => ! $task->assignee, 'is-edit' => $canGive])
+                                @if ($canGive) x-on:click.stop="$wire.mountAction('boardAssign', { task: {{ $task->id }} })" x-on:touchstart.stop @endif
+                                title="{{ $task->assignee ? $task->assignee->name : __('Free') }}{{ $canGive ? ' · '.__('Give it to someone') : '' }}">
+                                @if ($task->assignee)<b>{{ $initials($task->assignee) }}</b>{{ $task->assignee->id === $me->id ? __('Me') : \Illuminate\Support\Str::before($task->assignee->name, ' ') }}@else<b>–</b>{{ __('Free') }}@endif
+                            </{{ $canGive ? 'button' : 'span' }}>
                             @php($others = collect($workers[$task->id] ?? [])->reject(fn ($u) => $u->id === $task->assignee_id)->values())
                             @if ($others->isNotEmpty())
                                 <span class="wsa-card-helpers" title="{{ __('Also worked on it: :names', ['names' => $others->pluck('name')->join(', ')]) }}">

@@ -3104,5 +3104,11 @@
     "Empty: no due date.": "Gol: fără termen.",
     "Drop #:id?": "Renunți la #:id?",
     "It leaves the board and the lists of open tasks; its history stays.": "Iese de pe panou și din listele de sarcini deschise; istoria ei rămâne.",
-    "Also worked on it: :names": "Au mai lucrat: :names"
+    "Also worked on it: :names": "Au mai lucrat: :names",
+    "Change the due date": "Schimbă termenul",
+    ":count new comment for you|:count new comments for you": ":count comentariu nou pentru tine|:count comentarii noi pentru tine",
+    ":count new|:count new": ":count nou|:count noi",
+    "Add the hours": "Adaugă orele",
+    "Hide the hours": "Ascunde orele",
+    "The month's rhythm": "Ritmul lunii"
 }

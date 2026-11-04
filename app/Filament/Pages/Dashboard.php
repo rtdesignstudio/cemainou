@@ -70,14 +70,19 @@ class Dashboard extends BaseDashboard
     /** „Personalizează" deschis: lista secțiunilor, deasupra lor. */
     public bool $customizing = false;
 
+    /** Câte secțiuni de sus se desenează odată cu pagina; restul se încarcă imediat după, împreună. */
+    public const FIRST_SECTIONS = 2;
+
     public function content(Schema $schema): Schema
     {
         return $schema->components([
             View::make('filament.pages.today-customize')->visible(fn () => $this->customizing)->viewData(fn () => ['rows' => TodayLayout::for(auth()->user())]),
             // grila omului: în ordinea lui, cu lățimea lui (întreagă = două coloane pe ecran mare)
-            Grid::make(['default' => 1, 'lg' => 2])->schema(fn () => collect(TodayLayout::for(auth()->user()))->where('visible', true)
-                ->map(fn (array $row) => Livewire::make($row['widget'], fn () => $row['widget']::getDefaultProperties())->key('today-'.$row['key'])
-                    ->columnSpan($row['span'] === 'full' ? 'full' : ['default' => 1, 'lg' => 1]))->values()->all()),
+            // primele două secțiuni se desenează odată cu pagina; restul vin imediat după, toate într-o singură cerere (Livewire defer.bundle):
+            // pagina apare mult mai repede, iar celelalte nu mai cer fiecare câte o cerere
+            Grid::make(['default' => 1, 'lg' => 2])->schema(fn () => collect(TodayLayout::for(auth()->user()))->where('visible', true)->values()
+                ->map(fn (array $row, int $i) => Livewire::make($row['widget'], fn () => $row['widget']::getDefaultProperties() + ($i >= self::FIRST_SECTIONS ? ['defer.bundle' => true] : []))
+                    ->key('today-'.$row['key'])->columnSpan($row['span'] === 'full' ? 'full' : ['default' => 1, 'lg' => 1]))->all()),
         ]);
     }
 
@@ -120,9 +125,8 @@ class Dashboard extends BaseDashboard
     /** Secțiunile grilei, în ordinea omului (fiecare se arată doar cui îi e: canView). */
     public function getWidgets(): array
     {
-        // primele două bucăți (în ordinea aleasă de om) se desenează odată cu pagina; restul vin imediat după, toate într-o singură cerere
-        // (Livewire defer.bundle): pagina apare mai repede, fără câte o cerere pentru fiecare bucată
+        // aceeași ordine și aceeași regulă ca în content(): primele secțiuni odată cu pagina, restul imediat după, într-o singură cerere
         return collect(TodayLayout::for(auth()->user()))->where('visible', true)->pluck('widget')->values()
-            ->map(fn (string $widget, int $i) => $i < 2 ? $widget : $widget::make(['defer.bundle' => true]))->all();
+            ->map(fn (string $widget, int $i) => $i < self::FIRST_SECTIONS ? $widget : $widget::make(['defer.bundle' => true]))->all();
     }
 }

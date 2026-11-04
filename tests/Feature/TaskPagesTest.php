@@ -11,6 +11,7 @@ use App\Filament\Resources\Tasks\TaskResource;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Support\Inbox;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -114,6 +115,10 @@ class TaskPagesTest extends TestCase
         $maria = User::factory()->create(['name' => 'Maria Ceban']);
         $page->mountAction('boardAssign', ['task' => $todo->id])->setActionData(['assignee_id' => $maria->id])->callMountedAction();
         $this->assertSame($maria->id, $todo->fresh()->assignee_id);
+        $doing->comments()->create(['user_id' => $maria->id, 'body' => 'Am pus textele']);            // un comentariu nou pentru Ion: „1 nou" pe card, din clopoțel
+        $page->call('setMode', 'board')->assertSee('1 new');
+        Inbox::readAbout($ion, TaskResource::getUrl('view', ['record' => $doing]));
+        $page->call('setMode', 'board')->assertDontSee('1 new');
         $done = Task::add($project, $ion, 'Banner nou', assignee: $ion);                              // gata: cât a lucrat fiecare, din ce s-a păstrat la închidere
         $done->close($ion);
         $done->forceFill(['time_minutes' => 150, 'time_people' => [[$ion->id, 90], [$maria->id, 60]]])->save();

@@ -44,7 +44,7 @@ class PeopleCards
             ->where('created_at', '>=', now()->subDays(14))->latest()->get(['id', 'user_id', 'project_id', 'created_at'])
             ->groupBy('user_id')->map(fn (Collection $rows) => $rows->pluck('project')->filter()->unique('id')->take(3)->values());
         $team = $people->reject(fn (User $u) => $u->isClient());
-        $setup = $viewer->isAdmin() ? PageCache::data('people-setup', $viewer, [$team->pluck('id')->values()->all()], fn () => TeamSetup::for($team)) : [];
+        $setup = $viewer->isAdmin() ? PageCache::data('people-setup', $viewer, [$team->pluck('id')->values()->all()], fn () => TeamSetup::for($team), tables: ['users', 'updates', 'projects']) : [];
         $weekMinutes = self::weekMinutes($team->filter(fn (User $u) => $viewer->can('viewWorkTime', $u)));
         $tz = $viewer->tz();
 

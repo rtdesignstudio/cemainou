@@ -19,10 +19,13 @@ class PageCache
 {
     public const SECONDS = 60;
 
+    /** Tabelele din amprentă: toate, implicit. O parte care citește mai puțin își dă doar tabelele ei, ca o scriere în altă parte să n-o refacă. */
+    public const ALL = ['updates', 'tasks', 'time_entries', 'projects', 'update_comments', 'task_comments', 'documents', 'attachments', 'update_items', 'task_events', 'users'];
+
     /** HTML-ul unei părți de pagină, desenat o dată pe minut (sau imediat ce cineva scrie ceva). */
-    public static function html(string $name, User $viewer, array $params, Closure $render): HtmlString
+    public static function html(string $name, User $viewer, array $params, Closure $render, array $tables = self::ALL): HtmlString
     {
-        $key = 'cemainou.page.'.$name.'.'.$viewer->id.'.'.md5(json_encode([$params, $viewer->locale, $viewer->tz(), app()->getLocale(), config('cemainou.version'), self::stamp()]));
+        $key = 'cemainou.page.'.$name.'.'.$viewer->id.'.'.md5(json_encode([$params, $viewer->locale, $viewer->tz(), app()->getLocale(), config('cemainou.version'), self::stamp($tables)]));
         try {
             $html = Cache::remember($key, self::SECONDS, fn () => (string) $render());
         } catch (Throwable) {
@@ -36,9 +39,9 @@ class PageCache
      * Date simple (doar text, numere, liste; niciun obiect), păstrate $seconds și refăcute imediat ce cineva scrie ceva (stamp) sau începe o zi
      * nouă: graficele de pe pagina unui om sau a unui proiect. Timpul măsurat de azi poate întârzia cel mult $seconds.
      */
-    public static function data(string $name, User $viewer, array $params, Closure $build, int $seconds = 600): mixed
+    public static function data(string $name, User $viewer, array $params, Closure $build, int $seconds = 600, array $tables = self::ALL): mixed
     {
-        $key = 'cemainou.data.'.$name.'.'.md5(json_encode([$params, $viewer->tz(), app()->getLocale(), now($viewer->tz())->toDateString(), config('cemainou.version'), self::stamp()]));
+        $key = 'cemainou.data.'.$name.'.'.md5(json_encode([$params, $viewer->tz(), app()->getLocale(), now($viewer->tz())->toDateString(), config('cemainou.version'), self::stamp($tables)]));
         try {
             $cached = Cache::get($key);
             if ($cached !== null) {
@@ -57,24 +60,23 @@ class PageCache
      * Amprenta a ce au scris oamenii: se schimbă la orice update, rând, sarcină (și mișcarea ei), timp adăugat, proiect, comentariu, document
      * sau om nou. Nu și la vizitele oamenilor (users.updated_at se mișcă la fiecare deschidere a paginii Azi).
      */
-    public static function stamp(): string
+    public static function stamp(array $tables = self::ALL): string
     {
-        $request = request();                                                   // o dată pe cerere: o pagină are mai multe bucăți păstrate
-        if (is_string($memo = $request->attributes->get('cemainou.stamp'))) {
-            return $memo;
-        }
+        $request = request();                                                   // o dată pe cerere: o pagină are mai multe bucăți păstrate (fiecare tabel, citit o dată)
+        $memo = $request->attributes->get('cemainou.stamp', []);
         $parts = [];
-        foreach (['updates', 'tasks', 'time_entries', 'projects', 'update_comments', 'task_comments', 'documents', 'attachments'] as $table) {
-            $row = DB::table($table)->selectRaw('max(updated_at) as at, max(id) as id')->first();   // și id-ul: un rând nou în aceeași secundă tot schimbă amprenta
-            $parts[] = $row->at.'#'.$row->id;
+        foreach ($tables as $table) {
+            if (! array_key_exists($table, $memo)) {
+                $memo[$table] = match ($table) {
+                    'update_items' => DB::table('update_items')->max('id').'/'.DB::table('update_items')->max('resolved_at'),   // și un rând rezolvat (Blocat / Urmează)
+                    'task_events', 'users' => (string) DB::table($table)->max('id'),
+                    default => (($row = DB::table($table)->selectRaw('max(updated_at) as at, max(id) as id')->first())->at.'#'.$row->id),   // și id-ul: un rând nou în aceeași secundă
+                };
+            }
+            $parts[] = $table.'='.$memo[$table];
         }
-        foreach (['update_items', 'task_events', 'users'] as $table) {
-            $parts[] = DB::table($table)->max('id');
-        }
-        $parts[] = DB::table('update_items')->max('resolved_at');              // un rând rezolvat (Blocat / Urmează)
-        $stamp = implode('|', $parts);
-        $request->attributes->set('cemainou.stamp', $stamp);
+        $request->attributes->set('cemainou.stamp', $memo);
 
-        return $stamp;
+        return implode('|', $parts);
     }
 }

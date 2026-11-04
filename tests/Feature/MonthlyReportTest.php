@@ -75,11 +75,12 @@ class MonthlyReportTest extends TestCase
         $task->forceFill(['done_at' => Carbon::parse('2026-10-20 15:00'), 'time_minutes' => 120])->save();
         $report = ProjectReport::create(['project_id' => $site->id, 'month' => '2026-10', 'token' => str_repeat('a', 40), 'include_hours' => false]);
 
-        $this->get('/r/'.$report->token)->assertOk()->assertSee('Galeria foto')->assertDontSee(['Who worked', 'Ana Lungu', '≈']);   // fără bifă: ca până acum
+        $this->get('/r/'.$report->token)->assertOk()->assertSeeInOrder(["The month's rhythm", 'Radu Rusu', 'Ana Lungu', 'Galeria foto'])   // fără ore: grila rămâne, ca imagine
+            ->assertDontSee(['≈', '5h', 'Time invested']);
 
         $report->forceFill(['include_hours' => true])->save();
         $this->get('/r/'.$report->token)->assertOk()
-            ->assertSeeInOrder(['Who worked', 'Radu Rusu', 'Ana Lungu', 'What was delivered', 'Galeria foto', '2h', '≈25%'])   // 120 din 480 de minute
+            ->assertSeeInOrder(["The month's rhythm", 'Radu Rusu', 'Ana Lungu', 'What was delivered', 'Galeria foto', '2h', '≈25%'])   // 120 din 480 de minute
             ->assertSee('≈75%');                                                                                                // restul, nelegat de o sarcină
     }
 

@@ -113,6 +113,6 @@ class MyDayCard extends Widget implements HasActions, HasSchemas
             'day' => MyDay::for($user, $this->date), 'nav' => true, 'isToday' => $this->date === null,
             'canGoBack' => ! $this->date || Carbon::parse($this->date, $user->tz())->gt(now($user->tz())->subDays(self::DAYS_BACK)->endOfDay()),
             'canSelect' => WorkTimeActions::allowed($user), 'actions' => $actions,
-        ]))];   // ora: bara „acum" se mută
+        ]), tables: ['time_entries', 'tasks', 'task_events', 'updates', 'update_items', 'users'])];   // ora: bara „acum" se mută
     }
 }

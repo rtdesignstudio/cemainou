@@ -81,7 +81,7 @@ class TeamToday extends Widget
         });
         // uneltele fiecăruia (agent, timp măsurat, /upd...): adminul le vede la toți, fiecare la el
         $whose = $viewer->isAdmin() ? $users : $users->where('id', $viewer->id);
-        $setup = PageCache::data('team-setup', $viewer, [$whose->pluck('id')->values()->all()], fn () => TeamSetup::for($whose));   // 10 minute: cheile, hook-urile, telefonul nu se schimbă de la un minut la altul
+        $setup = PageCache::data('team-setup', $viewer, [$whose->pluck('id')->values()->all()], fn () => TeamSetup::for($whose), tables: ['users', 'updates', 'projects']);   // 10 minute: cheile, hook-urile, telefonul nu se schimbă de la un minut la altul
         $people = $users->map(function (User $user) use ($viewer, $nowIn, $times, $doing, $setup, $added, $hours, $removed, $firstSignal) {
             $time = $viewer->can('viewWorkTime', $user) ? $times[$user->id] : null;
             $lastSeen = $user->last_seen_at;

@@ -11972,7 +11972,7 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
 }
 .wsa-card-acts { display: none; gap: 0.35rem; margin-left: auto; }
 .wsa-card-acts button {
-    height: 1.75rem;
+    height: 1.5rem;                                      /* cât cercul omului: cardul nu crește când apar butoanele */
     padding: 0 0.6rem;
     border: 1px solid var(--color-gray-950);
     border-radius: var(--wsa-r);
@@ -11981,7 +11981,7 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
     color: var(--color-gray-950);
     cursor: pointer;
 }
-.wsa-card-acts button.is-done { display: inline-grid; place-items: center; width: 1.75rem; padding: 0; background: var(--color-gray-950); color: #fff; }
+.wsa-card-acts button.is-done { display: inline-grid; place-items: center; width: 1.5rem; padding: 0; background: var(--color-gray-950); color: #fff; }
 .wsa-card-acts button:hover { background: var(--color-gray-950); color: #fff; }
 @media (hover: hover) and (min-width: 640px) {
     .wsa-card:hover .wsa-card-acts, .wsa-card:focus-within .wsa-card-acts { display: inline-flex; }
@@ -12161,3 +12161,29 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
     color: var(--color-gray-600);
 }
 .wsa-card-people b { font-weight: 600; color: var(--color-gray-950); font-variant-numeric: tabular-nums; }
+
+/* editare direct pe card: termenul și omul sunt butoane (subliniere punctată la trecerea mouse-ului); comentariile noi pentru tine, ca o etichetă neagră */
+button.wsa-card-due, button.wsa-card-who {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+}
+button.wsa-card-due { margin-left: auto; font-size: var(--wsa-fs-label); color: var(--color-gray-500); }
+button.wsa-card-due.is-overdue, button.wsa-card-due.is-today { color: var(--color-gray-950); font-weight: 600; }
+button.wsa-card-due:hover, button.wsa-card-who:hover { text-decoration: underline dotted; text-underline-offset: 3px; }
+button.wsa-card-who { font-size: var(--wsa-fs-label); }
+.wsa-card-meta .wsa-card-new {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0 0.4rem;
+    border-radius: var(--wsa-r);
+    background: var(--color-gray-950);
+    color: #fff;
+    font-weight: 600;
+    line-height: 1.25rem;
+    text-decoration: none;
+}
+.wsa-card-meta .wsa-card-new .wsa-card-ico { color: #fff; }

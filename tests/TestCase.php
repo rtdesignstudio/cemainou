@@ -4,6 +4,7 @@ namespace Tests;
 
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\File;
+use Livewire\Livewire;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -15,6 +16,7 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
         $this->backups = sys_get_temp_dir().'/wsa-backups-'.uniqid();
         config(['cemainou.backup_path' => $this->backups, 'cemainou.release_feed' => null]);   // și fără cereri spre rt.md (lista de versiuni)
+        Livewire::withoutLazyLoading();                                          // paginile întregi: secțiunile amânate de pe Azi se desenează direct (TodayDeferTest le verifică amânate)
     }
 
     protected function tearDown(): void

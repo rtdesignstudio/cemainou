@@ -412,6 +412,23 @@ class ListTasks extends ListRecords
         return $pairs->groupBy(0)->map(fn (Collection $rows) => $rows->pluck(1)->unique()->map(fn ($id) => $people->get($id))->filter()->values())->all();
     }
 
+    /**
+     * Comentariile noi pentru mine, pe sarcină: din clopoțel (comentariile pe aceeași sarcină se strâng într-o notificare, grupul task:N:comments,
+     * cu câte au venit); deschizi sarcina și se fac citite. @return array<int, int> id-ul sarcinii => câte
+     */
+    public function boardNewComments(): array
+    {
+        return auth()->user()->unreadNotifications()->where('created_at', '>=', now()->subDays(30))->where('data', 'like', '%"group":"task:%:comments"%')->latest()->limit(200)->get()
+            ->reduce(function (array $new, $n) {
+                $wsa = $n->data['viewData']['wsa'] ?? [];
+                if (preg_match('/^task:(\d+):comments$/', (string) ($wsa['group'] ?? ''), $m)) {
+                    $new[(int) $m[1]] = ($new[(int) $m[1]] ?? 0) + max(1, (int) ($wsa['count'] ?? 1));
+                }
+
+                return $new;
+            }, []);
+    }
+
     /** „Anulează" după o mutare de pe panou: sarcina se întoarce unde era (cu motivul blocajului, dacă era blocată). */
     #[On('board-undo')]
     public function undoMove(): void
