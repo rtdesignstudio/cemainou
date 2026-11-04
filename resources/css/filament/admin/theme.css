@@ -11721,3 +11721,223 @@ body:not(.wsa-plays-here) .wsa-here-only, body.wsa-plays-here .wsa-away-only { d
 .wsa-doc.is-older {
     opacity: 0.55;
 }
+
+/* Sarcini: Panou | Listă, ca un comutator text; elementul ales subliniat cu negru, ca meniul de sus */
+.wsa-mode {
+    display: inline-flex;
+    gap: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+.wsa-mode button {
+    padding: 0.25rem 0;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    font-size: var(--wsa-fs-button);
+    color: var(--color-gray-500);
+    cursor: pointer;
+}
+.wsa-mode button:hover { color: var(--color-gray-950); }
+.wsa-mode button.is-on {
+    color: var(--color-gray-950);
+    border-bottom-color: var(--color-gray-950);
+    font-weight: 500;
+}
+
+/* panoul: patru coloane egale, fără fundaluri; capul coloanei cu o linie neagră, ca titlurile de secțiune; cardurile albe, cu o linie fină */
+.wsa-board-cols {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.25rem;
+    align-items: start;
+}
+.wsa-board-col {
+    display: grid;
+    gap: 0.5rem;
+    min-height: 8rem;
+    padding-bottom: 1rem;
+    transition: background-color 0.12s;
+}
+.wsa-board-col.is-over {
+    background: var(--color-gray-50);
+    outline: 1px dashed var(--color-gray-400);
+    outline-offset: 4px;
+}
+.wsa-board-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--color-gray-950);
+}
+.wsa-board-head h3 {
+    font-size: var(--wsa-fs-label);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.wsa-board-head span {
+    font-size: var(--wsa-fs-label);
+    color: var(--color-gray-500);
+    font-variant-numeric: tabular-nums;
+}
+.wsa-board-col.is-blocked .wsa-board-head { border-bottom-color: #dc2626; }
+.wsa-card {
+    position: relative;
+    display: grid;
+    gap: 0.4rem;
+    padding: 0.75rem 0.85rem;
+    background: #fff;
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--wsa-r);
+    cursor: grab;
+    transition: border-color 0.12s, box-shadow 0.12s, opacity 0.12s;
+}
+.wsa-card:hover { border-color: var(--color-gray-400); }
+.wsa-card:focus-visible {
+    outline: 2px solid var(--color-gray-950);
+    outline-offset: 1px;
+}
+.wsa-card.is-dragged { opacity: 0.35; }
+.wsa-board.is-dragging .wsa-card { cursor: grabbing; }
+.wsa-card-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: var(--wsa-fs-label);
+    color: var(--color-gray-500);
+}
+.wsa-card-due.is-overdue { color: #dc2626; }
+.wsa-card-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--color-gray-950);
+    text-decoration: none;
+}
+.wsa-card-title:hover { text-decoration: underline; }
+.wsa-card-reason {
+    font-size: var(--wsa-fs-label);
+    line-height: 1.4;
+    color: #dc2626;
+}
+.wsa-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: var(--wsa-fs-label);
+    color: var(--color-gray-500);
+    font-variant-numeric: tabular-nums;
+}
+.wsa-card-project {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.wsa-card-files { display: inline-flex; align-items: center; gap: 0.2rem; }
+.wsa-card-files .fi-icon { width: 0.875rem; height: 0.875rem; }
+.wsa-card-who {
+    margin-left: auto;
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 0.25rem;
+    border: 1px solid var(--color-gray-950);
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--color-gray-950);
+}
+.wsa-card-who.is-free { border-style: dashed; border-color: var(--color-gray-400); color: var(--color-gray-400); }
+.wsa-card-move { display: none; }
+.wsa-board-empty {
+    padding: 1rem 0;
+    font-size: var(--wsa-fs-label);
+    color: var(--color-gray-400);
+}
+.wsa-board-more {
+    font-size: var(--wsa-fs-label);
+    color: var(--color-gray-700);
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+}
+.wsa-board-tabs { display: none; }
+.wsa-board-undo {
+    position: fixed;
+    left: 50%;
+    bottom: 1.5rem;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transform: translateX(-50%);
+    padding: 0.65rem 1rem;
+    background: var(--color-gray-950);
+    color: #fff;
+    font-size: 0.9375rem;
+}
+.wsa-board-undo button {
+    border: 0;
+    background: none;
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+}
+.wsa-board-hint { margin-top: 0.5rem; }
+/* tabletă: două coloane pe rând */
+@media (max-width: 1023px) {
+    .wsa-board-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* telefon: o coloană odată, aleasă din file; mutarea din meniul cardului, nu trasul */
+@media (max-width: 639px) {
+    .wsa-board-tabs {
+        display: flex;
+        gap: 0.35rem;
+        overflow-x: auto;
+        margin-bottom: 0.75rem;
+        scrollbar-width: none;
+    }
+    .wsa-board-tabs button {
+        flex-shrink: 0;
+        height: var(--wsa-h-sm);
+        padding: 0 0.75rem;
+        border: 1px solid var(--color-gray-300);
+        border-radius: var(--wsa-r);
+        background: #fff;
+        font-size: var(--wsa-fs-label);
+        color: var(--color-gray-700);
+    }
+    .wsa-board-tabs button.is-on { border-color: var(--color-gray-950); background: var(--color-gray-950); color: #fff; }
+    .wsa-board-tabs span { margin-left: 0.25rem; opacity: 0.7; }
+    .wsa-board-cols { grid-template-columns: minmax(0, 1fr); }
+    .wsa-board-col { display: none; }
+    .wsa-board-col.is-shown { display: grid; }
+    .wsa-board-head { display: none; }
+    .wsa-card { cursor: default; }
+    .wsa-card-move {
+        display: block;
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+    }
+    .wsa-card-move select {
+        height: 1.75rem;
+        max-width: 7.5rem;
+        padding: 0 1.5rem 0 0.5rem;
+        border: 1px solid var(--color-gray-300);
+        border-radius: var(--wsa-r);
+        background-color: #fff;
+        font-size: var(--wsa-fs-label);
+    }
+    .wsa-card-top { padding-right: 7.75rem; }
+    .wsa-board-hint { display: none; }
+}

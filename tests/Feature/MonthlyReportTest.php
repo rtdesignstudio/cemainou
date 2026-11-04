@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Mail\MonthlyReport;
 use App\Models\Client;
 use App\Models\Project;
+use App\Models\ProjectDay;
 use App\Models\ProjectReport;
 use App\Models\Task;
 use App\Models\Update;
@@ -59,6 +60,27 @@ class MonthlyReportTest extends TestCase
         $this->assertNotNull($report->fresh()->viewed_at);                                       // clientul (fără logare) l-a deschis
         $this->get('/r/'.str_repeat('x', 40))->assertNotFound();
         Carbon::setTestNow();
+    }
+
+    public function test_with_hours_the_report_shows_who_worked_and_the_time_of_each_task(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-11-03 10:00', 'Europe/Chisinau'));
+        $radu = User::factory()->create(['name' => 'Radu Rusu', 'role' => 'admin', 'timezone' => 'Europe/Chisinau']);
+        $ana = User::factory()->create(['name' => 'Ana Lungu', 'timezone' => 'Europe/Chisinau']);
+        $site = Project::factory()->create(['name' => 'Site nou']);
+        ProjectDay::create(['date' => '2026-10-14', 'project_id' => $site->id, 'user_id' => $radu->id, 'active_minutes' => 300]);
+        ProjectDay::create(['date' => '2026-10-15', 'project_id' => $site->id, 'user_id' => $ana->id, 'active_minutes' => 180]);
+        $task = Task::add($site, $radu, 'Galeria foto', assignee: $radu);
+        $task->close($radu);
+        $task->forceFill(['done_at' => Carbon::parse('2026-10-20 15:00'), 'time_minutes' => 120])->save();
+        $report = ProjectReport::create(['project_id' => $site->id, 'month' => '2026-10', 'token' => str_repeat('a', 40), 'include_hours' => false]);
+
+        $this->get('/r/'.$report->token)->assertOk()->assertSee('Galeria foto')->assertDontSee(['Who worked', 'Ana Lungu', '≈']);   // fără bifă: ca până acum
+
+        $report->forceFill(['include_hours' => true])->save();
+        $this->get('/r/'.$report->token)->assertOk()
+            ->assertSeeInOrder(['Who worked', 'Radu Rusu', 'Ana Lungu', 'What was delivered', 'Galeria foto', '2h', '≈25%'])   // 120 din 480 de minute
+            ->assertSee('≈75%');                                                                                                // restul, nelegat de o sarcină
     }
 
     public function test_on_the_first_the_report_is_ready_for_the_lead_who_sends_it_from_the_page(): void

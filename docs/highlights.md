@@ -2,6 +2,10 @@
 
 The important changes, newest first. Small improvements and fixes come in every version and are not listed one by one.
 
+## 0.1.421 - 2026-11-04
+
+**A board for tasks, and a richer monthly report.** Tasks has Board | List: four columns (to do, in progress, blocked, done this week), cards you drag between them or move with the keys 1-4, an undo after every move, and one column at a time on the phone. With hours included, the monthly report opens with who worked, day by day, and each finished task shows its measured time and its share of the month.
+
 ## 0.1.419 - 2026-11-04
 
 **Handing a task over, cleanly.** When a task goes to someone else, the agent offers to leave one handoff note (what is done, what is left, which file is the final one) and to mark the earlier files as older versions; nothing is deleted. Whoever takes it over sees the note first and the final file on top, with the older versions dimmed below. While working, agents comment only on results and questions, and put a new version of a file in place of the old one.

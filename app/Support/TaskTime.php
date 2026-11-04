@@ -30,4 +30,18 @@ class TaskTime
 
         return ['total' => (int) $people->sum('minutes'), 'people' => $people];
     }
+
+    /** Păstrează pe sarcină timpul măsurat pe ea (time_minutes), cât semnalele încă există; fără timp măsurat, rămâne gol. */
+    public static function remember(Task $task): ?int
+    {
+        if (! TaskSession::where('task_id', $task->id)->exists()) {
+            return $task->time_minutes;
+        }
+        $total = self::for($task)['total'];
+        if ($total > 0 && $total !== $task->time_minutes) {
+            $task->forceFill(['time_minutes' => $total])->saveQuietly();
+        }
+
+        return $total > 0 ? $total : $task->time_minutes;
+    }
 }

@@ -2,6 +2,10 @@
 
 Schimbările importante, cele mai noi întâi. Îmbunătățirile mici și reparațiile vin în fiecare versiune și nu sunt trecute una câte una.
 
+## 0.1.421 - 2026-11-04
+
+**Panou pentru sarcini și un raport lunar mai bogat.** La Sarcini ai Panou | Listă: patru coloane (de făcut, în lucru, blocate, gata săptămâna asta), carduri pe care le tragi între ele sau le muți cu tastele 1-4, „Anulează” după fiecare mutare și o coloană odată pe telefon. Cu orele incluse, raportul lunar începe cu cine a lucrat, zi de zi, iar fiecare sarcină încheiată arată timpul măsurat și partea ei din lună.
+
 ## 0.1.419 - 2026-11-04
 
 **Predarea unei sarcini, curată.** Când sarcina trece la altcineva, agentul propune o singură notă de predare (ce e făcut, ce rămâne, care e fișierul final) și marchează fișierele de dinainte ca versiuni vechi; nimic nu se șterge. Cine preia vede întâi nota și fișierul final sus, cu versiunile vechi stinse dedesubt. Cât lucrează, agenții comentează doar rezultatele și întrebările, iar versiunea nouă a unui fișier o pun în locul celei vechi.

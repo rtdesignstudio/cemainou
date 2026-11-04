@@ -4,7 +4,7 @@
     $people = $this->people();
     $projects = $this->projectLayer();
     $picked = $this->pickedPerson();
-    $onMine = $this->activeTab === 'mine';
+    $onMine = $this->activeTab === 'mine' && ! $this->onBoard();             // pe panou, oamenii se aleg ca pe orice filă
     $role = fn ($u) => $u->isClient() ? __('client') : ($u->role === \App\Enums\Role::Collaborator ? __('collaborator') : null);
 @endphp
 <div class="wsa-task-layers">

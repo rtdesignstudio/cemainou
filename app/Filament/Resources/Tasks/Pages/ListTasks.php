@@ -88,9 +88,24 @@ class ListTasks extends ListRecords
 
     private bool $pickedRead = false;
 
+    /** Panou (coloane pe stări) sau listă: alegerea rămâne pentru data viitoare (pe sesiune); una din link (?view=) are întâietate. */
+    #[Url(as: 'view')]
+    public ?string $mode = null;
+
+    public const BOARD = ['todo', 'doing', 'blocked', 'done'];
+
+    /** Câte sarcini arată o coloană; restul, în listă. */
+    public const BOARD_LIMIT = 60;
+
+    /** Ultima mutare de pe panou, ca „Anulează" s-o poată întoarce: [id, starea de dinainte, motivul blocajului de dinainte]. */
+    public ?array $lastMove = null;
+
     public function mount(): void
     {
         parent::mount();
+        if (! in_array($this->mode, ['board', 'list'], true)) {
+            $this->mode = session('tasks.view') === 'board' ? 'board' : 'list';
+        }
         if ($this->projectPick && ! Project::visibleTo(auth()->user())->whereKey($this->projectPick)->exists()) {
             $this->projectPick = null;
         }
@@ -173,7 +188,7 @@ class ListTasks extends ListRecords
         $me = auth()->user();
         $person = $this->pickedPerson();
         $counts = Task::visibleTo($me)->open()
-            ->when($this->activeTab === 'mine' && ! $person, fn (Builder $q) => $q->openFor($me))
+            ->when($this->activeTab === 'mine' && ! $person && ! $this->onBoard(), fn (Builder $q) => $q->openFor($me))
             ->when($person, fn (Builder $q) => $person->isClient()
                 ? $q->where(fn (Builder $w) => $w->where('assignee_id', $person->id)->orWhere('created_by', $person->id))
                 : $q->where('assignee_id', $person->id))
@@ -224,11 +239,13 @@ class ListTasks extends ListRecords
 
         return $schema->components([
             View::make('filament.resources.tasks.stats')->viewData(fn () => ['s' => $this->stats()]),
-            $this->getTabsContentComponent(),
-            View::make('filament.resources.tasks.layers')->visible(fn () => ! $notes()),
-            View::make('filament.resources.tasks.notes')->visible($notes),
-            View::make('filament.resources.tasks.mine')->visible($mine),
-            EmbeddedTable::make()->visible(fn () => ! $notes() && ! $mine()),
+            View::make('filament.resources.tasks.mode'),                                          // Panou | Listă
+            $this->getTabsContentComponent()->visible(fn () => ! $this->onBoard()),
+            View::make('filament.resources.tasks.layers')->visible(fn () => ! $notes() || $this->onBoard()),
+            View::make('filament.resources.tasks.board')->visible(fn () => $this->onBoard()),
+            View::make('filament.resources.tasks.notes')->visible(fn () => $notes() && ! $this->onBoard()),
+            View::make('filament.resources.tasks.mine')->visible(fn () => $mine() && ! $this->onBoard()),
+            EmbeddedTable::make()->visible(fn () => ! $notes() && ! $mine() && ! $this->onBoard()),
         ]);
     }
 
@@ -326,12 +343,63 @@ class ListTasks extends ListRecords
         $status = TaskStatus::tryFrom($to);
         abort_unless($task && $status && in_array($status, [TaskStatus::Doing, TaskStatus::Todo, TaskStatus::Blocked, TaskStatus::Done], true)
             && $task->status !== $status && auth()->user()->can('move', [$task, $status]), 403);
+        if (! in_array($status, [TaskStatus::Blocked, TaskStatus::Done], true)) {
+            $this->noteMove($task);
+        }
         match ($status) {
             TaskStatus::Blocked => $this->mountAction('mineBlock', ['task' => $id]),
             TaskStatus::Done => $this->mountAction('mineDone', ['task' => $id]),
             TaskStatus::Doing => $task->assignee_id && $task->assignee_id !== auth()->id() ? $task->take(auth()->user()) : $task->moveTo(TaskStatus::Doing, auth()->user()),
             default => $task->moveTo(TaskStatus::Todo, auth()->user()),
         };
+    }
+
+    public function setMode(string $mode): void
+    {
+        $this->mode = $mode === 'board' ? 'board' : 'list';
+        session()->put('tasks.view', $this->mode);
+    }
+
+    public function onBoard(): bool
+    {
+        return $this->mode === 'board' && $this->activeTab !== 'notes';
+    }
+
+    /**
+     * Panoul: de făcut, în lucru, blocate și gata săptămâna asta, pe selecția de deasupra (omul, proiectul) și cifra apăsată; ordinea e automată:
+     * termenul (cele fără termen la urmă), apoi cele mai noi; la „Gata", cele încheiate cel mai recent. @return array<string, array{tasks: Collection, more: int}>
+     */
+    public function board(): array
+    {
+        $me = auth()->user();
+        $base = fn () => $this->shown($this->narrow(Task::visibleTo($me)))->with(['project', 'assignee'])->withCount('attachments');
+        $columns = [];
+        foreach (self::BOARD as $status) {
+            $query = $status === 'done'
+                ? $base()->where('status', TaskStatus::Done->value)->where('done_at', '>=', now($me->tz())->startOfWeek()->utc())->orderByDesc('done_at')
+                : $base()->where('status', $status)->orderByRaw('due_on is null')->orderBy('due_on')->orderByDesc('id');
+            $total = (clone $query)->count();
+            $columns[$status] = ['tasks' => $query->limit(self::BOARD_LIMIT)->get(), 'more' => max(0, $total - self::BOARD_LIMIT), 'total' => $total];
+        }
+        $this->rememberTrail(collect($columns)->flatMap(fn (array $c) => $c['tasks']->pluck('id'))->all(), __('Board'));
+
+        return $columns;
+    }
+
+    /** „Anulează" după o mutare de pe panou: sarcina se întoarce unde era (cu motivul blocajului, dacă era blocată). */
+    public function undoMove(): void
+    {
+        [$id, $from, $reason] = $this->lastMove + [null, null, null];
+        $this->lastMove = null;
+        $task = $this->mineTask(['task' => $id]);
+        $status = TaskStatus::tryFrom((string) $from);
+        abort_unless($task && $status && $task->status !== $status && auth()->user()->can('move', [$task, $status]), 403);
+        $task->moveTo($status, auth()->user(), $reason);
+    }
+
+    private function noteMove(Task $task): void
+    {
+        $this->lastMove = [$task->id, $task->status->value, $task->blocked_reason];
     }
 
     /** „Redeschide" o sarcină încheiată (din nou în lucru, dacă e a cuiva). */
@@ -354,6 +422,7 @@ class ListTasks extends ListRecords
             ->action(function (array $arguments, array $data) {
                 $task = $this->mineTask($arguments);
                 abort_unless($task && $task->status->isOpen() && auth()->user()->can('move', [$task, TaskStatus::Done]), 403);
+                $this->noteMove($task);
                 $task->close(auth()->user(), $data['proof'] ?? null);
                 $this->justDone = $task->id;                                    // bifa ei se desenează în „Încheiate"
             });
@@ -367,6 +436,7 @@ class ListTasks extends ListRecords
             ->action(function (array $arguments, array $data) {
                 $task = $this->mineTask($arguments);
                 abort_unless($task && $task->status->isOpen() && auth()->user()->can('move', [$task, TaskStatus::Blocked]), 403);
+                $this->noteMove($task);
                 $task->moveTo(TaskStatus::Blocked, auth()->user(), $data['reason']);
             });
     }

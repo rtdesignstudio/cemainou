@@ -13,6 +13,7 @@ use App\Support\Checklist;
 use App\Support\Inbox;
 use App\Support\Mentions;
 use App\Support\TaskNotices;
+use App\Support\TaskTime;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -36,7 +37,7 @@ class Task extends Model
     use HasFactory, StoresTimesInUtc;
 
     /** Aceleași valori implicite ca în baza de date, ca un model proaspăt creat să le aibă și în memorie. */
-    protected $attributes = ['notes' => null, 'due_on' => null, 'repeat' => null, 'repeated_from_id' => null, 'status' => 'todo', 'blocked_reason' => null, 'created_by' => null, 'assignee_id' => null, 'assignee_seen_at' => null, 'started_at' => null, 'done_at' => null, 'source' => 'web'];
+    protected $attributes = ['notes' => null, 'due_on' => null, 'repeat' => null, 'repeated_from_id' => null, 'status' => 'todo', 'blocked_reason' => null, 'created_by' => null, 'assignee_id' => null, 'assignee_seen_at' => null, 'started_at' => null, 'done_at' => null, 'time_minutes' => null, 'source' => 'web'];
 
     /** Regulile stau aici, nu doar în formulare și unelte: niciun proiect arhivat, niciun cont inactiv. */
     public static function add(Project $project, User $by, string $title, ?string $notes = null, ?User $assignee = null, Source $source = Source::Web, ?Update $update = null, bool $idea = false, ?string $due = null, ?TaskRepeat $repeat = null): self
@@ -160,6 +161,7 @@ class Task extends Model
                 Channels::taskLater($this, $by);                          // închisă sau blocată: în canalul proiectului (dintr-un update o spune update-ul)
             }
             if ($status === TaskStatus::Done) {
+                TaskTime::remember($this);                               // timpul măsurat, păstrat: semnalele trec după 90 de zile
                 TaskNotices::done($this, $by);                           // de la client: clientul află că e gata
                 Inbox::done($this, $by);                                 // clopoțelul: cine a cerut-o și omul ei
                 $this->repeatNext($by);                                  // recurentă: următoarea, cu termenul mutat
@@ -371,6 +373,7 @@ class Task extends Model
         return [
             'status' => TaskStatus::class,
             'source' => Source::class,
+            'time_minutes' => 'integer',
             'site_context' => 'array',
             'assignee_seen_at' => 'datetime',
             'started_at' => 'datetime',

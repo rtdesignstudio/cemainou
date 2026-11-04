@@ -3059,5 +3059,18 @@
     "A client or collaborator opens something they should not see, or tries pages that do not exist. Also by email.": "Un client sau un colaborator deschide ceva ce n-ar trebui să vadă sau încearcă pagini care nu există. Și pe email.",
     ":left more until :name (:why)": "Încă :left până la :name (:why)",
     "Older versions": "Versiuni vechi",
-    "Handoff": "Predare"
+    "Handoff": "Predare",
+    "Less": "Mai puțin",
+    "The rest of the time, ≈:share%, went to work on the project not tied to one task.": "Restul timpului, ≈:share%, a fost lucru pe proiect nelegat de o sarcină anume.",
+    "Board": "Panou",
+    "List": "Listă",
+    "Columns": "Coloane",
+    "Move to": "Mută în",
+    "Move to…": "Mută în…",
+    "Nothing finished this week yet.": "Nimic încheiat săptămâna asta, încă.",
+    "Nothing here.": "Nimic aici.",
+    ":count more in the list": "încă :count în listă",
+    "Moved.": "Mutată.",
+    "Drag a card to another column, or select it and press 1-4. Enter opens it.": "Trage un card în altă coloană, sau selectează-l și apasă 1-4. Enter îl deschide.",
+    "Undo the move": "Anulează"
 }

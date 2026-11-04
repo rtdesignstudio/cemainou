@@ -86,6 +86,32 @@ class TaskPagesTest extends TestCase
         $this->assertSame(__('Tasks'), Livewire::withQueryParams(['project' => 999999])->test(CreateTask::class)->instance()->backLinks()[0]['label']);
     }
 
+    public function test_the_board_shows_tasks_by_status_moves_them_and_undoes_a_move(): void
+    {
+        $ion = User::factory()->create(['name' => 'Ion Rusu']);
+        $this->actingAs($ion);
+        $project = Project::factory()->create();
+        $todo = Task::add($project, $ion, 'Pagina de contact', assignee: $ion);
+        $doing = Task::add($project, $ion, 'Galeria foto', assignee: $ion);
+        $doing->moveTo(TaskStatus::Doing, $ion);
+        $old = Task::add($project, $ion, 'Logo vechi', assignee: $ion);
+        $old->close($ion);
+        $old->forceFill(['done_at' => now()->subWeeks(2)])->save();
+
+        $page = Livewire::test(ListTasks::class)->call('setMode', 'board')
+            ->assertSeeInOrder(['To do', 'Pagina de contact', 'In progress', 'Galeria foto', 'Done this week'])
+            ->assertDontSee('Logo vechi');                                                            // gata doar săptămâna asta
+        $this->assertSame('board', session('tasks.view'));
+
+        $page->call('dropTask', $todo->id, 'doing')->assertSee('Moved.');
+        $this->assertSame(TaskStatus::Doing, $todo->fresh()->status);
+        $page->call('undoMove');
+        $this->assertSame(TaskStatus::Todo, $todo->fresh()->status);
+
+        $page->call('dropTask', $doing->id, 'blocked')->assertActionMounted('mineBlock');             // blocat cere motivul
+        Livewire::test(ListTasks::class)->assertSet('mode', 'board')->call('setMode', 'list')->assertSee('Pagina de contact');
+    }
+
     public function test_task_page_shows_history_marks_it_seen_and_closes_it(): void
     {
         $ana = User::factory()->create(['name' => 'Ana Popescu']);

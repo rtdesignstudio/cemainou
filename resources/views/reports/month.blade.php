@@ -46,6 +46,23 @@
         .files div { border: 1px solid var(--line); padding: 1rem; font-size: 1rem; line-height: 1.35; }
         .files .label { display: block; margin-bottom: .35rem; }
         .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: 0 3rem; }
+        /* cine a lucrat: grila om × zi a lunii, ca la Săptămâna (doar cu orele bifate); intensitatea în gri, ca pe pagina omului */
+        .people-scroll { overflow-x: auto; padding: 1.5rem 0 .5rem; }
+        .people { display: grid; grid-template-columns: minmax(8rem, 12rem) repeat(var(--days), minmax(.9rem, 1fr)) auto; gap: 3px; align-items: center; min-width: 40rem; }
+        .people .name { font-size: 1rem; padding-right: .75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .people .tot { font-size: 1rem; font-variant-numeric: tabular-nums; padding-left: .75rem; text-align: right; white-space: nowrap; }
+        .people .n { font-size: .6875rem; color: var(--mute); text-align: center; font-variant-numeric: tabular-nums; }
+        .people .n.we { color: #b5b5b5; }
+        .people i { display: block; aspect-ratio: 1; background: #f0f0f0; }
+        .people i.l1 { background: #d4d4d4; } .people i.l2 { background: #a3a3a3; } .people i.l3 { background: #525252; } .people i.l4 { background: var(--ink); }
+        .legend { display: flex; gap: .35rem; align-items: center; font-size: .8125rem; color: var(--mute); padding-bottom: .5rem; }
+        .legend i { width: .75rem; height: .75rem; display: inline-block; background: #f0f0f0; }
+        .legend i.l1 { background: #d4d4d4; } .legend i.l2 { background: #a3a3a3; } .legend i.l3 { background: #525252; } .legend i.l4 { background: var(--ink); }
+        /* la sarcini: timpul măsurat și cât din lună a cerut, aliniate în dreapta */
+        .week li { display: flex; justify-content: space-between; gap: 1rem; }
+        .week li .t { flex-shrink: 0; font-size: 1rem; color: var(--mute); font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .week li .t b { color: var(--ink); font-weight: 500; }
+        .other { padding: 1.25rem 0 0; font-size: 1rem; color: var(--mute); }
         footer { margin: 5rem 0 3rem; padding-top: 1.5rem; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-size: .875rem; color: var(--mute); }
         .empty { padding: 2rem 0; font-size: 1.125rem; color: var(--mute); }
         @media (max-width: 640px) { .week { grid-template-columns: 1fr; gap: .75rem; } .hero { padding: 3rem 0 2rem; } .figures div { padding: 1.25rem 1rem 1.25rem 0; } }
@@ -123,16 +140,38 @@
         @foreach ($r['figures'] as $f)<div><span class="label">{{ $f['label'] }}</span><b>{{ $f['value'] }}</b></div>@endforeach
     </div>
 
+    @if ($r['people'])
+        <section>
+            <h2>{{ __('Who worked') }}</h2>
+            <div class="people-scroll">
+                <div class="people" style="--days: {{ count($r['days']) }}">
+                    <span></span>
+                    @foreach ($r['days'] as $d)<span @class(['n', 'we' => $d['weekend']])>{{ $d['n'] }}</span>@endforeach
+                    <span></span>
+                    @foreach ($r['people'] as $p)
+                        <span class="name">{{ $p['name'] }}</span>
+                        @foreach ($p['days'] as $c)<i class="l{{ $c['level'] }}" title="{{ $c['date'] }}{{ $c['time'] ? ' · '.$c['time'] : '' }}"></i>@endforeach
+                        <span class="tot">{{ $p['time'] }}</span>
+                    @endforeach
+                </div>
+            </div>
+            <p class="legend">{{ __('Less') }} <i></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> {{ __('More') }}</p>
+        </section>
+    @endif
+
     <section>
         <h2>{{ __('What was delivered') }}</h2>
         @forelse ($r['weeks'] as $w)
             <div class="week">
                 <span class="label">{{ $w['label'] }}</span>
-                <ul>@foreach ($w['items'] as $i)<li>{{ $i['text'] }}</li>@endforeach</ul>
+                <ul>@foreach ($w['items'] as $i)<li><span>{{ $i['text'] }}</span>@isset($i['time'])<span class="t"><b>{{ $i['time'] }}</b> · ≈{{ $i['share'] }}%</span>@endisset</li>@endforeach</ul>
             </div>
         @empty
             <p class="empty">{{ __('Nothing reported this month yet.') }}</p>
         @endforelse
+        @if ($r['other_share'] !== null)
+            <p class="other">{{ __('The rest of the time, ≈:share%, went to work on the project not tied to one task.', ['share' => $r['other_share']]) }}</p>
+        @endif
     </section>
 
     @if ($r['decisions'] || $r['next'])
