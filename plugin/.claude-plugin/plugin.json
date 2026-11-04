@@ -1,0 +1,58 @@
+{
+  "name": "cemainou",
+  "displayName": "cemainou",
+  "version": "0.1.0",
+  "description": "Your team's work log, written by the AI agents you already use: measures each Claude Code session's time, links it to its project, brings the team's context in, and drafts the daily update with /upd. Connects to your own self-hosted cemainou.",
+  "author": {
+    "name": "RT Design Studio",
+    "email": "mail@rt.md",
+    "url": "https://rt.md"
+  },
+  "homepage": "https://rt.md/cemainou/",
+  "repository": "https://github.com/rtdesignstudio/cemainou",
+  "documentationUrl": "https://rt.md/cemainou/docs/#agents",
+  "supportUrl": "https://github.com/rtdesignstudio/cemainou/issues",
+  "privacyPolicyUrl": "https://rt.md/cemainou/privacy/",
+  "license": "FSL-1.1-ALv2",
+  "icon": "./icon.png",
+  "keywords": [
+    "work log",
+    "status update",
+    "time tracking",
+    "team",
+    "project management",
+    "self-hosted",
+    "mcp"
+  ],
+  "userConfig": {
+    "server_url": {
+      "type": "string",
+      "title": "cemainou address",
+      "description": "Your team's cemainou, for example https://cemainou.example.com (without /mcp).",
+      "required": true
+    },
+    "api_key": {
+      "type": "string",
+      "title": "Agent key",
+      "description": "In cemainou: Profile, Agents, Connect an agent, Other. Copy the key; it is shown once.",
+      "required": true,
+      "sensitive": true
+    },
+    "only_folders": {
+      "type": "string",
+      "title": "Only these folders (optional)",
+      "description": "Only sessions started inside these folders reach cemainou, separated by colons, for example /home/ana/clients:/home/ana/work. Empty: every folder.",
+      "default": ""
+    }
+  },
+  "mcpServers": {
+    "cemainou": {
+      "type": "http",
+      "url": "${user_config.server_url}/mcp",
+      "headers": {
+        "Authorization": "Bearer ${user_config.api_key}",
+        "X-Cemainou-Agent": "claude-code"
+      }
+    }
+  }
+}

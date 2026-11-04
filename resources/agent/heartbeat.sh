@@ -42,10 +42,18 @@ raw=$(printf '%s\n' "$fields" | sed -n 5p)
 # Cursor așteaptă un răspuns la trimiterea promptului: îl lăsăm mereu să meargă, orice ar fi (și când nu trimitem nimic)
 [ "$raw" = beforeSubmitPrompt ] && trap 'printf "{\"continue\":true}\n"' EXIT
 
-for CONF in "$HOME/.config/cemainou" "$HOME/.config/whatsupai"; do [ -r "$CONF/config" ] && break; done   # numele vechi (whatsupai), până îl mută update.sh
-[ -r "$CONF/config" ] || exit 0
-. "$CONF/config"
-CEMAINOU_URL=${CEMAINOU_URL:-${WHATSUPAI_URL:-}}; CEMAINOU_TOKEN=${CEMAINOU_TOKEN:-${WHATSUPAI_TOKEN:-}}; CEMAINOU_ONLY=${CEMAINOU_ONLY:-${WHATSUPAI_ONLY:-}}
+# pluginul cemainou din Claude Code (/plugin): adresa, cheia și folderele vin din setările lui (CLAUDE_PLUGIN_OPTION_*); altfel, din config-ul pus de install.sh
+if [ -n "${CLAUDE_PLUGIN_OPTION_SERVER_URL:-}" ]; then
+  CONF=''
+  CEMAINOU_URL=${CLAUDE_PLUGIN_OPTION_SERVER_URL%/}; CEMAINOU_URL=${CEMAINOU_URL%/mcp}
+  CEMAINOU_TOKEN=${CLAUDE_PLUGIN_OPTION_API_KEY:-}; CEMAINOU_ONLY=${CLAUDE_PLUGIN_OPTION_ONLY_FOLDERS:-}
+else
+  [ "$agent" = claude-code ] && grep -qs '"cemainou@[^"]*" *: *true' "$HOME/.claude/settings.json" && exit 0   # pluginul e pornit: trimit hook-urile lui (Cursor, tot de aici)
+  for CONF in "$HOME/.config/cemainou" "$HOME/.config/whatsupai"; do [ -r "$CONF/config" ] && break; done   # numele vechi (whatsupai), până îl mută update.sh
+  [ -r "$CONF/config" ] || exit 0
+  . "$CONF/config"
+  CEMAINOU_URL=${CEMAINOU_URL:-${WHATSUPAI_URL:-}}; CEMAINOU_TOKEN=${CEMAINOU_TOKEN:-${WHATSUPAI_TOKEN:-}}; CEMAINOU_ONLY=${CEMAINOU_ONLY:-${WHATSUPAI_ONLY:-}}
+fi
 [ -n "${CEMAINOU_URL:-}" ] && [ -n "${CEMAINOU_TOKEN:-}" ] || exit 0
 [ -n "$event" ] || exit 0
 

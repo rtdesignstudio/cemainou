@@ -4,10 +4,18 @@
 # sau „nu e legată de un proiect, întreabă omul". Trimite doar: id-ul sesiunii, amprenta folderului (sha256 al căii, calculat aici;
 # calea nu pleacă), remote-urile git (fără parole), proiectul dintr-un .cemainou (sau .whatsupai) și versiunea fișierelor cemainou de aici.
 # Dacă serverul nu răspunde, nu scrie nimic. Dacă serverul are fișiere mai noi, le aduce în fundal (update.sh).
-for CONF in "$HOME/.config/cemainou" "$HOME/.config/whatsupai"; do [ -r "$CONF/config" ] && break; done   # numele vechi (whatsupai), până îl mută update.sh
-[ -r "$CONF/config" ] || exit 0
-. "$CONF/config"
-CEMAINOU_URL=${CEMAINOU_URL:-${WHATSUPAI_URL:-}}; CEMAINOU_TOKEN=${CEMAINOU_TOKEN:-${WHATSUPAI_TOKEN:-}}; CEMAINOU_ONLY=${CEMAINOU_ONLY:-${WHATSUPAI_ONLY:-}}
+# pluginul cemainou din Claude Code (/plugin): adresa, cheia și folderele vin din setările lui (CLAUDE_PLUGIN_OPTION_*); altfel, din config-ul pus de install.sh
+if [ -n "${CLAUDE_PLUGIN_OPTION_SERVER_URL:-}" ]; then
+  CONF=''
+  CEMAINOU_URL=${CLAUDE_PLUGIN_OPTION_SERVER_URL%/}; CEMAINOU_URL=${CEMAINOU_URL%/mcp}
+  CEMAINOU_TOKEN=${CLAUDE_PLUGIN_OPTION_API_KEY:-}; CEMAINOU_ONLY=${CLAUDE_PLUGIN_OPTION_ONLY_FOLDERS:-}
+else
+  grep -qs '"cemainou@[^"]*" *: *true' "$HOME/.claude/settings.json" && exit 0   # pluginul e pornit: sesiunea o anunță hook-ul lui, nu și acesta
+  for CONF in "$HOME/.config/cemainou" "$HOME/.config/whatsupai"; do [ -r "$CONF/config" ] && break; done   # numele vechi (whatsupai), până îl mută update.sh
+  [ -r "$CONF/config" ] || exit 0
+  . "$CONF/config"
+  CEMAINOU_URL=${CEMAINOU_URL:-${WHATSUPAI_URL:-}}; CEMAINOU_TOKEN=${CEMAINOU_TOKEN:-${WHATSUPAI_TOKEN:-}}; CEMAINOU_ONLY=${CEMAINOU_ONLY:-${WHATSUPAI_ONLY:-}}
+fi
 [ -n "${CEMAINOU_URL:-}" ] && [ -n "${CEMAINOU_TOKEN:-}" ] || exit 0
 
 input=$(cat 2>/dev/null)
@@ -58,7 +66,7 @@ if [ -n "$cwd" ] && [ -d "$cwd" ]; then
   done
 fi
 
-mine=$(cat "$CONF/version" 2>/dev/null | tr -cd '0-9a-f')
+if [ -n "$CONF" ]; then mine=$(cat "$CONF/version" 2>/dev/null | tr -cd '0-9a-f'); else mine=plugin; fi   # pluginul se actualizează din Claude Code
 headers=$(mktemp 2>/dev/null) || headers=''
 line=$(curl -fsS --max-time 3 -X POST "$CEMAINOU_URL/api/session" ${headers:+-D "$headers"} \
     -H "Authorization: Bearer $CEMAINOU_TOKEN" -H "Accept: text/plain" \
@@ -66,8 +74,8 @@ line=$(curl -fsS --max-time 3 -X POST "$CEMAINOU_URL/api/session" ${headers:+-D 
     --data-urlencode "project=$project" --data-urlencode "agent=claude-code" --data-urlencode "version=$mine" 2>/dev/null) || { [ -n "$headers" ] && rm -f "$headers"; exit 0; }
 [ -n "$line" ] && printf '%s\n' "$line"
 
-# comenzile și hook-urile la zi: dacă serverul are altă versiune, update.sh rulează în fundal (sesiunea nu așteaptă; la următoarea sunt noi)
-if [ -n "$headers" ]; then
+# comenzile și hook-urile la zi: dacă serverul are altă versiune, update.sh rulează în fundal (sesiunea nu așteaptă; la următoarea sunt noi); nu și la plugin
+if [ -n "$headers" ] && [ -n "$CONF" ]; then
   latest=$(tr -d '\r' < "$headers" | sed -n 's/^[Xx]-[A-Za-z]*-[Aa]gent-[Vv]ersion: *//p' | tr -cd '0-9a-f' | head -c 12)
   rm -f "$headers"
   if [ -n "$latest" ] && [ "$latest" != "$mine" ]; then

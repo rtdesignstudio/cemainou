@@ -1,0 +1,8 @@
+{
+  "name": "cemainou",
+  "owner": { "name": "RT Design Studio", "email": "mail@rt.md" },
+  "description": "cemainou for Claude Code: the team's work log, written by your agents.",
+  "plugins": [
+    { "name": "cemainou", "source": "./plugin", "description": "Measures each Claude Code session's time, links it to its project, brings the team's context in, and drafts the daily update with /upd. Connects to your self-hosted cemainou." }
+  ]
+}

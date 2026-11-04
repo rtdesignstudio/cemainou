@@ -37,8 +37,9 @@ class SessionController
         AgentPresence::signal($user, ActivityKind::SessionStart, $source, $session->project, $session);
 
         if ($source === Source::ClaudeCode) {                                     // versiunea fișierelor de pe calculator: pe pagina omului, dacă rămâne în urmă
-            $theirs = substr(preg_replace('/[^0-9a-f]/', '', (string) ($data['version'] ?? '')), 0, 12) ?: 'old';
-            $behind = $theirs !== AgentFiles::version();
+            $plugin = ($data['version'] ?? null) === 'plugin';                     // pluginul din Claude Code: se actualizează de acolo, nu rămâne în urmă
+            $theirs = $plugin ? 'plugin' : (substr(preg_replace('/[^0-9a-f]/', '', (string) ($data['version'] ?? '')), 0, 12) ?: 'old');
+            $behind = ! $plugin && $theirs !== AgentFiles::version();
             $user->forceFill(['agent_version' => $theirs, 'agent_version_at' => now(), 'agent_behind' => $behind ? min(999, $user->agent_behind + 1) : 0])->saveQuietly();
         }
         $line = AgentSessions::contextLine($session);

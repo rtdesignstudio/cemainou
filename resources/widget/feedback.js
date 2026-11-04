@@ -199,6 +199,7 @@
             '</div><div class="stage"><canvas></canvas></div></div>' +
             '</div>';
 
+        function submitKey(e) { return e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !e.isComposing; }
         var w = root.querySelector('.w'), fab = root.querySelector('.fab'), panel = root.querySelector('.panel'), ta = root.querySelector('textarea');
         var shotsEl = root.querySelector('.shots'), msg = root.querySelector('.form .msg'), send = root.querySelector('.form .send'), elChip = root.querySelector('.els');
         var form = root.querySelector('.form'), done = root.querySelector('.done'), badge = root.querySelector('.badge'), news = root.querySelector('.news'), newsAt = 0, menu = root.querySelector('.menu');
@@ -374,6 +375,7 @@
                     (it.dataset.fixed ? '<a href="' + esc(it.dataset.fixed) + '" target="_blank" rel="noopener">' + esc(T.fixed) + ' →</a>' : '') +
                     '<a href="' + esc(it.dataset.url) + '" target="_blank" rel="noopener">' + esc(T.openIn) + ' →</a></div>';
                 var btn = th.querySelector('.say'), box = th.querySelector('.answer');
+                box.addEventListener('keydown', function (e) { if (submitKey(e) && !btn.disabled) { e.preventDefault(); btn.click(); } });   // ⌘ / Ctrl + Enter răspunde
                 btn.onclick = function () {
                     if (!box.value.trim()) { box.focus(); return; }
                     btn.disabled = true; btn.textContent = T.sending;
@@ -623,6 +625,7 @@
                 elements: elements.map(function (x) { return { selector: x.selector, text: x.text, rect: x.rect }; }),
             };
         }
+        ta.addEventListener('keydown', function (e) { if (submitKey(e) && !send.disabled) { e.preventDefault(); send.click(); } });   // ⌘ / Ctrl + Enter trimite, ca în aplicație
         send.onclick = function () {
             if (!ta.value.trim()) { say(T.empty, true); return; }
             var fd = new FormData();

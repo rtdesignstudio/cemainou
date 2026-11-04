@@ -2,6 +2,10 @@
 
 Schimbările importante, cele mai noi întâi. Îmbunătățirile mici și reparațiile vin în fiecare versiune și nu sunt trecute una câte una.
 
+## 0.1.418 - 2026-11-04
+
+**cemainou pentru Claude Code, ca plugin.** Conectezi Claude Code din el însuși: `/plugin install cemainou --marketplace rtdesignstudio/cemainou`, apoi adresa cemainou și o cheie de agent. Aduce aceeași măsurare a timpului, legarea de proiect și contextul echipei ca instalarea cu o comandă, plus `/cemainou:upd` pentru update-ul zilei. În widget-ul de feedback, ⌘ / Ctrl + Enter trimite.
+
 ## 0.1.412 - 2026-10-29
 
 **Accesul din afară, sub ochi.** cemainou ține jurnalul a ce deschid clienții și colaboratorii: pagini, fișiere și ce citesc agenții lor. De fiecare dată, și înainte să le plece ceva (notificare, email, Telegram, rezumatul săptămânal, raportul lunar), o a doua verificare, scrisă separat de regulile de acces, se asigură că au voie să vadă. Dacă nu, adminul află imediat, pe email și în clopoțel, iar mesajul nu pleacă. Cine încearcă multe pagini care nu există e anunțat și el. Totul, în Admin → Acces din afară.

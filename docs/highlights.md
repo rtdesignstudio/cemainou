@@ -2,6 +2,10 @@
 
 The important changes, newest first. Small improvements and fixes come in every version and are not listed one by one.
 
+## 0.1.418 - 2026-11-04
+
+**cemainou for Claude Code, as a plugin.** Connect Claude Code from inside it: `/plugin install cemainou --marketplace rtdesignstudio/cemainou`, then your cemainou address and an agent key. It brings the same time measuring, project linking and team context as the one-line command, and `/cemainou:upd` for the daily update. In the feedback widget, ⌘ / Ctrl + Enter now sends.
+
 ## 0.1.412 - 2026-10-29
 
 **Outside access, watched.** cemainou keeps a log of what clients and collaborators open: pages, files and what their agents read. Each time, and before anything is sent to them (notification, email, Telegram, weekly digest, monthly report), a second check written apart from the access rules makes sure they are allowed to see it. If not, the admin learns at once, by email and in the bell, and the message does not leave. Someone trying many pages that do not exist is reported too. Everything is under Admin → Outside access.
