@@ -51,4 +51,18 @@ class ClientPeopleTest extends TestCase
         $this->actingAs($dima);
         $this->assertFalse(ClientPeopleCard::canView());                                             // clientul nu vede nimic din asta
     }
+
+    public function test_last_seen_counts_what_they_did_outside_the_app(): void
+    {
+        $client = Client::factory()->create();
+        $alex = User::factory()->create(['role' => 'lead']);
+        $maxim = User::factory()->create(['role' => 'client', 'client_id' => $client->id, 'visited_at' => now()->subDays(6)]);
+        $site = Project::factory()->create(['client_id' => $client->id, 'client_visible' => true, 'lead_id' => $alex->id]);
+        $this->travel(-11)->hours();
+        Task::add($site, $maxim, 'Linkuri moarte în meniu', assignee: $alex);                     // din widgetul de pe site: nu trece prin aplicație
+        $this->travelBack();
+
+        $seen = ClientPeople::for($alex)->first()['seen'];
+        $this->assertTrue($seen->between(now()->subHours(12), now()->subHours(10)));              // „acum 11 ore", nu „6 zile"
+    }
 }

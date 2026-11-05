@@ -96,13 +96,14 @@ class ClientPeople
                 ['label' => __('Site widget'), 'done' => $widget->has($id)],
             ];
             $neverIn = $person->visited_at === null && Invitations::pending($person);
+            $seen = collect([$person->visited_at, $actions->first()['at'] ?? null])->filter()->max();   // ultima vizită sau ultima acțiune (widgetul de pe site, agentul nu trec prin aplicație)
 
             return [
                 'user' => $person,
                 'company' => $person->client?->name,
                 'projects' => $projects->where('client_id', $person->client_id)->filter(fn (Project $p) => $p->client_visible)->pluck('name')->values()->all(),
                 'now' => $person->visited_at && $person->visited_at->gt(now()->subMinutes(WorkTime::gap())),
-                'seen' => $person->visited_at,
+                'seen' => $seen,
                 'never' => $neverIn,
                 'last' => $actions->first(),
                 'week' => $week,
@@ -110,7 +111,7 @@ class ClientPeople
                 'on_them' => $mine,
                 'steps' => $steps,
                 'steps_done' => collect($steps)->where('done', true)->count(),
-                'rank' => [$waiting->isNotEmpty() ? 0 : 1, $person->visited_at && $person->visited_at->isToday() ? 0 : 1, $neverIn ? 1 : 0, -($person->visited_at?->getTimestamp() ?? 0)],
+                'rank' => [$waiting->isNotEmpty() ? 0 : 1, $seen?->isToday() ? 0 : 1, $neverIn ? 1 : 0, -($seen?->getTimestamp() ?? 0)],
             ];
         })->sortBy('rank')->values();
     }
